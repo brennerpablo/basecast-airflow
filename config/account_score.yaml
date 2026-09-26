@@ -1,0 +1,66 @@
+# PENDING REVIEW by Pablo — proposed by Claude on 2026-09-26
+#
+# Account score for the commercial-intelligence module (task A2), from phase 0 Q3
+# (docs/analysis/q3_signals.md, analysis/q3_signals.py, logic in basecast_pipelines/models/accounts.py).
+# Weights were fixed WITHOUT looking at where Base's partner accounts fall (validation mode: the five
+# partners were held out of every Q3 statistic); their position is revealed only in A2.
+#
+# Universe: ERCOT co-ops and munis in the PUCT CCN layers matched to EIA-861 (config/utility_crosswalk.yaml).
+# Method: each signal becomes its percentile rank within the universe (0-1, ties get the average rank,
+#   `direction: lower` flips it); the score is the weighted mean. An account missing a signal has its
+#   weights renormalized over the signals it has (today only permits_per_1k, 1 account).
+# Rule (PHASE0_ANALYSIS Q3): a signal enters with coverage >= 80% of the universe and not near-constant
+#   (mode < 90% of values); of a pair with Spearman > 0.8 only one is weighted.
+
+version: 1
+universe: puct_ercot_coop_muni_x_eia861
+method: weighted_percentile_rank
+
+signals:
+  pop_growth:
+    weight: 0.25
+    direction: higher
+    source: census_population_county (PEP vintage 2025), 2020 -> 2025, county populations apportioned by county_share
+    why: Residents added to the territory are the load and peak growth a co-op or muni must buy capacity for, and the homes Base can serve; 100% coverage, median +6.4%.
+  permits_per_1k:
+    weight: 0.15
+    direction: higher
+    source: census_permits_county (annual, imputed units_total) 2023-2025 per 1,000 residents in 2025
+    why: Forward-looking pipeline of new homes (new construction is where batteries are easiest to add); rho 0.73 with pop_growth, so it adds signal rather than repeating it; 7.6% of units are imputed statewide.
+  owner_sf_homes:
+    weight: 0.20
+    direction: higher
+    source: census_housing_county (ACS 2024 5-year B25032 lines 3-4), apportioned by county_share
+    why: Owner-occupied single-family homes are the addressable market for a home battery; keeps the size cluster (rho 0.998 with population, 0.96 with permit_units, which are dropped). Biased low for city territories (area apportionment); swap for eia_customers when available (see pending).
+  owner_sf_share:
+    weight: 0.10
+    direction: higher
+    source: same ACS table, owner-occupied single-family / occupied units
+    why: How much of the territory fits Base's product (suburban and rural homes vs. apartments); range 0.41-0.73, not correlated above 0.6 with any other signal.
+  dc_sites:
+    weight: 0.15
+    direction: higher
+    source: tceq_data_center_sites with first permit since 2025-01-01, sites per county x county_share
+    why: New data centers near the territory are the large-load pressure that makes local capacity scarce; a lower bound (name/NAICS filter, no MW) and 69% zeros, so it works as a bonus for exposed accounts.
+  zone_peak_cagr:
+    weight: 0.15
+    direction: higher
+    source: ltlf_forecasts LTLF 2025 ercot_adjusted summer peak by weather zone, CAGR 2025 -> 2031, area-weighted
+    why: ERCOT's own forecast of zonal peak growth, the wholesale and 4CP pressure the account faces; a placeholder until the A3 forecast replaces it; only 8 distinct zone values, so it is coarse.
+
+# Signals that do not enter today, with what would change that.
+pending:
+  eia_customers:
+    status: out (coverage 57%; 27% of munis) — enters when eia861_sales also loads EIA-861 Short_Form (projected coverage 99%)
+    proposal: replace owner_sf_homes as the size signal with the same weight (rho 0.88 between them, so not both); it counts real meters instead of area-apportioned homes.
+  eia_customer_cagr:
+    status: out (coverage 57%) — meters added 2019 -> 2024, the most direct growth measure; coverage with Short_Form not computed (not verified)
+    proposal: if it reaches 80%, take 0.10 from pop_growth (rho 0.68 with it).
+  eia_res_sales_share:
+    status: out (coverage 57%); Short_Form has totals only, so it cannot reach 80% from EIA-861 alone
+  eia_sales_mwh:
+    status: out (coverage 57%); redundant with eia_customers (rho 0.88 long form, 0.97 with Short_Form)
+  population:
+    status: passes, not weighted — redundant with owner_sf_homes (rho 0.998)
+  permit_units:
+    status: passes, not weighted — redundant with owner_sf_homes (rho 0.96) and population (0.96); permits_per_1k carries the growth part
