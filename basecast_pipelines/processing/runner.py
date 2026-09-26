@@ -420,6 +420,9 @@ def run_process(
     }
     with EtlRun(source_id, storage, params=params, stage="process") as run, connect(settings.db_url) as conn:
         ensure_bookkeeping(conn)
+        from basecast_pipelines.processing.registry import publish
+
+        publish(conn, {source_id: module})
         summaries = go(conn)
         for s in summaries:
             run.event("dataset", **s.event())

@@ -146,3 +146,22 @@ def test_long_identifiers_are_refused():
 
     with pytest.raises(ValueError):
         column_types(pl.DataFrame({"x" * 64: [1]}))
+
+
+def test_registry_is_published(monkeypatch):
+    url = _db_or_skip(monkeypatch)
+    from basecast_pipelines.common.db import connect
+    from basecast_pipelines.parsers import get_parser
+    from basecast_pipelines.processing.registry import publish
+
+    with connect(url) as conn:
+        sources = ["ercot_ziptozone", "ercot_native_load"]
+        assert publish(conn, {s: get_parser(s) for s in sources}) == 3
+        rows = conn.execute(
+            "SELECT dataset, target, mode, key_columns FROM dataset_registry "
+            "WHERE source_id = 'ercot_native_load' ORDER BY dataset"
+        ).fetchall()
+    assert rows == [
+        ("ercot_load_hourly_wz", "postgres", "sql", None),
+        ("ercot_load_hourly_wz_archive", "postgres", "by_key", ["ts_utc", "weather_zone"]),
+    ]

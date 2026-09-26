@@ -180,3 +180,16 @@ def datasets() -> None:
             typer.echo(f"{source_id:26} {d.name:36} {d.target:9} {d.mode:8} v{d.version}")
         for d in getattr(module, "SQL_DATASETS", []):
             typer.echo(f"{source_id:26} {d.name:36} postgres  sql")
+
+
+@app.command()
+def registry() -> None:
+    """Publish every dataset (source, target, mode, keys, partitioning) to Postgres ``dataset_registry``."""
+    from basecast_pipelines.common.db import connect
+    from basecast_pipelines.processing.registry import publish
+
+    settings = load_settings()
+    if not settings.db_url:
+        raise typer.BadParameter("set BASECAST_DB_URL")
+    with connect(settings.db_url) as conn:
+        typer.echo(f"published {publish(conn)} registry rows")
