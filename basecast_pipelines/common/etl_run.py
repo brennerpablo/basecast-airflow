@@ -1,7 +1,8 @@
 """``etl_run``: one row per pipeline execution (status, duration, counts, events).
 
 With ``BASECAST_DB_URL`` set, rows go to the ``etl_run`` table in Postgres (inserted as ``running``, then
-updated when the run ends), where the API reads them; otherwise to ``_runs/etl_run.parquet`` in the lake.
+updated when the run ends; a row left ``running`` by a dead process becomes ``abandoned`` when the next run
+of the same source and stage starts), where the API reads them; otherwise to ``_runs/etl_run.parquet`` in the lake.
 Airflow tasks tag their rows with the DAG, task and run through ``airflow_labels``."""
 
 from __future__ import annotations
@@ -120,6 +121,16 @@ def _pg_insert_running(db_url: str, run: EtlRun) -> None:
 
     with connect(db_url) as conn:
         ensure_bookkeeping(conn)
+        # One run per source and stage at a time (max_active_runs=1): a row still "running" from before
+        # belongs to a process that died (lost connection, killed task) and never wrote its end.
+        conn.execute(
+            """
+            UPDATE etl_run SET status = 'abandoned', finished_at = now(),
+                error = 'superseded by run ' || %(run_id)s || ' while still marked running'
+            WHERE source = %(source)s AND stage = %(stage)s AND status = 'running'
+            """,
+            {"run_id": run.run_id, "source": run.source, "stage": run.stage},
+        )
         conn.execute(
             """
             INSERT INTO etl_run (run_id, source, stage, dag_id, task_id, airflow_run_id, try_number,
