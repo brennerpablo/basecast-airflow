@@ -25,6 +25,7 @@ def test_status_deck_names_across_eras() -> None:
     # Real names seen on ERCOT pages and inside TAC zips, 2024-2026.
     assert _is_status("LLI%20Queue%20Status%20Update%20-%202024_5_2.pdf")
     assert _is_status("LLI Queue Status Update - 2024-10-30.pptx")
+    assert _is_status("LLI%20Queue%20Update%20-%202022-10-24.pdf")
     assert _is_status("October TAC Report.pptx")
     assert _is_status("March TAC Report Updated_03262026")
     assert _is_status("April 24 LLWG Report_042426")

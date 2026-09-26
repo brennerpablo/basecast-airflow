@@ -14,7 +14,9 @@
 Meeting pages are static HTML (``/calendar/MMDDYYYY-<slug>``); every meeting page also links its
 neighbours, which finds meetings missing from the year lists (LFLTF 2025). TAC zips are downloaded only
 when a member name matches, read from the zip's central directory with one byte-range request. The name
-patterns are candidate filters: confirm deck content at parse time. ``dt`` is the meeting date (ERCOT
+patterns are candidate filters: confirm deck content at parse time. ``--opt since_year=2022`` reaches
+the LFLTF decks of 2022-2023 ("LLI Queue (Status) Update"); ``--opt kinds=status_deck`` keeps only the
+status decks. ``dt`` is the meeting date (ERCOT
 Monthly: first day of the issue month; key documents: posting date from the URL path).
 """
 
@@ -47,7 +49,7 @@ _MEETING = re.compile(r"^https://www\.ercot\.com/calendar/(\d{2})(\d{2})(\d{4})-
 _POSTED = re.compile(r"/files/docs/(\d{4})/(\d{2})/(\d{2})/")
 _MONTH = r"(?:january|february|march|april|may|june|july|august|september|october|november|december)"
 STATUS_DECK = re.compile(
-    rf"\blli queue status update\b|^{_MONTH} tac report\b|^{_MONTH} \d{{1,2}} llwg report\b"
+    rf"\blli queue (status )?update\b|^{_MONTH} tac report\b|^{_MONTH} \d{{1,2}} llwg report\b"
     r"|\blarge load interconnection status update\b",
     re.IGNORECASE,
 )
@@ -123,13 +125,15 @@ def _meeting_links(links: list[Link], token: str, start: date, end: date) -> lis
     return found
 
 
-def discover(http: HttpClient, *, since_year: int = 2024) -> list[RemoteFile]:
+def discover(http: HttpClient, *, since_year: int = 2024, kinds: str | None = None) -> list[RemoteFile]:
     today = local_today()
     start = date(int(since_year), 1, 1)
     found: dict[str, RemoteFile] = {}
 
+    wanted = set(kinds.split(",")) if kinds else None
+
     def add(link: Link, kind: str, dt: date, page: str, group: str, **meta: object) -> None:
-        if link.url in found:
+        if link.url in found or (wanted is not None and kind not in wanted):
             return
         found[link.url] = RemoteFile(
             url=link.url,
