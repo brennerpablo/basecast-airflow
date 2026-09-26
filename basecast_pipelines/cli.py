@@ -18,7 +18,7 @@ from basecast_pipelines.common.validate import audit_raw
 from basecast_pipelines.config import PROJECT_ROOT, load_settings, local_today
 from basecast_pipelines.sources import SOURCE_MODULES, UnknownSourceError, describe, get_source
 
-app = typer.Typer(no_args_is_help=True, help="basecast data pipelines (raw ingestion).")
+app = typer.Typer(no_args_is_help=True, help="basecast data pipelines (raw ingestion and processing).")
 
 
 def _parse_option(raw: str) -> tuple[str, object]:
@@ -130,3 +130,50 @@ def register(
         storage, source, path, dt=dt.date() if dt else local_today(), origin_url=origin_url, note=note
     )
     typer.echo(f"stored {key}" if key else "same content already registered; nothing written")
+
+
+@app.command()
+def process(
+    source: Annotated[str, typer.Argument(help="Source id with a parser (see `basecast datasets`).")],
+    dataset: Annotated[list[str] | None, typer.Option("--dataset", "-d", help="Only these datasets (repeatable).")] = None,
+    since: Annotated[datetime | None, typer.Option(formats=["%Y-%m-%d"], help="Only raw dt >= this date.")] = None,
+    until: Annotated[datetime | None, typer.Option(formats=["%Y-%m-%d"], help="Only raw dt <= this date.")] = None,
+    reprocess: Annotated[bool, typer.Option("--reprocess", help="Re-parse every selected file, ignoring the state.")] = False,
+    rebuild: Annotated[bool, typer.Option("--rebuild", help="Drop the tables first (schema changes); implies --reprocess.")] = False,
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Parse and summarize; write nothing.")] = False,
+    max_files: Annotated[int | None, typer.Option(help="Parse at most this many files per dataset (dry runs).")] = None,
+    sample_rows: Annotated[int, typer.Option(help="Rows of each dataset to print in a dry run.")] = 5,
+) -> None:
+    """Parse a source's raw files into its datasets (Postgres, or Parquet + BigQuery for the large ones)."""
+    from basecast_pipelines.parsers import NoParserError
+    from basecast_pipelines.processing.runner import run_process
+
+    settings = load_settings()
+    storage = storage_from_uri(settings.storage_root)
+    try:
+        summaries = run_process(
+            source, storage=storage, settings=settings, datasets=dataset, reprocess=reprocess, rebuild=rebuild,
+            dry_run=dry_run, since=since.date() if since else None, until=until.date() if until else None,
+            max_files=max_files,
+        )
+    except NoParserError:
+        raise typer.BadParameter(f"{source!r} has no parser yet; see `basecast datasets`") from None
+    for s in summaries:
+        typer.echo(f"{s.dataset} -> {s.target} ({s.mode}): {s.rows:,} rows from {s.files} files, "
+                   f"{s.files_skipped} unchanged{' (skipped)' if s.skipped else ''}")
+        if dry_run:
+            for name, dtype in s.schema.items():
+                typer.echo(f"    {name:32} {dtype}")
+            if s.sample is not None:
+                with pl.Config(tbl_rows=sample_rows, tbl_cols=-1, tbl_width_chars=200, fmt_str_lengths=40):
+                    typer.echo(s.sample.head(sample_rows))
+
+
+@app.command()
+def datasets() -> None:
+    """List every dataset produced by the parsers, with its target and write mode."""
+    from basecast_pipelines.parsers import get_parser, processable_sources
+
+    for source_id in processable_sources():
+        for d in get_parser(source_id).DATASETS:
+            typer.echo(f"{source_id:26} {d.name:36} {d.target:9} {d.mode:8} v{d.version}")
