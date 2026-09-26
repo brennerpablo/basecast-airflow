@@ -257,7 +257,7 @@ dmin = {(r["weather_zone"], r["year"]): r["excess_mw"] for r in ex_min.iter_rows
 check_rows, zone_ll_hist = [], {z: [] for z in Z}
 for y in (2023, 2024, 2025, 2026):
     m = peak_months[y]
-    a2e_y = pf.interpolate(pts, pf.month_index(m))
+    a2e_y = pf.interpolate(pts, pf.month_end_index(m))
     lzs_y = lz_share_at(date(int(m[:4]), int(m[5:]), 28))
     s_y = geo.rake_to_group(s_base, geo.lz_west_membership(F_NORTH), lzs_y)
     for z in Z:

@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 PRE_BREAK_UNTIL = 2019
 POST_BREAK_FROM = 2022  # first summer counted in U (X1: 2022 is the first summer > 3 SD above the pre-break model)
-SUMMER_POINT = 6.5  # month offset of the summer peak within the year: end of July (peaks fell Jul 20 - Aug 20)
+SUMMER_POINT = 7.0  # month offset of the summer peak within the year: end of July (peaks fell Jul 20 - Aug 20)
 MIN_HORIZON_MONTHS = 6  # Q5: ratios from decks made weeks before year end say nothing about new MW
 QUANTILES = (0.1, 0.5, 0.9)
 
@@ -50,9 +50,14 @@ def month_index(value: str | date) -> float:
     return int(value[:4]) * 12 + int(value[5:7]) - 1
 
 
+def month_end_index(month: str) -> float:
+    """Month index of the end of ``"YYYY-MM"``: where a monthly status reading (the stock at month end) sits."""
+    return month_index(month) + 1
+
+
 def dec_index(year: int) -> float:
     """Month index of the end of December of ``year`` (the realized stock's date)."""
-    return year * 12 + 11
+    return year * 12 + 12
 
 
 def summer_index(year: int) -> float:
@@ -145,7 +150,7 @@ def a2e_points(cv: pl.DataFrame, vintages: pl.DataFrame, bars: pl.DataFrame, as_
     pts: dict[float, tuple[float, str]] = {}
     if not status.is_empty():
         for row in status.drop_nulls("a2e_mw").iter_rows(named=True):
-            pts[month_index(row["month"])] = (row["a2e_mw"], "status_by_month")
+            pts[month_end_index(row["month"])] = (row["a2e_mw"], "status_by_month")
     for row in published_by(vintages, as_of).drop_nulls("a2e_stock_mw").iter_rows(named=True):
         idx = float(row["vintage"].year * 12 + row["vintage"].month - 1)
         pts.setdefault(idx, (row["a2e_stock_mw"], "deck_stock"))
@@ -176,7 +181,7 @@ def observed_factor(
         if energized.is_empty() or month > energized["month"].max() or month < energized["month"].min():
             continue
         sim, used = px.value_asof(energized, month, "simultaneous_mw")
-        a2e = interpolate(pts, month_index(month))
+        a2e = interpolate(pts, month_end_index(month))
         if sim is None or not a2e:
             continue
         rows.append({"year": year, "peak_month": month, "simultaneous_mw": sim, "sim_month": used, "a2e_mw": a2e,
@@ -195,7 +200,7 @@ def unattributed(
     for year in sorted(excess):
         if year < first_year or year not in peak_months:
             continue
-        a2e = interpolate(pts, month_index(peak_months[year]))
+        a2e = interpolate(pts, month_end_index(peak_months[year]))
         if a2e is None:
             continue
         rows.append({"year": year, "excess_mw": excess[year], "a2e_mw": a2e, "ll_mw": factor * a2e,

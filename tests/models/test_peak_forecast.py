@@ -12,7 +12,10 @@ from basecast_pipelines.models import peak_forecast as pf
 
 def test_month_index_and_interpolate():
     assert pf.month_index("2025-01") == 2025 * 12
-    assert pf.dec_index(2025) == pf.month_index("2025-12")
+    # X16 #3: month-end convention. dec_index was Dec 1 and the summer point Jul 16
+    assert pf.month_index(date(2025, 12, 31)) < pf.dec_index(2025) == pf.month_index(date(2026, 1, 1))
+    assert pf.month_end_index("2025-12") == pf.dec_index(2025)
+    assert pf.summer_index(2025) == pf.month_index(date(2025, 8, 1))  # end of July
     pts = [(0.0, 10.0), (10.0, 20.0)]
     assert pf.interpolate(pts, -1) is None
     assert pf.interpolate(pts, 5) == pytest.approx(15)
@@ -71,13 +74,13 @@ def test_a2e_path_runs_from_the_vintage_stock_through_projected_decembers():
     path = pf.a2e_path(10_000.0, date(2026, 6, 1), promised, 0.2, [2027])
     dec26 = 10_000 + 0.2 * 10_000
     dec27 = 10_000 + 0.2 * 30_000
-    assert path[2027] == pytest.approx(dec26 + (dec27 - dec26) * (pf.SUMMER_POINT + 1) / 12)
+    assert path[2027] == pytest.approx(dec26 + (dec27 - dec26) * 7 / 12)  # end of Dec 2026 -> end of Jul 2027
     # a promise below the current stock adds nothing
     assert pf.a2e_path(10_000.0, date(2026, 6, 1), {2026: 5_000.0, 2027: 5_000.0}, 0.5, [2027])[2027] == 10_000
 
 
 def test_unattributed_subtracts_the_observed_large_load():
-    points = pl.DataFrame({"month_idx": [pf.month_index("2023-01"), pf.month_index("2024-01")],
+    points = pl.DataFrame({"month_idx": [pf.month_end_index("2023-01"), pf.month_end_index("2024-01")],
                            "a2e_mw": [1000.0, 3400.0]})
     u = pf.unattributed({2021: 500.0, 2023: 5000.0}, points, {2021: "2021-08", 2023: "2023-07"}, 0.5)
     assert u["year"].to_list() == [2023]  # 2021 is before the post-break window

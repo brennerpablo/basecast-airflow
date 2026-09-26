@@ -170,11 +170,11 @@ fc_all.write_csv(out_path("x7_forecast_ercot.csv"))
 dec = dict(zip(realized["target_year"].to_list(), realized["realized_a2e_mw"].to_list(), strict=True))
 pace = (dec[2025] - dec[2022]) / 3
 a2e_jun26 = pf.interpolate(list(zip(now["points"]["month_idx"].to_list(), now["points"]["a2e_mw"].to_list(),
-                                    strict=True)), pf.month_index("2026-06"))
+                                    strict=True)), pf.month_end_index("2026-06"))
 org_p50 = dict(zip(*fc_pre.filter(pl.col("layer") == "organic").select("year", "p50_mw").to_dict(as_series=False).values(),
                    strict=True))
 u_p50 = float(np.median(now["u"]["u_mw"].to_numpy()))
-pace_rows = [{"year": y, "a2e_summer_mw": a2e_jun26 + pace * (pf.summer_index(y) - pf.month_index("2026-06")) / 12,
+pace_rows = [{"year": y, "a2e_summer_mw": a2e_jun26 + pace * (pf.summer_index(y) - pf.month_end_index("2026-06")) / 12,
               } for y in years_fc]
 pace_tab = pl.DataFrame(pace_rows).with_columns((pl.col("a2e_summer_mw") * now["factor"]).alias("ll_mw")).with_columns(
     (pl.col("year").replace_strict(org_p50, return_dtype=pl.Float64) + pl.col("ll_mw") + u_p50).alias("total_p50_mw"))
@@ -243,7 +243,7 @@ pts_now_l = list(zip(pts_now["month_idx"].to_list(), pts_now["a2e_mw"].to_list()
 
 def realized_ll(year: int) -> float:
     """What the LL layer should have been: today's factor x today's reading of A2E at that summer's peak month."""
-    return now["factor"] * pf.interpolate(pts_now_l, pf.month_index(peak_months[year]))
+    return now["factor"] * pf.interpolate(pts_now_l, pf.month_end_index(peak_months[year]))
 
 
 def last_summer_of(as_of: date) -> int:
