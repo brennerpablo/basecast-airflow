@@ -1,0 +1,49 @@
+# Build switches for the marts (docs/build/BUILD_00_overview.md §3). Each switch has a `value` and a `status`;
+# `default_pending_review` means Pablo has not reviewed the finding (R*n* = item n of the review queue in
+# docs/analysis/findings.md). basecast_pipelines/marts/config.py checks every value against its allowed set.
+
+scoring:
+  weights_set: {value: q3, status: default_pending_review}  # R1: q3 | x4 (config/account_score.yaml); blocks A-M8
+
+large_load:
+  mode: {value: estimated, status: default_pending_review}  # R3: estimated | scenarios (> 1 error in 10 → scenarios)
+  zone_allocation: {value: x11, status: default_pending_review}  # R16: x11 | x7_fixed
+
+queue:
+  model: {value: entry_ia_sm, status: default_pending_review}  # R4: entry_ia_sm | cohort
+  horizons: {value: [2027, 2028], status: default_pending_review}  # later years only as P2 (beyond_backtested_window)
+
+forecast:
+  organic_fit_end: {value: 2019, status: default_pending_review}  # R5
+  unattributed_layer: {value: separate, status: default_pending_review}  # R9
+  default_variant: {value: deck_pre_batch_zero, status: default_pending_review}  # R13
+  last_year: {value: 2030, status: default_pending_review}  # R13
+
+dc_sites:
+  metro_rule: {value: county_list_13, status: default_pending_review}  # R7: county_list_13 | density_100
+  include_naics_only: {value: true, status: default_pending_review}  # R7
+
+triggers:
+  gen_storage_ia: {value: strong, status: default_pending_review}  # R12: strong | context
+
+munis:
+  place_facts: {value: true, status: default_pending_review}  # R15
+  place_permit_trigger: {value: true, status: default_pending_review}  # R15
+
+four_cp:  # R11, closed by X15
+  rates:
+    value:
+      - {year: 2025, usd_per_kw_year: 68.547, docket: "57491", status: final}
+      - {year: 2026, usd_per_kw_year: 75.527, docket: "59080", status: pending}
+    status: reviewed
+
+# Validation lock (BUILD_00 §7): while `revealed` is false, the five accounts below are held out by name before
+# any signal is computed, and no mart carries is_base_partner. Only A-M8, after Pablo's go, sets it to true.
+validation:
+  revealed: false
+  held_out_names:
+    - Bandera Electric Cooperative
+    - Guadalupe Valley Electric Cooperative
+    - CoServ
+    - Farmers Electric Cooperative
+    - Austin Energy

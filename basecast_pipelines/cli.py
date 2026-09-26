@@ -213,3 +213,99 @@ def export_geo(
     for name, size in sizes.items():
         typer.echo(f"{out_dir / name}: {size:,} bytes")
     typer.echo(f"tolerance {tol:g} m")
+
+
+marts_app = typer.Typer(no_args_is_help=True, help="Marts: small typed tables for the API (docs/build/BUILD_A).")
+app.add_typer(marts_app, name="marts")
+
+
+@marts_app.command("list")
+def marts_list() -> None:
+    """List the marts in build order, with key and inputs."""
+    from basecast_pipelines.marts.catalog import MARTS
+
+    for m in MARTS.values():
+        typer.echo(f"{m.name:34} v{m.version}  key={','.join(m.key)}  inputs={','.join(m.inputs)}")
+
+
+def _echo_outcomes(outcomes) -> bool:
+    ok = True
+    for o in outcomes:
+        state = "written" if o.written else "NOT WRITTEN"
+        counts = {s: sum(c["status"] == s for c in o.checks) for s in ("passed", "failed", "skipped")}
+        typer.echo(f"{o.name:34} {o.rows:>7} rows  {state:11} checks {counts}  {o.seconds:.1f} s")
+        for c in o.checks:
+            if c["status"] == "failed":
+                ok = False
+                typer.echo(f"    FAILED {c['check']}: expected {c.get('expected')!r}, got {c.get('actual')!r}"
+                           f"{' ' + c['error'] if c.get('error') else ''}")
+        ok = ok and o.written
+    return ok
+
+
+@marts_app.command("build")
+def marts_build(
+    names: Annotated[list[str] | None, typer.Argument(help="Mart names (see `basecast marts list`).")] = None,
+    all_marts: Annotated[bool, typer.Option("--all", help="Build every mart.")] = False,
+    as_of: Annotated[datetime | None, typer.Option(formats=["%Y-%m-%d"], help="Default: today (Chicago).")] = None,
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="Parquet to data/marts_dry/; no database.")] = False,
+    allow_dirty: Annotated[
+        bool, typer.Option("--allow-dirty", help="Write to Postgres from uncommitted code (not for real builds).")
+    ] = False,
+) -> None:
+    """Build, check and write marts (Postgres public.mart_* as basecast_writer; etl_run source marts, stage model).
+
+    Real builds run from committed code: a clean checkout of HEAD, or BASECAST_GIT_SHA set by the deploy."""
+    from basecast_pipelines.common.etl_run import EtlRun
+    from basecast_pipelines.marts import catalog, core
+    from basecast_pipelines.marts import config as marts_config
+    from basecast_pipelines.models.db import read_sql
+
+    if not names and not all_marts:
+        raise typer.BadParameter("name the marts or pass --all")
+    marts = catalog.select(None if all_marts else names)
+    day = as_of.date() if as_of else local_today()
+    ctx = core.MartContext(day, marts_config.load(), read_sql)
+    code = core.code_version(PROJECT_ROOT)
+    if dry_run:
+        outcomes = core.build_marts(marts, ctx, code=code, dry_dir=PROJECT_ROOT / "data" / "marts_dry")
+    else:
+        settings = load_settings()
+        if not settings.db_url:
+            raise typer.BadParameter("set BASECAST_DB_URL (basecast_writer)")
+        if not core.is_clean(code) and not allow_dirty:
+            raise typer.BadParameter(
+                f"code version {code}: build from a clean checkout of HEAD (with BASECAST_GIT_SHA) or pass --allow-dirty"
+            )
+        params = {"marts": [m.name for m in marts], "as_of": day.isoformat(), "code": code, "dry_run": False}
+        with EtlRun(core.SOURCE_ID, storage_from_uri(settings.storage_root), params=params, stage=core.STAGE) as run:
+            outcomes = core.build_marts(marts, ctx, code=code, db_url=settings.db_url, run=run)
+    typer.echo(f"as_of {day}, code {code}{' (dry run)' if dry_run else ''}")
+    if not _echo_outcomes(outcomes):
+        raise typer.Exit(1)
+
+
+@marts_app.command("check")
+def marts_check(
+    names: Annotated[list[str] | None, typer.Argument(help="Mart names; default: every built mart.")] = None,
+) -> None:
+    """Re-run the checks on the marts in Postgres (read as basecast_reader), at the as_of each was built for."""
+    import json
+    from datetime import date
+
+    from basecast_pipelines.marts import catalog, core
+    from basecast_pipelines.models.db import read_sql
+
+    ok = True
+    for mart in catalog.select(names):
+        if read_sql("select to_regclass(%(t)s)::text as t", {"t": f"public.{mart.name}"})["t"][0] is None:
+            typer.echo(f"{mart.name:34} not built")
+            continue
+        meta = read_sql("select value::text as v from mart_meta where mart = %(m)s and key = 'as_of'",
+                        {"m": mart.meta_name})
+        built_as_of = date.fromisoformat(json.loads(meta["v"][0])) if meta.height else local_today()
+        frame = read_sql(f'select * from "{mart.name}"')
+        outcome = core.MartOutcome(mart.name, frame.height, True, core.run_checks(mart, frame, built_as_of), 0.0)
+        ok = _echo_outcomes([outcome]) and ok
+    if not ok:
+        raise typer.Exit(1)

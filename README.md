@@ -56,6 +56,24 @@ uv run pytest                                    # tests (offline, small real fi
 
 `docs/processing.md` explains the parser contract, write modes and rules.
 
+## Marts
+
+The marts are the small typed tables the API serves (`public.mart_*`, plus `mart_meta`), built from the processed
+tables by `basecast_pipelines/marts/` (plan and golden checks in `docs/build/BUILD_A_airflow_marts.md`; switches in
+`config/marts.yaml`). They need the `analysis` group (numpy, rapidfuzz):
+
+```bash
+uv run --group analysis basecast marts list                               # marts in build order
+uv run --group analysis basecast marts build --all --as-of 2026-09-26 --dry-run   # Parquet to data/marts_dry/
+uv run --group analysis basecast marts build --all                        # write Postgres (BASECAST_DB_URL, writer)
+uv run --group analysis basecast marts check                              # re-run the checks on what is in Postgres
+uv run --group analysis basecast export-geo                               # county / weather-zone GeoJSON for the app
+```
+
+A real build writes only from committed code: run it from a clean checkout of HEAD with `BASECAST_GIT_SHA` set
+(or `--allow-dirty` for a scratch database). A mart whose golden check fails is not written; the previous version
+keeps being served and the `etl_run` row (source `marts`, stage `model`) ends `partial`.
+
 ## Airflow
 
 - `dags/dag_<source>_incremental.py`: one per source, scheduled (cadences in

@@ -103,7 +103,8 @@ basecast-airflow/
 │   ├── processing/           # parser contract (Dataset, SqlDataset), runner, tabular helpers
 │   ├── parsers/              # one module per source, same path as sources/ (docs/processing.md)
 │   ├── adapters/             # fleet_data_source.py, utility_data_source.py (interfaces + simulated)
-│   └── cli.py                # `basecast run|process|datasets|runs|audit|inventory`
+│   ├── marts/                # core.py (Mart, build, checks, write), one module per screen group, catalog.py
+│   └── cli.py                # `basecast run|process|datasets|runs|audit|inventory|marts|export-geo`
 ├── dags/                     # dag_<source>_incremental.py (thin), dag_source_full.py, basecast_dags/ (factory, cadences)
 ├── deploy/                   # gcp/ (setup scripts, 05 deploys HEAD to the VM), airflow/ (compose, image, pools)
 ├── tests/                    # pytest with small fixtures (trimmed real samples)
