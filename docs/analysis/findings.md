@@ -170,4 +170,9 @@ is a candidate, not yet in `docs/video-numbers.md`.
   greater", in response to Governor Abbott's August 3 directive; the PUCT presentation of 2026-08-20 (p. 7) lists 17
   large loads (6,608 MW) affected through the end of 2026. It explains why the approved stock sat at 8.8–8.9 GW all of
   2026 (X7) and biases Q5's partial 2026 ratio (0.28) low: read 2026 as a policy pause, not as realization.
+- **The 4CP offer in dollars (X3 + X15, arithmetic only).** Each MW a fleet takes off a co-op's load in all four 4CP
+  intervals lowers that co-op's wholesale transmission charges by about $68,547 a year at the 2025 postage-stamp rate
+  ($75,527 at the pending 2026 rate), billed the year after the summer. Caveats: it is the co-op's avoided cost, not
+  Base's revenue; it assumes every interval is hit (a 15:45–17:45 discharge hit 63 of 64 in 2010–2025, ~56 dispatch
+  days a summer with a weather-based call); the fleet's kW per home is not verified.
 - Every figure lives in `analysis/out/` (gitignored); re-run the scripts to regenerate them.
