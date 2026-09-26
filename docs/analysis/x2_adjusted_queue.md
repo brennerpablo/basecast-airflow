@@ -118,7 +118,7 @@ within the window.
 | Queue of | projects | raw MW | **predicted** | **actual** | **error** | developer projected COD | raw |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Jun 2022 | 881 | 174,846 | 13,943 | 15,940 | **−12.5%** | 121,064 (+660%) | +997% |
-| Jan 2023 | 1,066 | 215,786 | 20,165 | 18,428 | **+9.4%** | 141,880 (+570%) | +1,071% |
+| Jan 2023 | 1,066 | 215,786 | 20,165 | 18,428 | **+9.4%** | 141,880 (+670%) | +1,071% |
 | Aug 2024 | 1,614 | 330,882 | 28,960 | 28,460 | **+1.8%** | 145,631 (+412%) | +1,063% |
 
 **Statewide mean absolute error 7.9% (mean −0.4%, worst 12.5%).** The actual falls within ±1.2 Bernoulli standard
@@ -191,7 +191,7 @@ be coincidences, and the 57 unmatched (e.g. BlueBell Solar, High Lonesome Wind, 
 > "ERCOT's generation queue lists 438 GW. Our model expects about **39 GW to reach commercial operation by the end of
 > 2027 and 70 GW by the end of 2028**, roughly 1 MW in 6. Run from past queue snapshots, the same method landed
 > **within 13% of what actually got built over the next two years** (three snapshots, 2022–2024). Developers' own COD
-> dates overstated it 4–7×."
+> dates came to 5–8× what got built."
 
 Caveats to keep with it: the backtest covers 24-month windows on three snapshots, which also picked the model. Dec 2028
 lies beyond the tested window. 8.3 GW of the Dec 2027 number is IA-stage gas, much of it large projects (≥ 880 MW) that are outside
@@ -199,7 +199,7 @@ the history the curves were fit on.
 
 ## Proposed decisions.md lines
 
-- 2026-09-26 — The Explorer's adjusted queue = Σ capacity × P(COD by the horizon | stage, months at the stage): IA-stage projects use the MW-weighted Aalen–Johansen CIF from the IA, conditioned at the elapsed time ((F(e+h) − F(e)) / S(e)); entry-stage projects (no IA, including FIS approved) are scored semi-Markov (time to IA from entry, convolved with the IA curve). — Backtest from the 2022-06, 2023-01 and 2024-08 queues, 24 months ahead: statewide error −12.5% / +9.4% / +1.8%, vs +48% mean for the plain landmark curves and 4–7× for developer COD dates.
+- 2026-09-26 — The Explorer's adjusted queue = Σ capacity × P(COD by the horizon | stage, months at the stage): IA-stage projects use the MW-weighted Aalen–Johansen CIF from the IA, conditioned at the elapsed time ((F(e+h) − F(e)) / S(e)); entry-stage projects (no IA, including FIS approved) are scored semi-Markov (time to IA from entry, convolved with the IA curve). — Backtest from the 2022-06, 2023-01 and 2024-08 queues, 24 months ahead: statewide error −12.5% / +9.4% / +1.8%, vs +48% mean for the plain landmark curves and 5–8× for developer COD dates.
 - 2026-09-26 — Adjusted-queue curves are MW-weighted, and FIS approval and synchronization are not stages. — Count weighting overpredicts (mean error 38% vs 8%); adding FIS approval or synchronization as a stage made the backtest worse (57% and 36%).
 - 2026-09-26 — Past the curve's support (fewer than 10 projects at risk) the clock is clamped so the horizon window ends at the last supported time. — The step CIF is flat past its last event, which would give old projects a probability of 0.
 - 2026-09-26 — [pending Pablo] The Explorer shows Dec 2027 and Dec 2028 (end-of-year horizons from the latest GIS report), with the backtest error as the credibility note; horizons beyond 24 months are labelled "beyond the backtested window". — Only 24-month windows were backtested.
