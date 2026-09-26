@@ -305,7 +305,10 @@ def marts_check(
         meta = read_sql("select value::text as v from mart_meta where mart = %(m)s and key = 'as_of'",
                         {"m": mart.meta_name})
         built_as_of = date.fromisoformat(json.loads(meta["v"][0])) if meta.height else local_today()
-        frame = read_sql(f'select * from "{mart.name}"')
+        types = read_sql("select column_name, data_type from information_schema.columns where table_schema = "
+                         "'public' and table_name = %(t)s order by ordinal_position", {"t": mart.name})
+        cols = ", ".join(f'"{c}"::text as "{c}"' if t in ("jsonb", "json") else f'"{c}"' for c, t in types.rows())
+        frame = read_sql(f'select {cols} from "{mart.name}"')
         checks = core.run_checks(mart, frame, built_as_of, marts_config.load())
         outcome = core.MartOutcome(mart.name, frame.height, True, checks, 0.0)
         ok = _echo_outcomes([outcome]) and ok
