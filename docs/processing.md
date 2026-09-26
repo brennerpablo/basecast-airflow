@@ -53,6 +53,13 @@ DATASETS = [
 `lake_processed` records (dataset, raw key, sha256, version), so scheduled runs parse only new raw files.
 `--reprocess` re-parses everything selected; `--rebuild` also drops the tables first (schema changes).
 
+- `by_file` prunes: when a run sees every raw file (no `--since`/`--until`/`--max-files`), rows of files
+  the dataset no longer selects (a corrected report, a newer copy of the same URL) are deleted.
+- `replace` rebuilds the table when the columns change (added, removed or retyped).
+- Two sources feeding one table: give each source its own table and combine them in a SQL dataset
+  declared by both modules (see `ercot_load_hourly_wz`), so neither can overwrite or drop the other's rows.
+- Identifiers longer than 63 bytes are refused (Postgres would silently truncate them).
+
 ### BigQuery datasets
 
 Use `by_file` or `by_key` and set `partition=("<date or timestamp column>", "MONTH")` (a table may have at
@@ -74,7 +81,7 @@ not exist yet, the dataset is skipped with a warning.
 ### PostGIS
 
 Return geometries as GeoJSON text and declare them: `geometry={"geom": 4326}` (the SRID of the input
-coordinates; the column is stored as `geometry(Geometry, 4326)`, transformed if needed).
+coordinates; the column is stored as `geometry(Geometry, 4326)`, transformed if needed, with a GiST index).
 
 ## Rules
 
@@ -92,7 +99,8 @@ coordinates; the column is stored as `geometry(Geometry, 4326)`, transformed if 
 - **No nested columns:** encode lists and structs as JSON text.
 - **Numbers read from PDFs or charts** carry `extraction_method` and `verified` (false until a human
   checks them).
-- **Memory:** the Airflow VM leaves ~2.5 GB to tasks. Parse per file; keep `build` for small inputs.
+- **Memory:** the Airflow VM leaves ~2.5 GB to tasks. Parse per file; use `build` when the inputs are
+  small, or when collecting pages one by one keeps memory lower than concatenating parsed files.
 
 ## Checking a parser
 

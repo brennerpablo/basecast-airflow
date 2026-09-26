@@ -84,3 +84,64 @@ def test_sql_dataset_is_rebuilt_after_the_module_datasets(raw_file, storage, mon
     assert (base.rows, derived.rows) == (2, 1)
     again, _ = runner.run_process("s", storage=storage, settings=settings)
     assert again.files_skipped == 1 and again.rows == 0
+
+
+def _db_or_skip(monkeypatch):
+    import os
+
+    url = os.environ.get("BASECAST_TEST_DB_URL")
+    if not url:
+        pytest.skip("BASECAST_TEST_DB_URL not set")
+    monkeypatch.setenv("BASECAST_DB_URL", url)
+    return url
+
+
+def test_by_file_prunes_rows_of_files_no_longer_selected(raw_file, storage, monkeypatch):
+    url = _db_or_skip(monkeypatch)
+    raw_file("s", "ercot_ziptozone/appendix_d_trimmed.xlsx", dt=date(2026, 1, 1))
+
+    class Module:
+        DATASETS = [
+            Dataset(name="_t_prune", target="postgres", mode="by_file", description="", select=latest_dt,
+                    parse=lambda f: pl.DataFrame({"dt": [f.dt]})),
+        ]
+
+    monkeypatch.setattr(runner, "get_parser", lambda source: Module)
+    settings = Settings("file://unused", "ua", db_url=url)
+    runner.run_process("s", storage=storage, settings=settings, rebuild=True)
+    raw_file("s", "ercot_ziptozone/appendix_d_trimmed.xlsx", dt=date(2026, 2, 1), name="newer.xlsx")
+    [summary] = runner.run_process("s", storage=storage, settings=settings)
+    assert summary.files_pruned == 1
+    from basecast_pipelines.common.db import connect
+
+    with connect(url) as conn:
+        assert conn.execute("SELECT dt FROM _t_prune").fetchall() == [(date(2026, 2, 1),)]
+
+
+def test_replace_rebuilds_the_table_when_a_column_disappears(raw_file, storage, monkeypatch):
+    url = _db_or_skip(monkeypatch)
+    raw_file("s", "ercot_ziptozone/appendix_d_trimmed.xlsx")
+    columns = {"a": [1], "b": [2]}
+
+    class Module:
+        DATASETS = [
+            Dataset(name="_t_replace", target="postgres", mode="replace", description="",
+                    parse=lambda f: pl.DataFrame(columns)),
+        ]
+
+    monkeypatch.setattr(runner, "get_parser", lambda source: Module)
+    settings = Settings("file://unused", "ua", db_url=url)
+    runner.run_process("s", storage=storage, settings=settings, rebuild=True)
+    columns.pop("b")
+    runner.run_process("s", storage=storage, settings=settings, reprocess=True)
+    from basecast_pipelines.common.db import connect, existing_columns
+
+    with connect(url) as conn:
+        assert "b" not in existing_columns(conn, "_t_replace")
+
+
+def test_long_identifiers_are_refused():
+    from basecast_pipelines.common.db import column_types
+
+    with pytest.raises(ValueError):
+        column_types(pl.DataFrame({"x" * 64: [1]}))

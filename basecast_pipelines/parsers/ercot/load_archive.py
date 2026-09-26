@@ -28,7 +28,7 @@ import zipfile
 
 import polars as pl
 
-from basecast_pipelines.parsers.ercot._load_common import KEY, TABLE, hourly_long, parse_hour_labels, zone_columns
+from basecast_pipelines.parsers.ercot._load_common import ARCHIVE_TABLE, KEY, combined_load_table, hourly_long, parse_hour_labels, zone_columns
 from basecast_pipelines.processing.core import Dataset, RawFile
 from basecast_pipelines.processing.tabular import find_header_row, read_grid, sheet_names, with_header
 
@@ -68,7 +68,7 @@ def parse_native_load(f: RawFile) -> pl.DataFrame:
 
 DATASETS = [
     Dataset(
-        name=TABLE,
+        name=ARCHIVE_TABLE,
         target="postgres",
         mode="by_key",
         key=KEY,
@@ -80,3 +80,5 @@ DATASETS = [
         inputs=lambda f: f.suffix in {".xls", ".xlsx", ".zip"},
     ),
 ]
+
+SQL_DATASETS = [combined_load_table()]

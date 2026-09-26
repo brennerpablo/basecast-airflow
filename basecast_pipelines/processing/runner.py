@@ -14,7 +14,7 @@ from datetime import date, datetime, timezone
 
 import polars as pl
 
-from basecast_pipelines.common.db import SchemaMismatchError, connect, ensure_bookkeeping, write_table
+from basecast_pipelines.common.db import SchemaMismatchError, connect, delete_files, ensure_bookkeeping, write_table
 from basecast_pipelines.common.etl_run import EtlRun
 from basecast_pipelines.common.storage import Storage
 from basecast_pipelines.config import Settings, local_today
@@ -37,6 +37,7 @@ class DatasetSummary:
     files_skipped: int = 0
     rows: int = 0
     skipped: bool = False
+    files_pruned: int = 0
     schema: dict[str, str] = field(default_factory=dict)
     sample: pl.DataFrame | None = None
     rows_by_file: dict[str, int] = field(default_factory=dict)
@@ -50,6 +51,7 @@ class DatasetSummary:
             "files_skipped": self.files_skipped,
             "rows": self.rows,
             "skipped": self.skipped,
+            "files_pruned": self.files_pruned,
         }
 
 
@@ -115,6 +117,15 @@ class _State:
         for f in files:
             self.seen[f.key] = (f.sha256, version)
 
+    def forget(self, keys: Sequence[str]) -> None:
+        if self.conn is None:
+            return
+        self.conn.execute(
+            "DELETE FROM lake_processed WHERE dataset = %s AND raw_key = ANY(%s)", (self.dataset, list(keys))
+        )
+        for k in keys:
+            self.seen.pop(k, None)
+
 
 class _Writer:
     """Writes one dataset's batches to its target and records the processing state."""
@@ -171,6 +182,20 @@ class _Writer:
                 log.warning("%s: schema changed, recreating the table (replace mode)", ds.name)
                 recreate = True
 
+    def prune(self, keys: Sequence[str], state: _State) -> None:
+        """Drop the rows of raw files the dataset no longer selects (superseded or corrected files)."""
+        ds = self.ds
+        if ds.target == "postgres":
+            with self.conn.transaction():
+                delete_files(self.conn, ds.name, keys)
+                state.forget(keys)
+            return
+        from basecast_pipelines.common.bq import delete_files as bq_delete_files
+
+        bq_delete_files(self.bq, dataset=self.settings.bq_dataset, table=ds.name, source_files=keys)
+        with self.conn.transaction():
+            state.forget(keys)
+
     def _write_bigquery(self, df: pl.DataFrame, files: Sequence[RawFile],
                         parquet_parts: dict[str, pl.DataFrame] | None) -> None:
         from basecast_pipelines.common.bq import load_parquet
@@ -207,7 +232,10 @@ def _process_dataset(
     rebuild: bool,
     dry_run: bool,
     max_files: int | None,
+    complete: bool = False,
 ) -> DatasetSummary:
+    """``complete``: every raw file of the source was listed (no dt window, no file cap), so by_file rows
+    of files the dataset no longer selects can be pruned."""
     summary = DatasetSummary(ds.name, ds.target, ds.mode)
     files = ds.files(raw)
     if max_files is not None:
@@ -288,6 +316,12 @@ def _process_dataset(
             flush()
     if not dry_run:
         flush()
+        if ds.mode == "by_file" and complete and conn is not None:
+            stale = sorted(set(state.seen) - {f.key for f in files})
+            if stale:
+                log.info("%s: pruning rows of %d files no longer selected", ds.name, len(stale))
+                writer.prune(stale, state)
+                summary.files_pruned = len(stale)
     return summary
 
 
@@ -352,6 +386,7 @@ def run_process(
             summary = _process_dataset(
                 ds, raw, storage=storage, settings=settings, conn=conn, reprocess=reprocess,
                 rebuild=rebuild, dry_run=dry_run, max_files=max_files,
+                complete=since is None and until is None and max_files is None,
             )
             log.info("%s: %s", ds.name, summary.event())
             out.append(summary)

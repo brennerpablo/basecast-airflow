@@ -114,3 +114,19 @@ def load_parquet(
         log.info("%s: %s from %d files", target, mode, len(sources))
     finally:
         client.delete_table(stage, not_found_ok=True)
+
+
+def delete_files(client, *, dataset: str, table: str, source_files: Sequence[str]) -> None:
+    """Remove the rows of raw files a dataset no longer reads (by_file mode)."""
+    from google.api_core.exceptions import NotFound
+    from google.cloud import bigquery
+
+    target = f"{client.project}.{dataset}.{table}"
+    try:
+        client.get_table(target)
+    except NotFound:
+        return
+    config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ArrayQueryParameter("files", "STRING", list(source_files))]
+    )
+    client.query(f"DELETE FROM `{target}` WHERE source_file IN UNNEST(@files)", job_config=config).result()

@@ -20,8 +20,18 @@ COPY_CHUNK_ROWS = 200_000
 SRID = 4326
 
 
+MAX_IDENTIFIER_BYTES = 63
+
+
 class SchemaMismatchError(Exception):
     """An existing table has a column whose type differs from the new data (reprocess to rebuild it)."""
+
+
+def check_identifier(name: str) -> str:
+    """Postgres silently truncates identifiers past 63 bytes, which breaks the next write: refuse them."""
+    if len(name.encode()) > MAX_IDENTIFIER_BYTES:
+        raise ValueError(f"identifier longer than {MAX_IDENTIFIER_BYTES} bytes: {name!r}")
+    return name
 
 
 def connect(url: str) -> psycopg.Connection:
@@ -58,6 +68,8 @@ def pg_type(dtype: pl.DataType) -> str:
 
 def column_types(df: pl.DataFrame, geometry: Mapping[str, int] | None = None) -> dict[str, str]:
     geometry = geometry or {}
+    for name in df.columns:
+        check_identifier(name)
     return {
         name: f"geometry(Geometry,{SRID})" if name in geometry else pg_type(dtype)
         for name, dtype in df.schema.items()
@@ -83,8 +95,12 @@ def ensure_table(
     columns: Mapping[str, str],
     *,
     indexes: Iterable[Sequence[str]] = (),
+    spatial: Iterable[str] = (),
+    exact: bool = False,
 ) -> None:
-    """Create the table, or add the columns it lacks. A type change raises ``SchemaMismatchError``."""
+    """Create the table, or add the columns it lacks. A type change raises ``SchemaMismatchError``, and so
+    does a column the new data no longer has when ``exact`` (replace mode rebuilds the table then)."""
+    check_identifier(table)
     current = existing_columns(conn, table)
     if current is None:
         conn.execute(
@@ -105,6 +121,15 @@ def ensure_table(
                 )
             elif current[name].lower() != typ.lower():
                 raise SchemaMismatchError(f"{table}.{name}: table has {current[name]}, data has {typ}")
+        gone = [c for c in current if c not in columns]
+        if exact and gone:
+            raise SchemaMismatchError(f"{table}: columns no longer produced: {gone}")
+    for col in spatial:
+        conn.execute(
+            sql.SQL("CREATE INDEX IF NOT EXISTS {} ON {} USING gist ({})").format(
+                sql.Identifier(f"{table}__{col}_gist"[:63]), sql.Identifier(table), sql.Identifier(col)
+            )
+        )
     for cols in indexes:
         conn.execute(
             sql.SQL("CREATE INDEX IF NOT EXISTS {} ON {} ({})").format(
@@ -165,7 +190,7 @@ def write_table(
     if recreate:
         conn.execute(sql.SQL("DROP TABLE IF EXISTS {}").format(sql.Identifier(table)))
     indexes = [["source_file"]] if mode == "by_file" else [list(key)] if mode == "by_key" else []
-    ensure_table(conn, table, columns, indexes=indexes)
+    ensure_table(conn, table, columns, indexes=indexes, spatial=list(geometry), exact=mode == "replace")
 
     stage = f"_stage_{table}"[:63]
     conn.execute(
@@ -210,6 +235,16 @@ def write_table(
     )
     log.info("%s: %s %s rows", table, mode, df.height)
     return df.height
+
+
+def delete_files(conn: psycopg.Connection, table: str, source_files: Sequence[str]) -> int:
+    """Remove the rows of raw files a dataset no longer reads (by_file mode); the caller commits."""
+    if existing_columns(conn, table) is None:
+        return 0
+    cur = conn.execute(
+        sql.SQL("DELETE FROM {} WHERE source_file = ANY(%s)").format(sql.Identifier(table)), (list(source_files),)
+    )
+    return cur.rowcount
 
 
 # --- bookkeeping tables ------------------------------------------------------------------------------

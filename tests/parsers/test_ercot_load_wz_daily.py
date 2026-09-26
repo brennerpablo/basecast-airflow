@@ -36,7 +36,7 @@ def test_same_schema_as_the_archive(raw_file):
     archive = parse_native_load(
         raw_file("ercot_native_load", "ercot_native_load/Native_Load_2025_trimmed.zip", name="Native_Load_2025.zip")
     )
-    assert daily.schema == archive.schema  # both write ercot_load_hourly_wz
+    assert daily.schema == archive.schema  # both feed ercot_load_hourly_wz
 
 
 def test_simulated_fall_back_day(raw_file):

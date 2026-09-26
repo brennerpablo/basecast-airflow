@@ -22,7 +22,7 @@ import zipfile
 
 import polars as pl
 
-from basecast_pipelines.parsers.ercot._load_common import KEY, TABLE, hourly_long, zone_columns
+from basecast_pipelines.parsers.ercot._load_common import NP6345_TABLE, KEY, combined_load_table, hourly_long, zone_columns
 from basecast_pipelines.processing.core import Dataset, RawFile
 
 SOURCE_ID = "ercot_load_wz_daily"
@@ -68,15 +68,17 @@ def parse_load_wz_daily(f: RawFile) -> pl.DataFrame:
 
 DATASETS = [
     Dataset(
-        name=TABLE,
+        name=NP6345_TABLE,
         target="postgres",
         mode="by_key",
         key=KEY,
         description=(
             "Hourly actual load by ERCOT weather zone plus the ERCOT total (MW) from NP6-345-CD; same table as "
-            "the Hourly Load Data Archives, filling the days after the last archive update."
+            "the Hourly Load Data Archives (combined in ercot_load_hourly_wz), filling the days after the last archive update."
         ),
         parse=parse_load_wz_daily,
         inputs=lambda f: f.suffix == ".zip" and "csv" in f.name.lower(),
     ),
 ]
+
+SQL_DATASETS = [combined_load_table()]

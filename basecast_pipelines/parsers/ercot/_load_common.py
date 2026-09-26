@@ -24,6 +24,8 @@ import polars as pl
 from basecast_pipelines.processing.tabular import num
 
 TABLE = "ercot_load_hourly_wz"
+ARCHIVE_TABLE = "ercot_load_hourly_wz_archive"
+NP6345_TABLE = "ercot_load_hourly_wz_np6345"
 KEY = ("ts_utc", "weather_zone")
 LOCAL_TZ = "America/Chicago"
 TOTAL = "ERCOT"
@@ -185,3 +187,28 @@ def with_utc(df: pl.DataFrame) -> pl.DataFrame:
             f"{bad.select('operating_date', 'hour_ending').head(3).rows()}"
         )
     return out.drop("_day_hours")
+
+
+def combined_load_table():
+    """``ercot_load_hourly_wz``: the Hourly Load Data Archives, completed by NP6-345-CD only for the hours
+    the archive does not have yet. Each source keeps its own table, so the archive always wins the overlap
+    (the two split load between zones differently) and reprocessing either source cannot clobber the other.
+    Declared by both parser modules, so it is rebuilt after either one runs."""
+    from basecast_pipelines.processing.core import SqlDataset
+
+    return SqlDataset(
+        name=TABLE,
+        sql=f"""
+            SELECT a.* FROM {ARCHIVE_TABLE} a
+            UNION ALL
+            SELECT d.* FROM {NP6345_TABLE} d
+            WHERE NOT EXISTS (
+                SELECT 1 FROM {ARCHIVE_TABLE} a WHERE a.ts_utc = d.ts_utc AND a.weather_zone = d.weather_zone
+            )
+        """,
+        description=(
+            "Hourly load by ERCOT weather zone plus the ERCOT total (MW), long format; ts_utc is the end of the "
+            "hour-ending interval. Archive 2003+, NP6-345-CD after the last archive update."
+        ),
+        indexes=(("weather_zone", "ts_utc"),),
+    )
