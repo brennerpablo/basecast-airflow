@@ -1,0 +1,138 @@
+# Page text (pdfplumber / python-pptx) of real ERCOT large-load decks in raw/source=ercot_large_load_decks,
+# trimmed to the lines the headline patterns read (staff names left out). Key: deck page, with the
+# deck's dt (meeting date) as report_date.
+
+march_2026_updated_p6:
+  report_date: 2026-03-26
+  text: |
+    Loads Approved to Energize – Observations 1
+    Of the 9,042 MW that have received Approval to Energize, ERCOT has observed a non-simultaneous monthly peak consumption of 4,004 MW in March 2026 which is a slight decrease since February 2026.
+    This is calculated as the sum of the maximum value for each individual load per month
+    This value represents how much approved load ERCOT believes is now operational
+
+march_2026_updated_p7:
+  report_date: 2026-03-26
+  text: |
+    Loads Approved to Energize – Observations 2
+    ERCOT has observed a simultaneous monthly peak consumption of 3,522 MW in March 2026 which is a slight decrease since February 2026.
+    This is the maximum value of the sum of all the individual loads per month
+    This value is the maximum amount of large load that ERCOT has had to serve at a single point in time
+
+march_2026_original_p6:
+  report_date: 2026-03-13
+  text: |
+    Loads Approved to Energize – Observations 1
+    • Of the 9042 MW that have received Approval to Energize, ERCOT has observed a non-simultaneous monthly peak consumption of
+    3883 MW in March 2025 which is a slight decrease since February 2025.
+    – This is calculated as the sum of the maximum value for each individual load per month
+    PUBLIC 6
+
+jan_2025_p7:
+  report_date: 2025-01-22
+  text: |
+    Loads Approved to Energize – Observations
+    • Of the 6,306 MW that have received Approval to Energize, ERCOT has observed a non-simultaneous peak consumption of 3,211
+    MW in January 2025 with an all time peak of 3,697 MW that occurred in November 2024.
+    – This is calculated as the sum of the maximum value for each individual load regardless of when that maximum occurred
+    PUBLIC 7
+
+may_2023_p4:
+  report_date: 2023-05-31
+  text: |
+    Loads Approved to Energize - Observations
+    • Of the 2,620 MW that have received Approval to
+    Energize, ERCOT has observed a non-simultaneous
+    peak consumption of 2,072 MW
+    – This is calculated as the sum of the maximum value for
+    each individual load regardless of when that maximum
+    occurred
+    2072 548
+    0 500 1000 1500 2000 2500 3000
+    Load (MW)
+    PUBLIC 4
+
+oct_2024_p5:
+  report_date: 2024-10-30
+  text: |
+    Loads Approved to Energize – By Zone & Project Type
+    Of the total 5,697 MW Approved to Energize,
+    3,055 MW resides in LZ_WEST and 2,642 MW resides in the other load zones.
+    4,622 MW consists of standalone projects and 1,075 MW consist of co-located projects.
+    * Includes LZ_NORTH, LZ_SOUTH, and LZ_HOUSTON
+
+board_sep_2025_p2:
+  report_date: 2025-09-22
+  text: |
+    Item 16.2 Large Loads by Project Type
+    PUBLIC Large Load Interconnection
+    Queue (as of September 2, 2025)
+    Key Takeaway: ERCOT is tracking
+    approximately 189 GW of Large
+    Loads seeking interconnection
+    (compared to 56 GW in September
+    2024) of which ~69% are data
+    centers.
+
+monthly_nov_2025_p8:
+  report_date: 2025-11-01
+  text: |
+    Large Load Interconnection Requests Update
+    As of November 18, 2025, ERCOT is tracking approximately 226,000 MW of large loads seeking
+    interconnection to the system. For reference, in December 2024, there were 63,000 MW of
+    Large Load interconnection requests. Approximately 128,000 MW of the 226,000 MW have
+    not yet submitted their Planning Studies for review. A Large Load is considered any load of 75
+    MW or greater at a single point of interconnection.
+    As of now, approximately 7,500 MW of Large Loads have been approved to energize, with
+    5,300 MW having been observed energized and an additional 2,200 MW having been
+    approved to energize, but not yet operational.
+
+monthly_apr_2026_p4:
+  report_date: 2026-04-01
+  text: |
+    The Large Load Interconnection Queue continues to grow, with applications of large loads
+    now totaling 445.8 gigawatts (GW) by 2033. Of these current applications, 321 GW of these
+    applications have No Studies Submitted yet to ERCOT. 93.7 GW of Large Load applications
+    are classified as Under ERCOT Review, and 22 GW having Section 9.5 Requirements Met.
+    ERCOT has 5.9 GW of Observed Energized Large Loads, with another 3.2 GW of loads that
+    have Approval to Energize but are not Operational.
+
+batch_zero_sep_2026_p1:
+  report_date: 2026-09-14
+  text: |
+    Item 14: Batch Zero Update
+    Key Takeaways
+    • ERCOT has provided conditional classification for
+    all Batch Zero Large Loads:
+    • 204 projects (66.4 GW) met the qualifications to be
+    conditionally included as base load;
+    • 158 projects (127.9 GW) met the qualifications to
+    be conditionally included as studied load.
+
+# Chart labels interleaved with the bullets: the sentence is broken, so nothing must be extracted.
+jan_2023_p9_garbled:
+  report_date: 2023-01-23
+  text: |
+    Loads Approved to Energize - Observations
+    • Of the 2,370 MW that
+    Operation
+    have received Approval to
+    Energize, ERCOT has
+    556
+    Observed Peak Load
+    observed a non-
+    Remaining Approved to
+    coincident peak
+    Energize Load
+    consumption of 1814 MW
+    1814
+    PUBLIC 9
+
+# A sentence form no pattern covers: nothing must be extracted.
+dec_2023_p4:
+  report_date: 2023-12-11
+  text: |
+    ERCOT Approvals Since March 2023 (Observations)
+    • Projects with approved planning studies far outpace projects approved to energize.
+    • In the past 10 months only 618 MW have requested approval to energize while an additional
+    5,580 MW have had their planning studies approved in that time.
+    PUBLIC 4
