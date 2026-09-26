@@ -14,6 +14,9 @@ Exploration after X7. Run on 2026-09-26 against production Postgres (`basecast_r
   `x11_zone_forecast_compare.csv`, `x11_zone_forecast_variants.csv`, `x11_zone_allocation.csv`,
   `x11_county_pressure.csv`, `x11_named_county_check.csv`
 
+Numbers refreshed on 2026-09-26 after the X16 #3 month-end fix in `peak_forecast.py`: the zone forecasts (§4) move by
+up to about 1.5%; the shares and the allocation method are unchanged.
+
 **Every MW by zone or county below is allocated, not observed.** The deck values are machine-read and not
 verified (Q5 spot-check pending). The Batch Zero page 7 values were checked by eye against the rendered slide.
 
@@ -122,21 +125,21 @@ each alternative in §2 (allocation band only, not P10–P90).
 
 | Zone | 2027 X7 fixed | 2027 X11 [band] | 2030 X7 fixed | **2030 X11** [band] | 2030 Δ |
 |---|---:|---:|---:|---:|---:|
-| NCENT | 28,314 | 28,909 [28,770–30,316] | 30,334 | **32,933** [32,794–40,041] | +2,600 |
-| COAST | 24,448 | 23,929 [23,550–24,164] | 27,950 | **26,217** [24,339–26,452] | −1,734 |
-| SCENT | 16,519 | 15,474 [15,162–15,619] | 20,940 | **17,670** [16,130–18,210] | −3,271 |
-| SOUTH | 6,930 | 7,661 [7,135–7,873] | 7,315 | **10,124** [7,521–11,197] | +2,808 |
-| FWEST | 8,551 | 7,363 [7,057–8,292] | 13,822 | **9,419** [8,172–13,936] | −4,403 |
-| NORTH | 2,601 | 3,120 [2,395–4,231] | 4,523 | **6,172** [2,690–11,828] | +1,649 |
-| WEST | 2,224 | 3,324 [2,977–3,772] | 2,312 | **5,281** [3,537–5,729] | +2,969 |
-| EAST | 3,330 | 3,125 [2,960–3,282] | 4,318 | **3,802** [2,985–4,573] | −516 |
-| Sum | 92,916 | 92,906 | 111,514 | 111,616 | |
+| NCENT | 28,299 | 28,874 [28,735–30,213] | 30,314 | **32,885** [32,746–39,915] | +2,571 |
+| COAST | 24,417 | 23,912 [23,550–24,147] | 27,912 | **26,195** [24,339–26,431] | −1,716 |
+| SCENT | 16,473 | 15,449 [15,155–15,594] | 20,884 | **17,644** [16,122–18,177] | −3,240 |
+| SOUTH | 6,930 | 7,637 [7,135–7,838] | 7,315 | **10,093** [7,521–11,154] | +2,778 |
+| FWEST | 8,494 | 7,344 [7,038–8,230] | 13,755 | **9,397** [8,162–13,862] | −4,358 |
+| NORTH | 2,576 | 3,084 [2,359–4,143] | 4,492 | **6,129** [2,684–11,717] | +1,636 |
+| WEST | 2,224 | 3,303 [2,971–3,751] | 2,312 | **5,254** [3,529–5,703] | +2,943 |
+| EAST | 3,319 | 3,117 [2,960–3,267] | 4,304 | **3,793** [2,985–4,554] | −512 |
+| Sum | 92,730 | 92,720 | 111,288 | 111,390 | |
 
 - The ERCOT total does not move (±0.1%). The zones do: by 2030 X11 moves ~10 GW between zones.
-- FWEST's and SCENT's 2030 values drop 4.4 and 3.3 GW: X7 extrapolated the flat excess as if new large loads
+- FWEST's and SCENT's 2030 values drop 4.4 and 3.2 GW: X7 extrapolated the flat excess as if new large loads
   would keep landing there. The queue points to NCENT, NORTH, SOUTH and WEST instead.
 - WEST gets large load for the first time (X7 gave it 0% because its 2023–26 excess was negative).
-- NORTH's band is the widest (2.7–11.8 GW): the Q4 2026 QSA puts 48% of incoming load there, the TSP path 3–8%.
+- NORTH's band is the widest (2.7–11.7 GW): the Q4 2026 QSA puts 48% of incoming load there, the TSP path 3–8%.
 
 ## 5. County pressure for the Explorer (allocated, not observed)
 

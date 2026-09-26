@@ -11,6 +11,11 @@ Exploration X2, after phase 0. Run on 2026-09-26 against production Postgres (`b
   grain), `x2_zone_fuel_adjusted.csv`, `x2_backtest_projects.csv`, `x2_eia860m_match.csv`, `x2_backtest.png`,
   `x2_county_raw_vs_adjusted.png`
 
+**Backtest refreshed on 2026-09-26 after the X16 #2 fix.** The reporting-lag guard now applies (`survival.load_events()`
+did not load `ia_first_month` / `synchronization_first_month`, so backdated IAs leaked into the as-of fits). Statewide
+backtest error moved from −12.5% / +9.4% / +1.8% to −13.2% / +9.3% / +1.4% (mean absolute 7.9% → 8.0%). Today's queue
+numbers (§1, §2) are unchanged.
+
 ## Method in one paragraph
 
 Each active project gets P(COD by the horizon | its stage, months already spent there, no exit yet). **IA-stage**
@@ -117,23 +122,23 @@ within the window.
 
 | Queue of | projects | raw MW | **predicted** | **actual** | **error** | developer projected COD | raw |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Jun 2022 | 881 | 174,846 | 13,943 | 15,940 | **−12.5%** | 121,064 (+660%) | +997% |
-| Jan 2023 | 1,066 | 215,786 | 20,165 | 18,428 | **+9.4%** | 141,880 (+670%) | +1,071% |
-| Aug 2024 | 1,614 | 330,882 | 28,960 | 28,460 | **+1.8%** | 145,631 (+412%) | +1,063% |
+| Jun 2022 | 881 | 174,846 | 13,833 | 15,940 | **−13.2%** | 121,064 (+660%) | +997% |
+| Jan 2023 | 1,066 | 215,786 | 20,140 | 18,428 | **+9.3%** | 141,880 (+670%) | +1,071% |
+| Aug 2024 | 1,614 | 330,882 | 28,845 | 28,460 | **+1.4%** | 145,631 (+412%) | +1,063% |
 
-**Statewide mean absolute error 7.9% (mean −0.4%, worst 12.5%).** The actual falls within ±1.2 Bernoulli standard
+**Statewide mean absolute error 8.0% (mean −0.9%, worst 13.2%).** The actual falls within ±1.2 Bernoulli standard
 deviations (z = +1.2, −0.8, −0.2). That band is sampling noise only; it leaves out model error.
 
 By fuel (predicted vs actual):
 
 | Fuel | Jun 2022 | Jan 2023 | Aug 2024 | pooled error | mean abs error |
 |---|---|---|---|---:|---:|
-| solar | 4,959 / 6,173 (−20%) | 7,846 / 7,949 (−1%) | 11,330 / 12,541 (−10%) | −9.5% | 10.2% |
-| storage | 4,263 / 3,581 (+19%) | 6,375 / 5,531 (+15%) | 11,288 / 11,544 (−2%) | +6.1% | 12.2% |
-| wind | 4,091 / 4,409 (−7%) | 3,526 / 3,385 (+4%) | 3,834 / 2,373 (+62%) | +12.6% | 24.3% |
-| gas+other | 630 / 1,778 (−65%) | 2,419 / 1,563 (+55%) | 2,508 / 2,002 (+25%) | +4.0% | 48.2% |
+| solar | 4,932 / 6,173 (−20%) | 7,867 / 7,949 (−1%) | 11,433 / 12,541 (−9%) | −9.1% | 10.0% |
+| storage | 4,159 / 3,581 (+16%) | 6,282 / 5,531 (+14%) | 11,252 / 11,544 (−3%) | +5.0% | 10.8% |
+| wind | 4,110 / 4,409 (−7%) | 3,572 / 3,385 (+6%) | 3,834 / 2,373 (+62%) | +13.3% | 24.6% |
+| gas+other | 632 / 1,778 (−64%) | 2,419 / 1,563 (+55%) | 2,326 / 2,002 (+16%) | +0.6% | 45.1% |
 
-By stage: IA-stage −20.9%, −1.6%, −5.5%; entry-stage +66%, +159%, +125%, on small MW (2.5–3.5 GW predicted vs
+By stage: IA-stage −20.6%, −1.1%, −4.9%; entry-stage +56%, +151%, +108%, on small MW (2.4–3.3 GW predicted vs
 1.3–1.6 GW actual).
 
 **Counties (the map test).** The Spearman correlation of predicted vs actual county MW is 0.66 / 0.64 / 0.64. The raw
@@ -145,13 +150,13 @@ a single county's number is noisy.
 
 | Variant | error |
 |---|---:|
-| **entry + IA, semi-Markov entry, MW-weighted (primary)** | **7.9%** |
-| + synchronized stage, semi-Markov, MW | 36.1% |
-| entry + IA semi-Markov, count-weighted | 37.7% |
-| entry + IA landmarks, marginal entry curve, MW (the q6 proposal as is) | 47.8% |
-| entry + FIS + IA, MW | 56.6% |
-| entry + FIS + IA + sync, MW | 93.1% |
-| count-weighted versions of the above | 70.7–132% |
+| **entry + IA, semi-Markov entry, MW-weighted (primary)** | **8.0%** |
+| + synchronized stage, semi-Markov, MW | 35.6% |
+| entry + IA semi-Markov, count-weighted | 37.8% |
+| entry + IA landmarks, marginal entry curve, MW (the q6 proposal as is) | 48.2% |
+| entry + FIS + IA, MW | 57.0% |
+| entry + FIS + IA + sync, MW | 93.4% |
+| count-weighted versions of the above | 70.6–133% |
 
 - **Why the q6 landmark model fails at entry:** the marginal entry curve counts the COD of projects that had already
   signed an IA. An entry-stage project has not, so the entry stage came out 5–11× too high (+512%, +830%, +1,130%).
@@ -180,7 +185,7 @@ only, or capacity within ±10% only.
 | other | 16 | 0.0% | 18.8% |
 | **all** | 421 | **58.7%** (247) | **86.5%** (364) |
 
-Timing (strong matches): EIA first operating month minus ERCOT COD month has a median of **0 months**, with 69% within
+Timing (strong matches): EIA first operating month minus ERCOT COD month has a median of **0 months**, with 68% within
 ±3 months (p10 −12, p90 +1). The early tail is mostly later phases matched to the first phase's EIA plant (e.g. Texas
 Solar Nova 2 → Nova 1). Renewables and storage agree well. Gas and "other" match poorly by name: EIA names the host
 plant, GIS names the unit or the project. **Not verified** beyond this name/capacity heuristic: the weak matches can
@@ -190,7 +195,7 @@ be coincidences, and the 57 unmatched (e.g. BlueBell Solar, High Lonesome Wind, 
 
 > "ERCOT's generation queue lists 438 GW. Our model expects about **39 GW to reach commercial operation by the end of
 > 2027 and 70 GW by the end of 2028**, roughly 1 MW in 6. Run from past queue snapshots, the same method landed
-> **within 13% of what actually got built over the next two years** (three snapshots, 2022–2024). Developers' own COD
+> **within 13.2% of what actually got built over the next two years** (three snapshots, 2022–2024). Developers' own COD
 > dates came to 5–8× what got built."
 
 Caveats to keep with it: the backtest covers 24-month windows on three snapshots, which also picked the model. Dec 2028
@@ -199,7 +204,7 @@ the history the curves were fit on.
 
 ## Proposed decisions.md lines
 
-- 2026-09-26 — The Explorer's adjusted queue = Σ capacity × P(COD by the horizon | stage, months at the stage): IA-stage projects use the MW-weighted Aalen–Johansen CIF from the IA, conditioned at the elapsed time ((F(e+h) − F(e)) / S(e)); entry-stage projects (no IA, including FIS approved) are scored semi-Markov (time to IA from entry, convolved with the IA curve). — Backtest from the 2022-06, 2023-01 and 2024-08 queues, 24 months ahead: statewide error −12.5% / +9.4% / +1.8%, vs +48% mean for the plain landmark curves and 5–8× for developer COD dates.
+- 2026-09-26 — The Explorer's adjusted queue = Σ capacity × P(COD by the horizon | stage, months at the stage): IA-stage projects use the MW-weighted Aalen–Johansen CIF from the IA, conditioned at the elapsed time ((F(e+h) − F(e)) / S(e)); entry-stage projects (no IA, including FIS approved) are scored semi-Markov (time to IA from entry, convolved with the IA curve). — Backtest from the 2022-06, 2023-01 and 2024-08 queues, 24 months ahead: statewide error −13.2% / +9.3% / +1.4%, vs +48% mean for the plain landmark curves and 5–8× for developer COD dates.
 - 2026-09-26 — Adjusted-queue curves are MW-weighted, and FIS approval and synchronization are not stages. — Count weighting overpredicts (mean error 38% vs 8%); adding FIS approval or synchronization as a stage made the backtest worse (57% and 36%).
 - 2026-09-26 — Past the curve's support (fewer than 10 projects at risk) the clock is clamped so the horizon window ends at the last supported time. — The step CIF is flat past its last event, which would give old projects a probability of 0.
 - 2026-09-26 — [pending Pablo] The Explorer shows Dec 2027 and Dec 2028 (end-of-year horizons from the latest GIS report), with the backtest error as the credibility note; horizons beyond 24 months are labelled "beyond the backtested window". — Only 24-month windows were backtested.
@@ -223,7 +228,7 @@ the history the curves were fit on.
    small look-ahead); the backtest queue uses the snapshot's.
 6. **Uncertainty band.** The Bernoulli band (±1.7–2.5 GW) is too narrow to show as P10/P90. A band from the backtest
    errors (±13%) or a bootstrap over projects and curves is still to do.
-7. **Wind at the latest date** (+62%) and **gas+other** in every date (mean abs 48%) are the weak strata.
+7. **Wind at the latest date** (+62%) and **gas+other** in every date (mean abs 45%) are the weak strata.
 
 ## Useful for the core features
 

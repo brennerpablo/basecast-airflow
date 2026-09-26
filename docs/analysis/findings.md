@@ -28,9 +28,9 @@ row says so and the item waits in the review queue.
 - The 2026 peak (91.1 GW) was 20.9 GW under ERCOT's 112 GW preliminary but 7–11 GW over trend and weather. The excess
   is flat, always-on load, and ERCOT's own large-load reports explain only a third to half of it (Q1, Q7, X1, X12).
 - A three-layer forecast (organic + realized large load + flat layer), rebuilt as of 8 past dates, beat LTLF and CDR
-  on the same cells: MAPE 3.3% vs 5.1% and 4.8% (X7, with its leaks listed).
+  on the same cells: MAPE 3.3% vs 5.1% (LTLF) and 3.2% vs 4.8% (CDR) (X7, with its leaks listed).
 - The generation queue's 438 GW becomes ~39 GW by the end of 2027; a 24-month backtest from three past queues lands
-  within 13%, while developers' dates add up to 5–8× what got built (X2).
+  within about 13% (−13.2%, +9.3%, +1.4%), while developers' dates add up to 5–8× what got built (X2).
 - Since 2021 the 4CP interval is no longer when power is scarce: a battery aimed at 4CP (15:45–17:45) misses the
   evening price spikes (X3).
 
@@ -88,7 +88,7 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    estimate before the video says "runs day and night". Don't name WEST's 2026 block (~0.7 GW, flat) in the video.
 10. **X2 — large new gas.** 9.1 GW of the Dec 2027 adjusted queue is gas+other, much of it ≥ 500 MW, where only 2 of
    16 such projects with an IA reached COD. Default: flag it in the UI now, add a size split if time allows. The
-   Bernoulli band is too narrow to show; use the backtest errors (±13%) or a bootstrap.
+   Bernoulli band is too narrow to show; use the backtest errors (up to ±13.2%) or a bootstrap.
 11. **X3 — interval label and dollars.** *Closed by X15:* ERCOT's official 4CP intervals (NP9-83-M) match the D&E
    15-min peaks in 66 of 68 months 2008–2025 (all of 2022–2025), and the workbook labels the time "Interval
    ending": the 15:45–17:45 window stands. The ERCOT postage-stamp rate is $68.547/kW-yr for 2025 (Docket 57491,
@@ -99,8 +99,8 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    context (17)? Data centers count in both the score and a trigger (default: keep both). Every trigger threshold
    is Claude's (list in `docs/analysis/x5_triggers.md`).
 13. **X7 — which large-load deck drives the forecast.** The March 2026 deck (before ERCOT's April "Batch Zero"
-   intake) gives 111.6 GW for 2030, the June 2026 deck 132.9 GW, and the 2023–25 approval pace 96.4 GW. Default: show
-   the three as scenarios, stop at 2030. The band covers 61% of cells in a nominal 80%: calibrate it on the 18
+   intake) gives 111.3 GW for 2030, the June 2026 deck 132.8 GW, and the 2023–25 approval pace 96.3 GW. Default: show
+   the three as scenarios, stop at 2030. The band covers 56% of cells in a nominal 80%: calibrate it on the 18
    backtest cells and say so. *X15:* ERCOT has not published a final LTLF 2026 (only the April preliminary; final
    Batch Zero classifications are due in December), so there is nothing to add.
 14. **X9 — accounts API and munis.** Key accounts by `ccn_no`, not the EIA `utility_id`; hold `is_base_partner` until
@@ -137,17 +137,17 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X | Question | Headline | Feeds |
 |---|---|---|---|
 | X1 | Is the peak excess over weather the large loads? | Against a pre-2020 model, the summer peak ran 6.9 / 8.1 / 7.1 / 11.2 GW high in 2023–2026; the overnight minimum rose as much as the peak (flat load); the decks' observed large loads cover a third to half. Split for the Forecast: pre-break organic + 0.51 × approved stock + a flat unattributed layer (2026: 89.1 vs 91.1 GW, −2.3%). Found and fixed a misdated deck in Q5 (ratios unchanged). | Forecast (A3), video |
-| X2 | Raw vs adjusted generation queue by county | 438 GW active (1,810 projects) → ~38.7 GW reaching COD by Dec 2027 (8.8%) and 70.4 GW by Dec 2028; 24-month backtests from 2022, 2023 and 2024 queues miss by −12.5%, +9.4%, +1.8%, while developers' projected COD dates add up to 5–8× what got built; county ranking beats the raw queue (Spearman 0.64–0.66 vs 0.43–0.45). | Explorer map, A4, video |
+| X2 | Raw vs adjusted generation queue by county | 438 GW active (1,810 projects) → ~38.7 GW reaching COD by Dec 2027 (8.8%) and 70.4 GW by Dec 2028; 24-month backtests from 2022, 2023 and 2024 queues miss by −13.2%, +9.3%, +1.4%, while developers' projected COD dates add up to 5–8× what got built; county ranking beats the raw queue (Spearman 0.64–0.66 vs 0.43–0.45). | Explorer map, A4, video |
 | X3 | 4CP timing and the offer to co-ops | A 2-hour discharge 15:45–17:45 covered 63 of 64 CPs (2010–2025); catching all four with a weather-based call takes ~56 days a summer and near-peak days doubled since 2023; since 2021 no CP fell in its month's top-20 priced intervals and the net-load peak moved to HE 20–21. | Accounts next action / offer, video |
 | X4 | EIA-861 short form | Reading 861S from the lake takes EIA customers from 57% to 99.1% of accounts (munis 27% → 98%); customers replace apportioned homes; Lubbock's −95% is retail choice (105,080 delivery-only customers). Parser spec for later in the doc. | Account score (A2), diagnosis |
 | X5 | Triggers and a ranking dry run | 8 triggers (5 strong); 46 of 107 non-partner accounts have one active; next action: 25 call now, 12 nurture, 34 watch, 36 hold; 14 of the top 15 sit on the metro growth rings; stable to ±0.05 weight shifts (ρ ≥ 0.993). | /accounts, /accounts/[id] |
 | X6 | Do the video numbers hold from the raw files? | All six re-derived without the models or parsers: 2026 peak 91,133.7 MW (HE 18, 2026-07-22), old record 85,508.5 MW, 112 GW and 90.5–98 GW (PUCT 58777 item 38), 232,500 MW tracked and 3.78% approved (Jan 2026), 1,810 projects / 438,262 MW (Aug 2026 GIS), Q5 deck inputs. Careful: the "> 20 GW" margin is 866 MW; the large-load queue reached ~438 GW by May 2026, the same figure as the generation queue. | video |
-| X7 | Does a three-layer peak forecast beat ERCOT? | Rebuilt as of 8 dates (18 cells): MAPE 3.3% vs LTLF 5.1% and CDR 4.8% (the design itself was chosen in 2026, a leak the doc lists). From the March 2026 deck: 93.0 [89.4–96.7] GW in 2027 and 111.6 [104.2–123.7] in 2030, vs LTLF 2025 104.3 and 138.9. After Batch Zero the MW promised by 2027 went from 67 to 201 GW while approved stayed at 8.8–8.9 GW. | Forecast, /backtest (A3), video |
-| X8 | What the screens need, and which lines can go in the video | `marts-proposal.md`: marts per screen (grain, key, columns, the `models/` function, blocking review item). `video-candidates.md`: lines ranked by strength with source, X6 status and caveat; top: 26.8 GW promised by end-2025 vs 8.8 GW approved; 112 vs 91.1 GW; the May 2026 backtest (88.9 GW vs 91.1). Its re-check fixed an X2 cell (+670%, 5–8×). | A0, get-data contract, video |
+| X7 | Does a three-layer peak forecast beat ERCOT? | Rebuilt as of 8 dates (18 cells): MAPE 3.3% vs LTLF 5.1% (3.2% vs CDR 4.8% on its 15 cells) (the design itself was chosen in 2026, a leak the doc lists). From the March 2026 deck: 92.8 [89.3–96.4] GW in 2027 and 111.3 [104.0–123.3] in 2030, vs LTLF 2025 104.3 and 138.9. After Batch Zero the MW promised by 2027 went from 67 to 201 GW while approved stayed at 8.8–8.9 GW. | Forecast, /backtest (A3), video |
+| X8 | What the screens need, and which lines can go in the video | `marts-proposal.md`: marts per screen (grain, key, columns, the `models/` function, blocking review item). `video-candidates.md`: lines ranked by strength with source, X6 status and caveat; top: 26.8 GW promised by end-2025 vs 8.8 GW approved; 112 vs 91.1 GW; the May 2026 backtest (89.0 GW vs 91.1). Its re-check fixed an X2 cell (+670%, 5–8×). | A0, get-data contract, video |
 | X9 | What the /accounts/[id] page can show | `assemble(ccn_no)` renders score breakdown, triggers with lapse dates, territory, EIA series and next action as facts with source and as-of. Gaps: no public source for an account's own 4CP load (the UtilityDataSource case), munis miss county triggers, apportionment misreads size for 69 accounts. | /accounts/[id], API shape |
 | X10 | Do Census place data fix the munis? | All 59 non-partner munis match a place. Size: homes per meter 0.03 → 0.42, ρ with meters 0.77 → 0.95. Growth: no (ρ 0.53 vs 0.54), cities grow onto land their muni does not serve. Strong triggers for munis 10 → 13 of 59. | /accounts diagnosis, muni ranking |
 | X11 | Where are the large loads? | Weather-zone charts exist (Batch Zero Update Sep 2026, QSA Q4 2026, LLIS May 2026); LZ_WEST = FWEST + WEST + 0.72 × NORTH. Approved stock leans NORTH 2.5, FWEST 1.7, NCENT 1.4, WEST 1.2 GW; the pipeline leans NCENT, NORTH, SOUTH. By zone, ~10 GW moves between zones in the 2030 forecast (total ±0.1%). | Forecast by zone, Explorer |
-| X12 | A weather-normalized load series for the Forecast | Daily model per zone (rolling 3-year fits, normal = ERA5 2003–2022): ERCOT daily MAPE 2.9% energy / 4.0% peak with the level known (8.0% / 10.7% without weather). Normalized energy grew 2.1%/yr in 2010–21, then 4.4–5.4%/yr in 2022–25. Normalized summer peak rose every year 2012–2026 (64.8 → 91.1 GW) while the raw peak fell in 7; 2025's 83.7 GW was a mild summer (88.0 normal); 2026 was weather-neutral. | Forecast series, video |
+| X12 | A weather-normalized load series for the Forecast | Daily model per zone (rolling 3-year fits, normal = ERA5 2003–2022): ERCOT daily MAPE 2.9% energy / 4.0% peak with the level known (8.0% / 10.7% without weather). Normalized energy grew 2.2%/yr in 2010–21, then 4.4–5.4%/yr in 2022–25. Normalized summer peak rose every year 2012–2026 (64.8 → 91.1 GW) while the raw peak fell in 7; 2025's 83.7 GW was a mild summer (88.0 normal); 2026 was weather-neutral. | Forecast series, video |
 | X13 | How much of the large-load wave lands with co-ops? | Of 199.5 GW requested for 2030 in the TSP filing, co-op G&Ts hold 45.7 GW (22.9%; Brazos 26.6, Golden Spread 16.6), ~1.9× the co-ops' 12.3% of ERCOT retail MWh, up from 8.8% in 2026. No location below the TSP, so no allocation to members: a context fact for 81 of 107 accounts. Q4 stays signal only. | /accounts context, video |
 | X14 | What are the Explorer's "priority acquisition zones"? | A county priority from territory signals only: market (homes, growth, permits, owner share) scaled by grid value (normalized zone peak growth, flat large-load pressure, load-zone price spread, new data centers), split by channel: 161 partnership, 39 retail-direct, 4 mixed counties. 17 of the top 20 on the metro growth rings; rural NORTH/WEST counties rise on grid value; stable to ±0.05 weights (ρ ≥ 0.996). | Explorer map |
 | X15 | Close the factual review items with primary sources | 4CP label confirmed (66/68 months vs ERCOT NP9-83-M); postage-stamp rate $68.547/kW-yr (2025) and $75.527/kW-yr (2026, pending); no final LTLF 2026 exists; Uri dates and NERC holidays confirmed. Every URL fetched on 2026-09-26. | X3 offer in dollars, X7, X12 |
@@ -176,5 +176,15 @@ is a candidate, not yet in `docs/video-numbers.md`.
   Base's revenue; it assumes every interval is hit (a 15:45–17:45 discharge hit 63 of 64 in 2010–2025, ~56 dispatch
   days a summer with a weather-based call); the fleet's kW per home is not verified.
 - Every figure lives in `analysis/out/` (gitignored); re-run the scripts to regenerate them.
-- **X16 review (2026-09-26, `docs/analysis/x16_models_review.md`):** 6 confirmed bugs. Fixed: Uri days now normalize the fitted day in `weather_normalized.py` (X12's ERCOT 2021 energy was 2.2 TWh low; "2.1%/yr in 2010–21" becomes 2.2%, 2022 YoY +5.0% (z 6.0) becomes +4.4% (z 3.9), "5–7 SD" becomes 3.9–5.7 SD; the X12 doc still shows the old numbers) and `DC_` ties left out of `four_cp.zone_coincidence` (< 0.1 pp). Open: `survival.load_events` skips `ia_first_month` (X2 backtest −13.2/+9.3/+1.4% after the fix), `peak_forecast` month-end dates (X7 2027 ≈ 92.8 GW, 2030 ≈ 111.3 GW), two latent NaN cases in `triggers.py`.
+- **X16 review (2026-09-26, `docs/analysis/x16_models_review.md`):** 6 confirmed bugs, all fixed; the X2, X7, X11
+  and X12 docs and the rows above show the new numbers.
+  - Uri days now normalize the fitted day in `weather_normalized.py`: X12's ERCOT 2021 energy was 2.2 TWh low; 2010–21
+    grows 2.2%/yr, not 2.1%; 2022 is +4.4% (z 3.9), not +5.0% (z 6.0); 2022–25 sit 3.9–5.7 SD above, not 5–7.
+  - `DC_` ties are left out of `four_cp.zone_coincidence` (< 0.1 pp).
+  - `survival.load_events` now loads the first-report months, so the reporting-lag guard applies: X2's backtest is
+    −13.2 / +9.3 / +1.4% (was −12.5 / +9.4 / +1.8%), today's queue is unchanged.
+  - `peak_forecast` uses month-end dates, status readings included: X7 2027 = 92.8 [89.3–96.4] GW and 2030 = 111.3
+    [104.0–123.3] GW (were 93.0 and 111.6), MAPE 3.3%, band coverage 10/18 (was 11/18). X11's zone forecasts move by
+    up to ~1.5%.
+  - `triggers.percentile_ranks` / `score_accounts` no longer produce NaN (latent; no number changes).
 - **Paused to save credits:** X17–X23 stopped mid-run; their partial files stay uncommitted in the working tree.

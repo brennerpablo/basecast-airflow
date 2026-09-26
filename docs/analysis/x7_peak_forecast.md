@@ -17,6 +17,11 @@ Exploration after phase 0. Run on 2026-09-26 against production Postgres (`basec
 **Every large-load number here comes from deck values Gemini read off chart images. They stay "not verified"
 until the Q5 spot-check is done.** The 2026 actual (91,134 MW) is preliminary: July–August are not final-settled.
 
+**Numbers refreshed on 2026-09-26 after the X16 #3 fix** (month-end convention: December stocks at Dec 31, the summer
+point at the end of July, monthly readings at month end). Headline 2027 P50 93.0 → 92.8 GW and 2030 111.6 → 111.3 GW;
+Jun 2026 deck 102.4 → 101.8 and 132.9 → 132.8 GW; the 2026-05-31 backtest cell 88.9 → 89.0 GW; P10–P90 coverage
+61% → 56% (the 2025-12-31 cell leaves the band). The backtest MAPE of 3.3% holds.
+
 ## 1. Method
 
 `peak(Y) = organic(Y) + LL(Y) + U`, for the ERCOT system (coincident, hourly) summer peak.
@@ -71,19 +76,19 @@ Zero queue is out of sample, so the Jun 2026 deck is shown as the high sensitivi
 
 | Year | Organic P50 | LL P50 [P10–P90] | U P50 | **Total P50 [P10–P90]** — Mar 2026 deck | Total P50 [P10–P90] — Jun 2026 deck | Approvals at 2023–25 pace (P50 only) |
 |---|---:|---:|---:|---:|---:|---:|
-| 2027 | 79.7 | 8.6 [7.4–11.3] | 5.0 | **93.0 [89.4–96.7]** | 102.4 [96.9–110.6] | 90.6 |
-| 2028 | 80.6 | 13.7 [10.9–19.9] | 5.0 | **99.0 [94.4–104.5]** | 117.3 [108.3–134.8] | 92.5 |
-| 2029 | 81.4 | 19.1 [14.7–29.2] | 5.0 | **105.3 [99.3–113.9]** | 127.7 [116.1–151.8] | 94.4 |
-| 2030 | 82.3 | 24.6 [18.5–38.5] | 5.0 | **111.6 [104.2–123.7]** | 132.9 [120.0–160.0] | 96.4 |
-| 2031 | 83.1 | 26.7 [20.0–42.1] | 5.0 | **114.5 [106.7–128.0]** | 135.5 [122.4–164.0] | 98.3 |
+| 2027 | 79.7 | 8.4 [7.2–11.0] | 5.0 | **92.8 [89.3–96.4]** | 101.8 [96.5–109.7] | 90.5 |
+| 2028 | 80.6 | 13.4 [10.7–19.6] | 5.0 | **98.8 [94.2–104.2]** | 116.7 [107.8–133.8] | 92.5 |
+| 2029 | 81.4 | 18.9 [14.6–28.8] | 5.0 | **105.0 [99.1–113.6]** | 127.4 [115.9–151.3] | 94.4 |
+| 2030 | 82.3 | 24.4 [18.4–38.1] | 5.0 | **111.3 [104.0–123.3]** | 132.8 [120.0–159.8] | 96.3 |
+| 2031 | 83.1 | 26.7 [20.0–42.1] | 5.0 | **114.5 [106.7–128.0]** | 135.5 [122.3–164.0] | 98.3 |
 
 - **The large-load layer is the whole story, and it rests on one assumption.**
-  - The LL P50 of the Mar 2026 deck implies an approved stock at the summer peak of **16.7 GW in 2027 and 48.1 GW in
+  - The LL P50 of the Mar 2026 deck implies an approved stock at the summer peak of **16.3 GW in 2027 and 47.6 GW in
     2030**. It is 8.9 GW today.
-  - The Jun 2026 deck implies 35.1 and 89.8 GW.
+  - The Jun 2026 deck implies 34.0 and 89.5 GW.
   - Approvals grew **+2.1 GW/yr** from Dec 2022 to Dec 2025 (2.4 → 4.5 → 6.3 → 8.8 GW) and ~+0.1 GW in H1 2026.
-  - At that pace (the last column, a sanity check, not a forecast) the stock reaches 11.3 GW in summer 2027 and
-    19.9 GW in 2031.
+  - At that pace (the last column, a sanity check, not a forecast) the stock reaches 11.2 GW in summer 2027 and
+    19.8 GW in 2031.
   - "Queue × a constant ratio" assumes approvals scale with the queue. The 2023–2026 decks say they have not.
 - **Organic** grows ~0.85 GW/yr. **U** is flat at ~5 GW (band 2.5–6.6 GW).
 - 2031 is past the Mar 2026 deck's last bar (2030), so its promise is the whole queue (238.6 GW). The 2030–2031 LL
@@ -93,8 +98,8 @@ Zero queue is out of sample, so the Jun 2026 deck is shown as the high sensitivi
 
 | Series | 2027 | 2028 | 2029 | 2030 | 2031 |
 |---|---:|---:|---:|---:|---:|
-| basecast P50, Mar 2026 deck | **93.0** | **99.0** | **105.3** | **111.6** | **114.5** |
-| basecast P50, Jun 2026 deck | 102.4 | 117.3 | 127.7 | 132.9 | 135.5 |
+| basecast P50, Mar 2026 deck | **92.8** | **98.8** | **105.0** | **111.3** | **114.5** |
+| basecast P50, Jun 2026 deck | 101.8 | 116.7 | 127.4 | 132.8 | 135.5 |
 | LTLF 2025, ERCOT-adjusted (2025-04-08) | 104.3 | 121.5 | 128.9 | 138.9 | 144.5 |
 | LTLF 2025, TSP-provided (sensitivity) | 138.2 | 173.2 | 196.7 | 208.0 | 218.4 |
 | CDR Dec 2025 (= May 2025 Revised) | 105.4 | 123.1 | 130.8 | 141.7 | — |
@@ -104,7 +109,7 @@ Zero queue is out of sample, so the Jun 2026 deck is shown as the high sensitivi
 2032). **`official_forecasts` has no final LTLF 2026**, only the preliminary's three manual figures. The
 comparison here is with LTLF 2025 and CDR Dec 2025.
 
-- **Mar 2026 deck vs. ERCOT's adjusted LTLF 2025:** −11.3 GW (2027), −22.5 (2028), −23.6 (2029), −27.3 (2030),
+- **Mar 2026 deck vs. ERCOT's adjusted LTLF 2025:** −11.5 GW (2027), −22.7 (2028), −23.9 (2029), −27.6 (2030),
   −30.0 (2031). ERCOT's P50 sits above our P90 from 2027 on.
 - **Jun 2026 deck:** lands 1–9 GW under ERCOT-adjusted. The post–Batch Zero queue times the historical ratio
   roughly reproduces ERCOT's own adjusted view.
@@ -114,13 +119,13 @@ comparison here is with LTLF 2025 and CDR Dec 2025.
 
 | Zone | Share of LL + U | 2027 organic P50 | 2027 P50 [P10–P90] | 2031 P50 [P10–P90] |
 |---|---:|---:|---:|---:|
-| COAST | 17.0% | 22,202 | 24,448 [23,592–25,331] | 28,581 [27,011–30,802] |
-| NCENT | 8.5% | 27,189 | 28,314 [27,157–29,375] | 30,734 [29,372–32,250] |
-| SCENT | 25.3% | 13,164 | 16,519 [15,730–17,330] | 21,584 [19,732–25,100] |
-| FWEST | 30.3% | 4,521 | 8,551 [7,549–9,574] | 14,580 [12,285–18,742] |
+| COAST | 17.0% | 22,202 | 24,417 [23,565–25,294] | 28,581 [27,011–30,802] |
+| NCENT | 8.5% | 27,189 | 28,299 [27,141–29,358] | 30,734 [29,372–32,250] |
+| SCENT | 25.3% | 13,164 | 16,473 [15,693–17,268] | 21,584 [19,732–25,100] |
+| FWEST | 30.3% | 4,521 | 8,494 [7,504–9,505] | 14,580 [12,285–18,742] |
 | SOUTH | 0% | 6,930 | 6,930 [6,539–7,315] | 7,447 [7,019–7,875] |
-| NORTH | 12.9% | 881 | 2,601 [2,121–3,094] | 4,726 [3,721–6,476] |
-| EAST | 6.0% | 2,529 | 3,330 [3,136–3,528] | 4,456 [4,006–5,286] |
+| NORTH | 12.9% | 881 | 2,576 [2,099–3,064] | 4,726 [3,721–6,476] |
+| EAST | 6.0% | 2,529 | 3,319 [3,127–3,513] | 4,456 [4,006–5,286] |
 | WEST | 0% | 2,224 | 2,224 [2,083–2,367] | 2,339 [2,188–2,495] |
 
 - WEST gets no LL + U because its coincident excess averaged −32 MW over 2023–2026. Its 2026 step (+0.7 GW, X1)
@@ -147,24 +152,24 @@ comparison here is with LTLF 2025 and CDR Dec 2025.
 
 | As of | Target | h | Actual GW | basecast P50 [P10–P90] | basecast % | In band | LTLF % | CDR % | Prelim % |
 |---|---|---:|---:|---|---:|:---:|---:|---:|---:|
-| 2023-05-31 | 2023 | 1 | 85.5 | 80.3 [77.9–82.7] | −6.1 | no | −3.7 | — | — |
+| 2023-05-31 | 2023 | 1 | 85.5 | 80.4 [77.9–82.8] | −6.0 | no | −3.7 | — | — |
 | 2023-05-31 | 2024 | 2 | 85.2 | 82.3 [79.8–84.7] | −3.5 | no | −1.1 | −0.3 | — |
 | 2023-05-31 | 2025 | 3 | 83.7 | 83.4 [80.9–85.9] | −0.4 | yes | +2.4 | +3.6 | — |
 | 2023-05-31 | 2026 | 4 | 91.1 | 84.3 [81.8–86.8] | −7.5 | no | −4.4 | −3.0 | — |
-| 2023-12-31 | 2024 | 1 | 85.2 | 83.7 [80.6–86.7] | −1.9 | yes | −1.1 | −1.7 | — |
-| 2023-12-31 | 2025 | 2 | 83.7 | 85.3 [82.2–88.3] | +1.9 | yes | +2.4 | +1.2 | — |
+| 2023-12-31 | 2024 | 1 | 85.2 | 83.8 [80.7–86.9] | −1.7 | yes | −1.1 | −1.7 | — |
+| 2023-12-31 | 2025 | 2 | 83.7 | 85.3 [82.1–88.3] | +1.9 | yes | +2.4 | +1.2 | — |
 | 2023-12-31 | 2026 | 3 | 91.1 | 86.5 [83.3–89.6] | −5.1 | no | −4.4 | −6.0 | — |
 | 2024-05-31 | 2024 | 1 | 85.2 | 83.6 [80.7–86.5] | −1.9 | yes | −1.1 | — | — |
-| 2024-05-31 | 2025 | 2 | 83.7 | 85.6 [82.6–88.5] | +2.3 | yes | +2.4 | +1.3 | — |
-| 2024-05-31 | 2026 | 3 | 91.1 | 87.0 [83.9–89.9] | −4.6 | no | −4.4 | −5.5 | — |
-| 2024-07-31 | 2025 | 1 | 83.7 | 86.0 [83.1–89.0] | +2.8 | yes | **+8.1** | +1.3 | — |
+| 2024-05-31 | 2025 | 2 | 83.7 | 85.6 [82.6–88.4] | +2.3 | yes | +2.4 | +1.3 | — |
+| 2024-05-31 | 2026 | 3 | 91.1 | 86.9 [83.9–89.9] | −4.6 | no | −4.4 | −5.5 | — |
+| 2024-07-31 | 2025 | 1 | 83.7 | 86.0 [83.0–89.0] | +2.7 | yes | **+8.1** | +1.3 | — |
 | 2024-07-31 | 2026 | 2 | 91.1 | 87.5 [84.5–90.4] | −4.0 | no | **+16.8** | −5.5 | — |
 | 2024-12-31 | 2025 | 1 | 83.7 | 86.8 [83.8–89.6] | +3.7 | no | +8.1 | **+9.8** | — |
 | 2024-12-31 | 2026 | 2 | 91.1 | 88.6 [85.5–91.4] | −2.8 | yes | +16.8 | **+18.9** | — |
-| 2025-05-31 | 2025 | 1 | 83.7 | 86.1 [83.1–88.9] | +2.9 | yes | +2.5 | — | — |
-| 2025-05-31 | 2026 | 2 | 91.1 | 88.7 [85.5–91.6] | −2.7 | yes | +3.9 | +4.7 | — |
-| 2025-12-31 | 2026 | 1 | 91.1 | 88.3 [85.2–91.2] | −3.2 | yes | +3.9 | +4.7 | — |
-| 2026-05-31 | 2026 | 1 | 91.1 | **88.9 [85.9–91.8]** | −2.4 | yes | +3.9 | +4.7 | **+22.9** |
+| 2025-05-31 | 2025 | 1 | 83.7 | 86.1 [83.2–89.0] | +2.9 | yes | +2.5 | — | — |
+| 2025-05-31 | 2026 | 2 | 91.1 | 88.6 [85.5–91.5] | −2.8 | yes | +3.9 | +4.7 | — |
+| 2025-12-31 | 2026 | 1 | 91.1 | 88.2 [85.2–91.1] | −3.2 | no | +3.9 | +4.7 | — |
+| 2026-05-31 | 2026 | 1 | 91.1 | **89.0 [86.0–91.9]** | −2.3 | yes | +3.9 | +4.7 | **+22.9** |
 
 The official vintages in the table are:
 
@@ -179,19 +184,19 @@ actual sits just above its P90).
 | Comparison | Cells | basecast MAPE | Official MAPE (bias) |
 |---|---:|---:|---:|
 | vs LTLF, all | 18 | **3.3%** | 5.1% (+2.8%) |
-| vs CDR, all | 15 | **3.3%** | 4.8% (+1.9%) |
+| vs CDR, all | 15 | **3.2%** | 4.8% (+1.9%) |
 | vs LTLF, as-of before LTLF 2024 (Jan 2023 vintage) | 10 | 3.5% | **2.7%** (−1.3%) |
 | vs CDR, same period | 8 | 3.4% | **2.8%** (−1.3%) |
 | vs LTLF, from LTLF 2024 on | 8 | **3.1%** | 8.0% (+8.0%) |
 | vs CDR, from Jul 2024 on | 7 | **3.1%** | 7.1% (+5.5%) |
-| vs 2026 preliminary | 1 | **2.4%** | 22.9% |
+| vs 2026 preliminary | 1 | **2.3%** | 22.9% |
 
-- **basecast overall:** 18 cells, MAPE 3.3%, bias −1.8%. **Coverage of P10–P90: 11/18 = 61%** (nominal 80%).
+- **basecast overall:** 18 cells, MAPE 3.3%, bias −1.8%. **Coverage of P10–P90: 10/18 = 56%** (nominal 80%).
 - **By horizon:**
 
   | h | Cells | MAPE | Bias | Coverage |
   |---:|---:|---:|---:|---:|
-  | 1 | 8 | 3.1% | −0.8% | 75% |
+  | 1 | 8 | 3.1% | −0.7% | 63% |
   | 2 | 6 | 2.9% | −1.5% | 67% |
   | 3 | 3 | 3.4% | −3.4% | 33% |
   | 4 | 1 | 7.5% | −7.5% | — |
@@ -207,7 +212,7 @@ actual sits just above its P90).
   3.4–3.5%).
 - **From mid-2024,** once ERCOT's forecasts took TSP large-load submissions in, basecast was 2.3–2.6× more accurate
   and its sign stayed negative: it under-forecasts slightly, while ERCOT over-forecast by 5–8%.
-- **The band is too narrow.** 61% coverage against 80% nominal, all misses on the low side except 2025 from
+- **The band is too narrow.** 56% coverage against 80% nominal, all misses on the low side except 2025 from
   Dec 2024. Widen it before the screen claims "80%".
 - **The cells are not independent:** 4 distinct summers, 8 of the 18 cells are summer 2026, and the ratios
   overlap across dates.
@@ -217,14 +222,14 @@ reading):
 
 | Target | Realized LL | LL forecast by as-of date (GW) | Realized U* | U forecast |
 |---|---:|---|---:|---:|
-| 2024 | 2.81 | 2.66 (May 23), 2.58 (Dec 23), 2.72 (May 24) | 5.3 | 2.4–2.5 |
-| 2025 | 3.84 | 2.90, 3.37, 3.87, 4.26 (Jul 24), 4.47 (Dec 24), 3.83 (May 25) | 1.9 | 2.4–5.0 |
-| 2026 | 4.57 | 3.05, 3.68, 4.34, 4.82, 5.35, 5.60, 5.44, 5.97 (May 26) | 7.7 | 2.4–5.0 |
+| 2024 | 2.81 | 2.64 (May 23), 2.73 (Dec 23), 2.74 (May 24) | 5.3 | 2.4–2.5 |
+| 2025 | 3.84 | 2.90, 3.35, 3.84, 4.23 (Jul 24), 4.44 (Dec 24), 3.87 (May 25) | 1.9 | 2.4–5.0 |
+| 2026 | 4.57 | 3.04, 3.67, 4.32, 4.80, 5.32, 5.53, 5.37, 6.09 (May 26) | 7.7 | 2.4–5.0 |
 
 \* Realized U = actual − organic P50 − realized LL, so it includes the summer's weather.
 
 - **LL:** close at 1–2 summers while the queue was stable (2023–2024 dates).
-- **LL over-forecast 2026 from every date after mid-2024** by +0.3 to +1.4 GW. Promises for 2026 grew from
+- **LL over-forecast 2026 from every date after mid-2024** by +0.2 to +1.5 GW. Promises for 2026 grew from
   30 GW to 55 GW while approvals did not keep up. That is the same failure the 2027–2031 forecast is exposed to.
 - **U is the noisiest layer:** 1.9–7.7 GW. It swings with the summer's weather, and the 2026 excess (7.7 GW) is
   above every past value.
@@ -294,7 +299,7 @@ not needed.
 
 ## Headline for the video (candidate)
 
-"Rebuilt with only what was public on May 31, 2026, our model put this summer's peak at 88.9 GW (range 85.9–91.8).
+"Rebuilt with only what was public on May 31, 2026, our model put this summer's peak at 89.0 GW (range 86.0–91.9).
 The grid peaked at 91.1. ERCOT's preliminary forecast from six weeks earlier said 112."
 
 Caveats to say or show:
@@ -316,10 +321,10 @@ Caveats to say or show:
 
 ## Review items for Pablo
 
-1. **Pre- or post–Batch Zero deck as the default.** The two give 111.6 vs. 132.9 GW for 2030. Neither is validated
+1. **Pre- or post–Batch Zero deck as the default.** The two give 111.3 vs. 132.8 GW for 2030. Neither is validated
    at 4–5 years, and the backtest shows LL over-forecasting whenever promises inflate. The approvals-pace check
-   (96.4 GW in 2030) is a third, lower view. Options: pick one, or show all three on screen as scenarios.
-2. **The band is too narrow** (61% coverage). Options:
+   (96.3 GW in 2030) is a third, lower view. Options: pick one, or show all three on screen as scenarios.
+2. **The band is too narrow** (56% coverage). Options:
    - Widen U, e.g. a continuous distribution over its min–max instead of resampling 4–5 values.
    - Correlate the layers.
    - Add the rolling-RMSE residual at every horizon, not just one.

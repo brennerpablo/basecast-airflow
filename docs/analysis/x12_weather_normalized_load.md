@@ -15,6 +15,12 @@ Postgres (`basecast_reader`, read-only): `ercot_load_hourly_wz` through operatin
   `x12_normalized_by_zone.png` (trailing-12-month average load, actual vs normalized, per zone) and
   `x12_ercot_summer_peak.png` (actual vs normalized P10/P50/P90 vs Q7)
 
+**Numbers refreshed on 2026-09-26 after the X16 #1 fix** (the Winter Storm Uri days are now normalized from the
+fitted day, not the shed load). Only 2021's normalized energy moves (ERCOT adjustment +1.0% → +1.6%), so the 2021–2022
+YoY, the 2010–21 reference and the z-scores change: ERCOT 2010–21 mean 2.1 → 2.2%/yr; 2022 +5.0% (z 6.0) → +4.4%
+(z 3.9); 2022–2025 now at 3.9–5.7 SD (was 5–7). The fits, the CAGRs and the summer peaks are unchanged, and the ~2022
+step still stands.
+
 ## Method
 
 **Targets, per zone and operating day (America/Chicago):** the daily mean MW (`dmean` = energy ÷ hours, so the
@@ -126,13 +132,13 @@ In-sample fit (rolling windows): daily-energy R² 0.92–0.99 by zone and window
 | 2018 | −0.5 | −1.8 | −0.7 | −2.3 | −1.7 | −1.7 | −1.0 | −1.3 | −1.4 |
 | 2019 | −1.2 | −1.2 | −0.3 | −1.2 | −0.8 | −2.2 | −1.6 | −1.5 | −1.1 |
 | 2020 | +0.3 | +2.5 | −0.4 | +2.3 | +0.3 | +0.3 | +0.4 | +0.1 | +1.0 |
-| 2021 | +0.8 | +0.0 | +0.4 | +1.8 | +1.0 | +1.0 | −0.0 | +1.0 | +1.0 |
+| 2021 | +1.4 | +0.5 | +1.2 | +2.3 | +1.6 | +1.6 | +0.4 | +1.5 | +1.6 |
 | 2022 | −2.2 | −3.1 | −0.8 | −3.9 | −3.3 | −4.7 | −2.3 | −3.4 | **−3.2** |
 | 2023 | −2.6 | −0.7 | −0.4 | −2.1 | −0.7 | −3.2 | −2.5 | −1.2 | −2.2 |
 | 2024 | −0.8 | +0.7 | −0.1 | −0.1 | −0.4 | −1.5 | −1.5 | −0.6 | −0.7 |
 | 2025 | −1.2 | −1.1 | −0.1 | −0.8 | −0.1 | −2.4 | −2.6 | −0.2 | −1.1 |
 
-- Over the normal period (2003–2022) the ERCOT adjustment averages +0.04%, as it should by construction.
+- Over the normal period (2003–2022) the ERCOT adjustment averages +0.06%, as it should by construction.
 - The adjustment is largest in 2011 (−4.3%) and 2022 (−3.2%), both extreme summers.
 
 ### Normalized annual energy (TWh) and growth
@@ -152,11 +158,11 @@ In-sample fit (rolling windows): daily-energy R² 0.92–0.99 by zone and window
 - **2019 → 2025 is weather-neutral.** Both years ran ~1.1% above normal, so raw and normalized CAGR agree within
   0.2 pp in every zone. The answer depends on the base year: **from 2022 (a hot year), raw growth understates the
   underlying rate** (ERCOT 4.33% raw vs. 5.07% normalized; NCENT 1.37% vs. 2.45%).
-- **Normalized ERCOT energy doubled its pace:** 2.12%/yr over 2010–2019, then +5.0 / +4.4 / +5.4 / +5.3% in
-  2022–2025. Against the 2010–2021 distribution of normalized YoY (mean 2.11%, SD 0.47 pp), those are
-  **5.0–7.0 SD** each year.
-- **Weather noise removed:** the SD of annual YoY change over 2004–2021 falls from 1.98 to 0.99 pp for ERCOT,
-  2.81 → 0.59 NCENT, 2.62 → 1.51 SOUTH, 2.92 → 2.11 SCENT and 3.52 → 2.72 WEST. COAST (1.66 → 1.68), FWEST and
+- **Normalized ERCOT energy doubled its pace:** 2.12%/yr over 2010–2019, then +4.4 / +4.4 / +5.4 / +5.3% in
+  2022–2025. Against the 2010–2021 distribution of normalized YoY (mean 2.16%, SD 0.57 pp), those are
+  **3.9–5.7 SD** each year.
+- **Weather noise removed:** the SD of annual YoY change over 2004–2021 falls from 1.98 to 1.04 pp for ERCOT,
+  2.81 → 0.56 NCENT, 2.62 → 1.51 SOUTH, 2.92 → 2.16 SCENT and 3.52 → 2.70 WEST. COAST (1.66 → 1.73), FWEST and
   NORTH are unchanged: hurricanes and structural growth dominate their variance, not weather.
 - **ERCOT modeled directly vs. the sum of the zones' normalized energy:** within ±0.17% every year.
 - **Normal-period sensitivity:** with 2006–2025 as normal, normalized energy is +0.04% to +0.68% higher (ERCOT
@@ -272,26 +278,26 @@ Normalized annual energy YoY (%), and its z-score against 2010–2021:
 
 | Year | COAST | EAST | FWEST | NCENT | NORTH | SCENT | SOUTH | WEST | ERCOT |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 2021 | +3.8 | +2.3 | +9.3 | +0.3 | +3.0 | +4.1 | +2.0 | −0.8 | +2.8 |
-| 2022 | +0.8 | +3.6 | +15.6 (z 0.9) | +3.4 (z 3.4) | **+31.0 (z 12.9)** | **+7.4 (z 6.1)** | +6.3 | +3.4 | **+5.0 (z 6.0)** |
-| 2023 | +2.1 | +1.9 | +21.4 (z 1.9) | +1.1 | +9.7 (z 4.0) | +4.7 | +2.6 | +3.6 | +4.4 (z 5.0) |
-| 2024 | +3.7 | +0.5 | +15.7 | +3.5 | +24.3 (z 10.1) | +3.8 | +4.5 | +3.7 | +5.4 (z 7.0) |
-| 2025 | +4.4 | +2.9 | +13.3 | +2.8 | +14.0 (z 5.8) | +3.5 | +4.7 | +2.8 | +5.3 (z 6.9) |
-| 2010–21 mean (SD) | 2.2 (1.2) | 1.8 (2.8) | 10.7 (5.6) | 1.1 (0.7) | 0.0 (2.4) | 1.6 (0.9) | 2.3 (1.6) | 1.5 (2.8) | 2.1 (0.5) |
+| 2021 | +4.4 | +2.8 | +10.1 | +0.8 | +3.6 | +4.7 | +2.5 | −0.4 | +3.4 |
+| 2022 | +0.1 | +3.2 | +14.7 (z 0.7) | +2.9 (z 2.7) | **+30.2 (z 12.2)** | **+6.7 (z 4.7)** | +5.8 | +2.9 | **+4.4 (z 3.9)** |
+| 2023 | +2.1 | +1.9 | +21.4 (z 1.9) | +1.1 | +9.7 (z 3.9) | +4.7 | +2.6 | +3.6 | +4.4 (z 4.0) |
+| 2024 | +3.7 | +0.5 | +15.7 | +3.5 | +24.3 (z 9.8) | +3.8 | +4.5 | +3.7 | +5.4 (z 5.7) |
+| 2025 | +4.4 | +2.9 | +13.3 | +2.8 | +14.0 (z 5.6) | +3.5 | +4.7 | +2.8 | +5.3 (z 5.6) |
+| 2010–21 mean (SD) | 2.2 (1.3) | 1.8 (2.8) | 10.8 (5.5) | 1.1 (0.7) | 0.0 (2.5) | 1.6 (1.1) | 2.3 (1.6) | 1.6 (2.8) | 2.2 (0.6) |
 
 - **NORTH: yes, sharply.**
-  - Normalized monthly YoY (average MW) goes from +3–4% (Oct–Nov 2021) to **+24% (Dec 2021)**, then +28% to +40%
+  - Normalized monthly YoY (average MW) goes from +3–4% (Oct–Nov 2021) to **+24% (Dec 2021)**, then +28% to +39%
     every month Jan–Nov 2022. That is X1's Dec 2021 / Jan 2022 timing, now with weather removed.
   - A second leg follows in 2024 (+21 to +31% monthly).
   - In 2026 NORTH turns negative: −1% (May), −8 / −11 / −10% (Jun–Aug), as X1 found.
 - **FWEST: no 2022 step in energy.** FWEST has grown 10–21% a year since 2014 (normalized: 2018 +18%, 2019 +21%),
-  so 2022 is ordinary for it (z 0.9).
+  so 2022 is ordinary for it (z 0.7).
   - X1's FWEST "excess" is measured against a pre-2020 *linear* peak trend. The energy series shows a sustained
     exponential ramp from ~2014, not a 2022 step. That matches Q7's FWEST break in 2017.
   - The 2026 **stall** is clear: normalized YoY +13–17% through Sep 2025, then +2 to +8% (Jan–May 2026) and
     +3 / +1 / −1 / −2% (Jun–Sep 2026).
-- **ERCOT and SCENT: yes.** ERCOT's normalized growth jumps from 2.1% to 5% in 2022 and stays there (5–7 SD every
-  year 2022–2025). SCENT 2022 is 6.1 SD.
+- **ERCOT and SCENT: yes.** ERCOT's normalized growth jumps from 2.2% to 4.4% in 2022 and stays at 4.4–5.4% (3.9–5.7 SD
+  every year 2022–2025). SCENT 2022 is 4.7 SD.
 - **WEST 2026 (X1): confirmed with weather removed.** Normalized YoY +8% (Oct 2025), +13% (Nov), +17% to +23%
   (Feb–Jun 2026), **+32% (Jul)**, **+39% (Aug)**, +48% (Sep 1–19).
 - **EAST** has an unflagged step in 2020 (+9.6%, z 2.8), visible in `x12_normalized_by_zone.png`. Cause not
