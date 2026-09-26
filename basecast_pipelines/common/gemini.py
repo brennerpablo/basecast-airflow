@@ -199,12 +199,11 @@ class Gemini:
     def _get_client(self):
         with self._lock:
             if self._client is None:
-                import google.auth
                 from google import genai
 
-                creds, _ = google.auth.default(
-                    scopes=["https://www.googleapis.com/auth/cloud-platform"], quota_project_id=self.project
-                )
+                from basecast_pipelines.common.gcp import credentials
+
+                creds, _ = credentials(self.project)
                 self._client = genai.Client(vertexai=True, project=self.project, location=LOCATION, credentials=creds)
             return self._client
 

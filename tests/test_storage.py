@@ -29,3 +29,24 @@ def test_put_file_moves_temp_into_place(storage: LocalStorage) -> None:
 def test_keys_cannot_escape_root(storage: LocalStorage) -> None:
     with pytest.raises(StorageError):
         storage.write_bytes("../outside.txt", b"x")
+
+
+def test_quota_project_only_for_user_credentials(monkeypatch):
+    """A service account must not carry a quota project (it would need serviceusage.services.use)."""
+    import google.auth
+    from google.oauth2.credentials import Credentials as UserCredentials
+
+    from basecast_pipelines.common import gcp
+
+    class ServiceAccount:
+        def with_quota_project(self, project):  # pragma: no cover - must not be called
+            raise AssertionError("quota project set on a service account")
+
+    monkeypatch.setattr(google.auth, "default", lambda scopes: (ServiceAccount(), "vm-project"))
+    creds, project = gcp.credentials("basecast-509812")
+    assert isinstance(creds, ServiceAccount) and project == "basecast-509812"
+
+    user = UserCredentials(token="t")
+    monkeypatch.setattr(google.auth, "default", lambda scopes: (user, "fundsys"))
+    creds, _ = gcp.credentials("basecast-509812")
+    assert creds.quota_project_id == "basecast-509812"
