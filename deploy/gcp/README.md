@@ -7,7 +7,7 @@ duplicates anything. Every command passes `--project`, so the local gcloud defau
 | Script | Creates |
 |---|---|
 | `01-bootstrap.sh` | APIs, budget alert (R$ 250/month, 50/90/100%), lake bucket `gs://basecast-509812-lake`, BigQuery dataset `basecast`, firewall (SSH only from IAP) |
-| `02-cloudsql.sh` | Cloud SQL `basecast-pg` (Postgres 17, db-f1-micro), databases `airflow` and `basecast`, roles, passwords in Secret Manager |
+| `02-cloudsql.sh` | Cloud SQL `basecast-pg` (Postgres 17, db-custom-2-8192), databases `airflow` and `basecast` (PostGIS), roles, passwords in Secret Manager |
 | `03-service-accounts.sh` | `airflow-vm` and `get-data-run` service accounts with least-privilege roles (BigQuery: jobs + dataset write for the VM, read for the API) |
 | `04-vm.sh` | VM `basecast-airflow` (e2-medium, Debian 12, Docker via `vm-startup.sh`) |
 | `05-airflow-up.sh` | Deploys the repo's committed `HEAD` and `deploy/airflow/` to the VM and (re)starts Airflow (re-run after any change) |
@@ -25,7 +25,7 @@ One Cloud SQL instance, two databases:
   creates tables; `basecast_reader` (the API) gets `SELECT` on them automatically.
 
 Connections go only through the Cloud SQL connectors (connector enforcement is on, no authorized
-networks). db-f1-micro allows 25 connections, so every client keeps a small pool.
+networks). The instance allows 400 connections; clients still keep small pools.
 
 From the Mac:
 
@@ -106,7 +106,7 @@ Prices from the Cloud Billing catalog on 2026-09-26, running 24/7:
 | VM e2-medium (US$ 0.0335/h) | 24.46 |
 | VM disk, 30 GB pd-standard | 1.20 |
 | VM external IPv4 (first 720 h/month per billing account free, then US$ 0.005/h) | 0 to 3.65 |
-| Cloud SQL db-f1-micro (US$ 0.0105/h) | 7.67 |
+| Cloud SQL db-custom-2-8192 (2 vCPU × US$ 0.0413/h + 8 GiB × US$ 0.007/h = US$ 0.139/h) | 101.2 |
 | Cloud SQL 10 GB SSD + backups | ~1.75 |
 | Bucket, Secret Manager, Cloud Run | ~0 (free tiers) |
 
@@ -119,5 +119,8 @@ gcloud sql instances patch basecast-pg --project basecast-509812 --activation-po
 
 The API reads Postgres, so stopping Cloud SQL takes those endpoints down.
 
-Upgrade paths: Cloud SQL `db-g1-small` (1.7 GB, US$ 0.035/h) if 25 connections or 614 MB get tight;
+The instance was db-f1-micro (US$ 0.0105/h, 25 connections, shared core) until 2026-09-26, when the PostGIS
+overlays of the initial load took 10+ minutes each on it. After the hackathon, go back to save money
+(`gcloud sql instances patch basecast-pg --project basecast-509812 --tier=db-f1-micro`, a restart of a few
+minutes; 25 connections is tight with Airflow and the API together). Other upgrade path:
 VM `e2-standard-2` (8 GB) if Airflow runs out of memory. Both are a stop, change and start.

@@ -13,7 +13,7 @@ x-airflow-common:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD}@cloud-sql-proxy:5432/airflow
-    # db-f1-micro allows 25 connections in total: keep each process's pool small.
+    # Keep each process's pool small (the instance was db-f1-micro, 25 connections, and may go back).
     AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE: '2'
     AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW: '3'
     AIRFLOW__CORE__PARALLELISM: '4'

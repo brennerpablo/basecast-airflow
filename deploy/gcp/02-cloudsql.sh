@@ -16,7 +16,7 @@ if ! gcloud sql instances describe "$SQL_INSTANCE" --project "$PROJECT" >/dev/nu
   # SSD instead of HDD: HDD IOPS scale with size and are tiny at 10 GB; SSD costs US$ 0.80/month more.
   # Connector enforcement: no authorized networks, only the Cloud SQL proxy/connectors get in.
   gcloud sql instances create "$SQL_INSTANCE" --project "$PROJECT" \
-    --database-version=POSTGRES_17 --edition=enterprise --tier=db-f1-micro \
+    --database-version=POSTGRES_17 --edition=enterprise --tier=db-custom-2-8192 \
     --zone="$ZONE" --availability-type=zonal \
     --storage-type=SSD --storage-size=10 --storage-auto-increase \
     --backup-start-time=08:00 --retained-backups-count=7 --no-enable-point-in-time-recovery \
