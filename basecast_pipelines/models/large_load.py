@@ -134,6 +134,60 @@ def with_vintage(cv: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+MAX_AXIS_LAG_MONTHS = 3
+MAX_AXIS_LEAD_MONTHS = 1
+_AXIS_KEY = ("vintage", "document", "source_file", "page", "chart_title")
+
+
+def _month_number(col: str) -> pl.Expr:
+    """``"YYYY-MM"`` (or the ``vintage`` date) as a running month count, so two months subtract to a lag."""
+    c = pl.col(col)
+    if col == "vintage":
+        return c.dt.year().cast(pl.Int32) * 12 + c.dt.month().cast(pl.Int32)
+    return c.str.slice(0, 4).cast(pl.Int32) * 12 + c.str.slice(5, 2).cast(pl.Int32)
+
+
+def misdated_month_axes(cv: pl.DataFrame, max_lag_months: int = MAX_AXIS_LAG_MONTHS,
+                        max_lead_months: int = MAX_AXIS_LEAD_MONTHS) -> pl.DataFrame:
+    """Monthly-axis charts whose axis was misread: the chart's last month sits more than ``max_lag_months``
+    before its deck, or more than ``max_lead_months`` after it.
+
+    The rolling "past 12 months" charts end in the deck's month or the one before (lag 0-1 in every deck but
+    one). Gemini read the May 2026 deck's axes two years early (2023-07..2024-05 for 2025-07..2026-05, lag 24).
+    The rule is per chart and looks at the *last* month: several charts legitimately open with an old anchor bar
+    (April 2022 in the 2023 queue charts, October 2022 in the approvals charts), which a per-value age limit
+    would drop. A 3-month tolerance also catches a one-year misread. Returns one row per flagged chart.
+    """
+    months = with_vintage(cv).filter(pl.col("category").str.contains(_MONTH))
+    last = months.group_by(_AXIS_KEY).agg(_month_number("category").max().alias("_last"),
+                                          pl.col("category").max().alias("last_month"))
+    return (
+        last.with_columns((_month_number("vintage") - pl.col("_last")).alias("lag_months"))
+        .filter((pl.col("lag_months") > max_lag_months) | (pl.col("lag_months") < -max_lead_months))
+        .drop("_last")
+        .sort("vintage", "document", "page")
+    )
+
+
+def drop_misdated_months(cv: pl.DataFrame, max_lag_months: int = MAX_AXIS_LAG_MONTHS,
+                         max_lead_months: int = MAX_AXIS_LEAD_MONTHS) -> pl.DataFrame:
+    """Chart values with ``vintage`` and ``series_kind``, minus the monthly values of misdated charts
+    (:func:`misdated_month_axes`). Every other row is kept; applying it twice changes nothing.
+
+    Dropped rather than re-dated: shifting the May 2026 axes by +24 months matches the June 2026 deck's reading
+    of the same months 10/10, so dropping loses nothing, while a re-date would be a guess for a deck that has no
+    later reading to confirm it.
+    """
+    df = with_vintage(cv)
+    bad = misdated_month_axes(df, max_lag_months, max_lead_months).select(_AXIS_KEY)
+    if bad.is_empty():
+        return df
+    flagged = df.join(bad.with_columns(pl.lit(True).alias("_misdated")), on=list(_AXIS_KEY), how="left")
+    return flagged.filter(
+        ~(pl.col("_misdated").fill_null(False) & pl.col("category").str.contains(_MONTH))
+    ).drop("_misdated")
+
+
 def series_inventory(cv: pl.DataFrame) -> pl.DataFrame:
     """Distinct (vintage, document, page, chart, series kind, dimension) with counts, statuses and span."""
     return (
@@ -328,10 +382,18 @@ def pick_vintages(checked: pl.DataFrame, doc_types: pl.DataFrame | None = None) 
 # ------------------------------------------------------------------------------------------- status series
 
 
-def a2e_by_month(cv: pl.DataFrame) -> pl.DataFrame:
-    """Approved-to-energize stock by month from the status series, keeping the latest deck's reading."""
+def a2e_by_month(cv: pl.DataFrame, max_lag_months: int = MAX_AXIS_LAG_MONTHS) -> pl.DataFrame:
+    """Approved-to-energize stock by month from the status series, keeping the latest deck's reading.
+
+    Misdated axes are dropped first (:func:`drop_misdated_months`): the latest deck wins each month, so one deck
+    read two years early would otherwise overwrite 11 good months (Dec 2023 showed the May 2026 deck's 8,786 MW
+    instead of 4,479 MW, the Apr 2024 deck's reading).
+
+    "Latest reading" means restated history wins: the Apr 2024 deck restates Jul-Dec 2023 upward (Dec 2023:
+    4,479 MW vs 3,188 MW in the Dec 2023 deck, which matches that deck's own sentence as of 11 Dec).
+    """
     return (
-        with_vintage(cv)
+        drop_misdated_months(cv, max_lag_months)
         .filter(
             (pl.col("series_kind") == "status_by_month")
             & (pl.col("status_bucket") == "approved_to_energize")
@@ -444,9 +506,10 @@ def summarize_ratios(ratios: pl.DataFrame, columns: tuple[str, ...] = RATIO_COLU
 
 
 def crosscheck_status_vs_headlines(cv: pl.DataFrame, headlines: pl.DataFrame, tol: float = 0.01) -> pl.DataFrame:
-    """Gemini's last month of the status series vs the same deck's "approved to energize" sentence."""
+    """Gemini's last month of the status series vs the same deck's "approved to energize" sentence
+    (misdated axes left out)."""
     last = (
-        with_vintage(cv)
+        drop_misdated_months(cv)
         .filter((pl.col("series_kind") == "status_by_month") & (pl.col("status_bucket") == "approved_to_energize")
                 & pl.col("category").str.contains(_MONTH))
         .sort("category")
@@ -490,7 +553,7 @@ def crosscheck_native(cv: pl.DataFrame, status: pl.DataFrame, tol: float = 0.01,
         )
         .filter(~pl.col("series").is_in(_AMBIGUOUS_SERIES))
     )
-    gem = with_vintage(cv).filter(pl.col("category_type") == "month").select(
+    gem = drop_misdated_months(cv).filter(pl.col("category_type") == "month").select(
         "document", "page", "vintage", "series_kind",
         pl.col("status_label").str.to_lowercase().alias("series"),
         pl.col("category").alias("month"), pl.col("value_mw").alias("gemini_mw"),

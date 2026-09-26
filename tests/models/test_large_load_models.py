@@ -144,3 +144,48 @@ def test_slide_link_forms():
     assert ll.slide_link("https://x/r.zip", "m.pdf", 4) == "https://x/r.zip › m.pdf, slide 4"
     assert ll.slide_link("https://x/d.pptx", "d.pptx", 5) == "https://x/d.pptx, slide 5"
     assert ll.slide_link(None, "d.pdf", 5).startswith("not verified")
+
+
+def _approvals(document, report_date, months_values, *, page=4):
+    title = "ERCOT Approvals – Past 12 Months"
+    return [_row(document, report_date, m, "approved_to_energize", v, title=title, ctype="month", page=page,
+                 source_file=f"raw/{document}") for m, v in months_values]
+
+
+def test_misdated_axis_is_dropped_but_old_anchor_bars_are_kept():
+    rows = (
+        # Apr 2024 deck: an Oct 2022 anchor bar (18 months back), then recent months up to the deck month.
+        _approvals("apr24", date(2024, 4, 1), [("2022-10", 1724), ("2023-12", 4479), ("2024-03", 4479)])
+        # May 2026 deck read two years early: 2023-12 / 2024-05 stand for 2025-12 / 2026-05.
+        + _approvals("may26", date(2026, 5, 21), [("2023-12", 8786), ("2024-05", 9062)])
+        # A one-year misread (last month 12 months before the deck) is caught too.
+        + _approvals("jun25", date(2025, 6, 2), [("2024-05", 6874)])
+    )
+    cv = _cv(rows)
+    flagged = ll.misdated_month_axes(cv)
+    assert flagged["document"].to_list() == ["jun25", "may26"]
+    assert flagged["lag_months"].to_list() == [13, 24]
+    kept = ll.drop_misdated_months(cv)
+    assert sorted(kept["document"].unique().to_list()) == ["apr24"]
+    assert "2022-10" in kept["category"].to_list()  # the anchor bar survives
+    assert ll.drop_misdated_months(kept).equals(kept)  # idempotent
+
+
+def test_a2e_by_month_is_not_overwritten_by_a_misdated_later_deck():
+    rows = (
+        _approvals("apr24", date(2024, 4, 1), [("2023-12", 4479), ("2024-03", 4479)])
+        + _approvals("may26", date(2026, 5, 21), [("2023-12", 8786), ("2024-03", 9042), ("2024-05", 9062)])
+    )
+    monthly = ll.a2e_by_month(_cv(rows))
+    assert monthly["month"].to_list() == ["2023-12", "2024-03"]
+    assert monthly["a2e_mw"].to_list() == [4479.0, 4479.0]
+    # With the check off (huge tolerance), the old behaviour comes back: the later, misdated deck wins.
+    unchecked = ll.a2e_by_month(_cv(rows), max_lag_months=10_000)
+    assert unchecked.filter(pl.col("month") == "2023-12")["a2e_mw"].item() == 8786.0
+
+
+def test_non_month_rows_of_a_deck_with_a_misdated_axis_are_kept():
+    rows = _approvals("may26", date(2026, 5, 21), [("2023-12", 8786)]) + _deck(
+        "may26", date(2026, 5, 21), {2026: (100, 0, 0, 0, 100)}, source_file="raw/may26")
+    kept = ll.drop_misdated_months(_cv(rows))
+    assert kept["category"].to_list() == ["2026"] * 5

@@ -218,18 +218,18 @@ MAX_CHART_SPAN_MONTHS = 16
 
 
 def drop_misdated_months(cv: pl.DataFrame, max_span_months: int = MAX_CHART_SPAN_MONTHS) -> pl.DataFrame:
-    """Chart values with ``vintage`` and ``series_kind`` added, minus monthly-axis values dated more than
-    ``max_span_months`` before their deck (a misread axis: the decks' monthly charts show the past 11-15 months).
-    Non-month categories are kept. The result can be passed back to ``large_load`` functions, which recompute
-    the same two columns."""
-    month_start = pl.col("category").str.strptime(pl.Date, "%Y-%m", strict=False)
-    too_old = month_start < pl.col("vintage").dt.offset_by(f"-{max_span_months}mo").dt.truncate("1mo")
-    return ll.with_vintage(cv).filter(~(too_old.fill_null(False)))
+    """Chart values with ``vintage`` and ``series_kind`` added, minus the monthly values of charts whose axis was
+    misread. Delegates to ``large_load.drop_misdated_months`` (the fix at the source): a chart is misdated when
+    its *last* month sits more than ``max_span_months`` before its deck, so old anchor bars in good charts are
+    kept. X1 keeps its looser 16-month tolerance (Q5 uses 3); on the real decks both drop exactly the May 2026
+    deck's four monthly charts. Non-month categories are kept."""
+    return ll.drop_misdated_months(cv, max_lag_months=max_span_months)
 
 
 def a2e_by_month_checked(cv: pl.DataFrame, max_span_months: int = MAX_CHART_SPAN_MONTHS) -> pl.DataFrame:
-    """Q5's approved-to-energize stock by month (``large_load.a2e_by_month``) after :func:`drop_misdated_months`."""
-    return ll.a2e_by_month(drop_misdated_months(cv, max_span_months))
+    """Q5's approved-to-energize stock by month (``large_load.a2e_by_month``, which now drops misdated axes
+    itself) with X1's tolerance."""
+    return ll.a2e_by_month(cv, max_lag_months=max_span_months)
 
 
 def energized_by_month(cv: pl.DataFrame, max_span_months: int = MAX_CHART_SPAN_MONTHS) -> pl.DataFrame:

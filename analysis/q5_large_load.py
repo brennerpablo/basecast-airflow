@@ -115,7 +115,10 @@ print(f"same vintage read twice, excluding the March 2026 revision: {dup_same['a
 # ## 5. Realized stocks at year end
 
 # %%
+misdated = ll.misdated_month_axes(cv)
+print("monthly-axis charts dropped as misdated (last month too far from the deck):\n", misdated)
 monthly = ll.a2e_by_month(cv)
+monthly.write_csv(out_path("q5_a2e_by_month.csv"))
 print(monthly)
 realized_rows = []
 for year in (2024, 2025, 2026):
@@ -208,7 +211,7 @@ for v in is_pick.iter_rows(named=True):
         "value": f"{target} bar, Total = {bar['total_mw']:,.0f} MW", "url": v["url"],
     })
 st_charts = (
-    ll.with_vintage(cv)
+    ll.drop_misdated_months(cv)
     .filter((pl.col("series_kind") == "status_by_month") & (pl.col("status_bucket") == "approved_to_energize"))
     .join(urls, on="source_file", how="left")
     .sort("category")
