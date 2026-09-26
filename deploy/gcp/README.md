@@ -11,6 +11,7 @@ duplicates anything. Every command passes `--project`, so the local gcloud defau
 | `03-service-accounts.sh` | `airflow-vm` and `get-data-run` service accounts with least-privilege roles (BigQuery: jobs + dataset write for the VM, read for the API) |
 | `04-vm.sh` | VM `basecast-airflow` (e2-medium, Debian 12, Docker via `vm-startup.sh`) |
 | `05-airflow-up.sh` | Deploys the repo's committed `HEAD` and `deploy/airflow/` to the VM and (re)starts Airflow (re-run after any change) |
+| `06-github-actions.sh` | GitHub Actions deploys: Workload Identity pool `github-pool` (only `basecast-airflow` and `basecast-get-data`, only from `main`), deploy service accounts `airflow-deploy` and `get-data-deploy`, the repos' secrets |
 
 `02-cloudsql.sh` needs `psql` and the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy)
 (`cloud-sql-proxy` on PATH, or `CLOUD_SQL_PROXY=/path/to/binary`).
@@ -55,6 +56,33 @@ BigQuery dataset `basecast`. Pools (`deploy/airflow/config/pools.json`): `ercot_
 ercot.com fetch shares the 20 req/min budget), `open_meteo` (1), `heavy_process` (1: large parses run
 alone on the 4 GB VM).
 
+### Deploys
+
+As in fundsys, a push to `main` deploys (`.github/workflows/deploy.yml`; also runnable by hand from the
+Actions tab). The workflow signs in to GCP through Workload Identity Federation, reaches the VM over
+SSH through IAP, `git reset --hard`s `/opt/basecast/src` (a clone of this public repo) to the pushed
+commit, copies `deploy/airflow/` to `/opt/basecast/airflow` and writes `.env` there from the
+`AIRFLOW_ENV_FILE` repo secret. Then one of three paths:
+
+- `Dockerfile`, `requirements.txt` or `docker-compose.yml` changed: rebuild the image and `up -d`.
+- only `.env` changed: `up -d --force-recreate` (compose reads `.env` only when a container starts).
+- anything else: restart the scheduler and the DAG processor, because tasks fork from the scheduler
+  and keep the modules it imported at start.
+
+Each path waits for the API server's health check; only then are old images and the build cache
+pruned. Rollback is `git revert` and a push. `05-airflow-up.sh` still works for the first install and
+to try a branch on the VM; the next push to `main` puts `main` back.
+
+`AIRFLOW_ENV_FILE` is the source of truth for the VM's `.env` (seed it from the current file so the
+Fernet key survives). The workflow also reads `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`,
+`GCP_PROJECT_ID`, `GCP_VM_NAME` and `GCP_VM_ZONE`. `06-github-actions.sh` creates all of it (the
+deploy service account `airflow-deploy` has only OS Login with sudo and IAP tunnel access, as in
+fundsys) and seeds `AIRFLOW_ENV_FILE` from the VM's `.env` when the secret does not exist. To change
+the `.env` later, edit the secret (`gh secret set AIRFLOW_ENV_FILE`) and redeploy.
+
+`basecast-get-data` deploys the same way, to Cloud Run (its `.github/workflows/deploy.yml`, service
+account `get-data-deploy`, environment in the `ENV_YAML` repo secret).
+
 DAGs are paused when created. After a deploy, unpause them (all or one by one):
 
 ```bash
@@ -66,7 +94,8 @@ gcloud compute ssh basecast-airflow --project basecast-509812 --zone us-central1
 
 `pg-postgres-password`, `pg-airflow-password`, `pg-basecast-writer-password`,
 `pg-basecast-reader-password`, `airflow-admin-password`, `get-data-api-token`. The Airflow Fernet key
-and JWT secret are generated on the VM and stay in `/opt/basecast/airflow/.env`.
+and JWT secret are generated on the VM and stay in `/opt/basecast/airflow/.env`, which the deploy
+workflow overwrites from the `AIRFLOW_ENV_FILE` repo secret (see Deploys).
 
 ## Cost
 

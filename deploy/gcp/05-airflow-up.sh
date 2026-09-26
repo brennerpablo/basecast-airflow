@@ -2,6 +2,8 @@
 # Deploys the committed HEAD of this repo to the VM (/opt/basecast/src: DAGs, pipelines, config/), then
 # copies deploy/airflow there and (re)starts Airflow. Safe to re-run after any change.
 # Uncommitted changes are not deployed: commit first.
+# The normal path is a push to main (.github/workflows/deploy.yml). This script is for the first install
+# and for trying a branch on the VM; the next push to main puts main back.
 set -euo pipefail
 source "$(dirname "$0")/env.sh"
 ssh_opts=(--project "$PROJECT" --zone "$ZONE" --tunnel-through-iap)
@@ -23,7 +25,8 @@ gcloud compute ssh "$VM_NAME" "${ssh_opts[@]}" --command "sudo bash -c '
   rm -rf /tmp/basecast-src && mkdir -p /tmp/basecast-src /opt/basecast/src
   tar -xzf /tmp/basecast-src.tar.gz -C /tmp/basecast-src
   echo $revision > /tmp/basecast-src/REVISION
-  rsync -a --delete /tmp/basecast-src/ /opt/basecast/src/
+  # --exclude .git: the workflow keeps a git clone here; its next deploy resets it to main.
+  rsync -a --delete --exclude .git /tmp/basecast-src/ /opt/basecast/src/
   chown -R 50000:0 /opt/basecast/src
   SQL_CONNECTION=$SQL_CONNECTION bash /tmp/airflow-deploy/up.sh
 '"
