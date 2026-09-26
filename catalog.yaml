@@ -48,7 +48,7 @@
   gridstatus_method: none
   priority: P0
   used_by: [large_load_realization_model, ltlf_benchmark]
-  caveats: "aggregate only, no per-project IDs (LLI-# internal); charts need manual/PDF extraction; categories changed with PGRR115/PGRR145 Batch Zero; TSPs with <5 customers folded into Other. Location/name changed over time: LFLTF pages (2024, 'LLI Queue Status Update'), inside TAC agenda-item zips (Oct 2024 - Jan 2026), LLWG pages ('<Month> TAC Report' Feb-Mar 2026, '<Month> <day> LLWG Report' Apr-Jun 2026). NPRR1267 'Large Load Interconnection Status Report' approved Jun 2025 but not in EMIL"
+  caveats: "aggregate only, no per-project IDs (LLI-# internal); charts need manual/PDF extraction; categories changed with PGRR115/PGRR145 Batch Zero; TSPs with <5 customers folded into Other. Location/name changed over time: LFLTF pages (2024, 'LLI Queue Status Update'), inside TAC agenda-item zips (Oct 2024 - Jan 2026), LLWG pages ('<Month> TAC Report' Feb-Mar 2026, '<Month> <day> LLWG Report' Apr-Jun 2026). NPRR1267 'Large Load Interconnection Status Report' approved Jun 2025 but not in EMIL. Headline, March 2026 (updated deck March-TAC-Report-Updated_03262026.pptx, slides 6-7): 9,042 MW approved to energize; observed peaks 4,004 MW non-simultaneous and 3,522 MW simultaneous (the first PDF printed 3,883/3,801 MW labeled March 2025)"
   verified: "verified at source 2026-09-25 (archive crawled Jan 2024 - Sep 2026; deck content checked on Mar and Apr 2026 only)"
 
 - id: hourly_load_archive

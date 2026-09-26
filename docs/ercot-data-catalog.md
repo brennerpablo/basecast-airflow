@@ -30,7 +30,7 @@ The one clear gap is an official county-to-zone table: ERCOT has none, so we bui
    - ERCOT Monthly recaps;
    - Batch Zero process documents.
 
-   The March 13, 2026 deck defines five status buckets and reports 9,042 MW approved to energize, with an observed non-simultaneous peak of 3,883 MW (the updated deck of 2026-03-26 reports 4,004 MW for March 2026; see the correction below). Its TSP breakdown folds groups with fewer than five customers into "Other" to protect customer data. This is an explicit confidentiality policy, so do not expect per-project releases.
+   The March 13, 2026 deck defines five status buckets and reports 9,042 MW approved to energize, with an observed non-simultaneous peak of 4,004 MW in March 2026 (updated deck `March-TAC-Report-Updated_03262026.pptx`, slide 6). Its TSP breakdown folds groups with fewer than five customers into "Other" to protect customer data. This is an explicit confidentiality policy, so do not expect per-project releases.
 3. **Hourly load by weather zone.** Available as annual files from 1995. The eight-weather-zone series starts in April 2003; before that, 11 control areas were reported. Formats: 2002–2014 xls, 2015 xls, 2016+ zip. The current-year file is updated monthly around the 9th.
 4. **CDR.** Every edition we checked ships as PDF plus spreadsheet (xls through 2014, xlsx later). The earliest is "Capacity, Demand and Reserves Report – 2000" (xls only). The December 2025 CDR xlsx is 13 MB. The May 2026 CDR was not produced.
 5. **LTLF.** The 2025 vintage has an hourly ERCOT and weather-zone forecast (xlsb, ~46 MB), monthly peak/energy (xlsx), and weather-year scenario files by weather zone (xlsx, 66–78 MB each). Archive year pages exist for 2013–2025. The 2026 preliminary LTLF (278,003 MW in 2029; 367,790 MW in 2032) is a PUCT filing and is under adjustment.
@@ -94,7 +94,7 @@ The one clear gap is an official county-to-zone table: ERCOT has none, so we bui
   - Status buckets: Observed Energized; Approved to Energize but Not Operational; Planning Studies Approved; Under ERCOT Review; No Studies Submitted.
   - Approvals by zone and project type (LZ_NORTH, LZ_SOUTH, LZ_HOUSTON aggregated as "Other").
   - Distribution by size, TSP, submittal date, in-service date, type and load zone.
-  - Observed non-simultaneous (3,883 MW) and simultaneous (3,801 MW) peaks of approved loads. **Correction (2026-09-26):** the original PDF labels these "March 2025"; ERCOT's updated deck (March-TAC-Report-Updated_03262026.pptx, slides 6-7) reports 4,004 MW and 3,522 MW for March 2026.
+  - Observed non-simultaneous (4,004 MW) and simultaneous (3,522 MW) peaks of approved loads in March 2026: `https://www.ercot.com/files/docs/2026/03/27/March-TAC-Report-Updated_03262026.pptx`, slides 6 and 7 (checked 2026-09-26). The first version of the deck (`March-TAC-Report.pdf`, 2026-03-12, pp. 6-7) printed 3,883 and 3,801 MW labeled "March 2025"; ERCOT replaced them.
 - **Headline figures:**
   - Jan 21, 2026: the ERCOT Monthly January 2026 recap (published Feb 13, 2026) says tracked large-load projects "total approximately 232,500 megawatts" and "8,786 MW of large load demand has received approval to energize".
   - March 2026: 9,042 MW approved. The ERCOT deck also reports 137 new LLI submissions of ~140,000 MW still being processed. Zero-Emission Grid's summary of that deck (a secondary source) says these requests would lift the total queue "from approximately ~238,000 MW to nearly ~380,000 MW".
