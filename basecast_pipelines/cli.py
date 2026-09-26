@@ -10,6 +10,7 @@ from typing import Annotated
 import polars as pl
 import typer
 
+from basecast_pipelines.common import ops_log
 from basecast_pipelines.common.http import HttpClient
 from basecast_pipelines.common.inventory import render_markdown, runs_table
 from basecast_pipelines.common.raw import register_local_file
@@ -41,6 +42,7 @@ def main(verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False) -> N
         datefmt="%H:%M:%S",
     )
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    ops_log.install()
 
 
 @app.command()

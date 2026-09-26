@@ -136,6 +136,11 @@ as support (pin the version; its methods vary between versions).
   `raw/source=<id>/` prefix) come from the table in `docs/SCRAPING_RUNBOOK.md` §1.
 - **Local etl_run:** every run writes one row to `data/_runs/etl_run.parquet` (source, started_at,
   finished_at, status, rows, files, error, events).
+- **ops.log:** with `BASECAST_DB_URL` set, `common/ops_log.py` also writes each run's start, end and events
+  (`etl_run.*`, `etl.<kind>`, with `run_id`) and every WARNING+ of the `basecast_pipelines`/`basecast_dags`
+  loggers to Postgres `ops.log`, the log the app's /ops screen reads (format: basecast-get-data data contract
+  §7). Batched on a thread, flushed when a run ends, never raises; `install()` is called by the CLI and the
+  DAG runtime.
 - Downloads above ~1 GB in total for one source: ask the user first.
 
 ## General rules (KICKOFF §7)

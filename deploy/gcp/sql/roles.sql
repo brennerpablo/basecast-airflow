@@ -24,3 +24,6 @@ GRANT ALL ON SCHEMA public TO airflow;
 CREATE EXTENSION IF NOT EXISTS postgis;
 GRANT USAGE, CREATE ON SCHEMA public TO basecast_writer;
 GRANT USAGE ON SCHEMA public TO basecast_reader;
+
+-- The `ops` schema (the shared log, ops.log) belongs to the app: basecast-app `npm run db:push` creates it
+-- and basecast-app `prisma/ops-grants.sql` gives basecast_writer INSERT there.

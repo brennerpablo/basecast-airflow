@@ -1,5 +1,5 @@
-"""Task bodies shared by the DAG factories: build storage/HTTP from the environment, tag etl_run rows
-with the Airflow run, and call the Airflow-free pipeline entry points."""
+"""Task bodies shared by the DAG factories: build storage/HTTP from the environment, turn on ops.log, tag
+etl_run rows with the Airflow run, and call the Airflow-free pipeline entry points."""
 
 from __future__ import annotations
 
@@ -39,12 +39,14 @@ def run_date(context: dict[str, Any]) -> date:
 
 
 def fetch_raw(source_id: str, context: dict[str, Any], *, since=None, until=None, options: dict | None = None) -> dict:
+    from basecast_pipelines.common import ops_log
     from basecast_pipelines.common.etl_run import airflow_labels
     from basecast_pipelines.common.http import HttpClient
     from basecast_pipelines.common.storage import storage_from_uri
     from basecast_pipelines.config import load_settings
     from basecast_pipelines.sources import get_source
 
+    ops_log.install()
     settings = load_settings()
     storage = storage_from_uri(settings.storage_root)
     airflow_labels.set(_labels(context))
@@ -59,11 +61,13 @@ def fetch_raw(source_id: str, context: dict[str, Any], *, since=None, until=None
 
 def process(source_id: str, context: dict[str, Any], *, since=None, until=None, datasets=None,
             reprocess: bool = False, rebuild: bool = False) -> dict:
+    from basecast_pipelines.common import ops_log
     from basecast_pipelines.common.etl_run import airflow_labels
     from basecast_pipelines.common.storage import storage_from_uri
     from basecast_pipelines.config import load_settings
     from basecast_pipelines.processing.runner import run_process
 
+    ops_log.install()
     settings = load_settings()
     storage = storage_from_uri(settings.storage_root)
     airflow_labels.set(_labels(context))

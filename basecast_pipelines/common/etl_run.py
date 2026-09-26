@@ -3,7 +3,8 @@
 With ``BASECAST_DB_URL`` set, rows go to the ``etl_run`` table in Postgres (inserted as ``running``, then
 updated when the run ends; a row left ``running`` by a dead process becomes ``abandoned`` when the next run
 of the same source and stage starts), where the API reads them; otherwise to ``_runs/etl_run.parquet`` in the lake.
-Airflow tasks tag their rows with the DAG, task and run through ``airflow_labels``."""
+Airflow tasks tag their rows with the DAG, task and run through ``airflow_labels``. The run's start, end and
+events also go to ``ops.log`` (``common/ops_log.py``) when it is on."""
 
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from uuid import uuid4
 
 import polars as pl
 
+from basecast_pipelines.common import ops_log
 from basecast_pipelines.common.storage import Storage
 
 log = logging.getLogger(__name__)
@@ -27,6 +29,12 @@ RUNS_KEY = "_runs/etl_run.parquet"
 
 # Set by the Airflow task before it calls a pipeline: dag_id, task_id, airflow_run_id, try_number.
 airflow_labels: ContextVar[dict | None] = ContextVar("airflow_labels", default=None)
+
+# The run in progress, so every ops.log line written inside it carries its run_id.
+current_run: ContextVar[EtlRun | None] = ContextVar("current_run", default=None)
+
+# Events emitted once per file; they stay in etl_run.events and out of ops.log.
+PER_FILE_KINDS = frozenset({"unchanged", "not_modified"})
 
 SCHEMA = {
     "run_id": pl.String,
@@ -63,17 +71,32 @@ class EtlRun:
         self.errors = 0
         self.events: list[dict] = []
         self.status: str | None = None
+        self._token = None
 
     def event(self, kind: str, **data: object) -> None:
         self.events.append({"at": datetime.now(timezone.utc).isoformat(), "kind": kind, **data})
         if kind == "error":
             self.errors += 1
+            error = str(data.get("error", ""))
+            ops_log.emit(
+                "error", "etl.error", f"{self.source}: {error or 'item failed'}",
+                error_class=ops_log.error_class_of(error) or "ItemError", context=data,
+            )
+        elif kind not in PER_FILE_KINDS:
+            ops_log.emit("info", f"etl.{kind}", f"{self.source} {kind}: {json.dumps(data, default=str)}", context=data)
 
     def __enter__(self) -> EtlRun:
         log.info("run %s started: %s %s %s", self.run_id, self.source, self.stage, self.params)
+        self._token = current_run.set(self)
+        ops_log.emit("info", "etl_run.start", f"{self.source} {self.stage} started", context={"params": self.params})
         db_url = os.environ.get("BASECAST_DB_URL")
         if db_url:
-            _pg_insert_running(db_url, self)
+            abandoned = _pg_insert_running(db_url, self)
+            if abandoned:
+                ops_log.emit(
+                    "warn", "etl_run.abandoned",
+                    f"{self.source} {self.stage}: {abandoned} earlier run(s) never finished; marked abandoned",
+                )
         return self
 
     def __exit__(
@@ -108,7 +131,28 @@ class EtlRun:
         else:
             append_run(self.storage, row)
         log.info("run %s %s: %s files, %s skipped", self.run_id, self.status, self.files, self.files_skipped)
+        self._log_end(row, (exc_type, exc, tb) if exc is not None else None)
+        if self._token is not None:
+            current_run.reset(self._token)
         return False
+
+    def _log_end(self, row: dict, exc_info) -> None:
+        counts = {k: row[k] for k in ("rows", "files", "files_skipped", "bytes")} | {"item_errors": self.errors}
+        summary = f"{self.files} files, {self.files_skipped} skipped, {self.rows} rows in {row['duration_s']:.1f} s"
+        if self.status == "failed":
+            ops_log.emit(
+                "error", "etl_run.failed", f"{self.source} {self.stage} failed: {row['error']}",
+                exc_info=exc_info, duration_ms=round(row["duration_s"] * 1000), context=counts,
+            )
+        else:
+            level = "warn" if self.status == "partial" else "info"
+            detail = f", {self.errors} item error(s)" if self.errors else ""
+            ops_log.emit(
+                level, f"etl_run.{self.status}", f"{self.source} {self.stage}: {summary}{detail}",
+                duration_ms=round(row["duration_s"] * 1000), context=counts,
+            )
+        # Airflow may end the task process without atexit: write the run's lines now.
+        ops_log.flush()
 
 
 def _labels() -> dict:
@@ -116,14 +160,15 @@ def _labels() -> dict:
     return {k: labels.get(k) for k in ("dag_id", "task_id", "airflow_run_id", "try_number")}
 
 
-def _pg_insert_running(db_url: str, run: EtlRun) -> None:
+def _pg_insert_running(db_url: str, run: EtlRun) -> int:
+    """Inserts the run as ``running``; returns how many earlier runs it marked ``abandoned``."""
     from basecast_pipelines.common.db import connect, ensure_bookkeeping
 
     with connect(db_url) as conn:
         ensure_bookkeeping(conn)
         # One run per source and stage at a time (max_active_runs=1): a row still "running" from before
         # belongs to a process that died (lost connection, killed task) and never wrote its end.
-        conn.execute(
+        abandoned = conn.execute(
             """
             UPDATE etl_run SET status = 'abandoned', finished_at = now(),
                 error = 'superseded by run ' || %(run_id)s || ' while still marked running'
@@ -147,6 +192,7 @@ def _pg_insert_running(db_url: str, run: EtlRun) -> None:
                 **_labels(),
             },
         )
+    return abandoned.rowcount
 
 
 def _pg_finish(db_url: str, row: dict) -> None:
