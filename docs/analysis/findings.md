@@ -1,4 +1,4 @@
-# Phase 0 findings — 2026-09-26, 12:40–13:45 CDT
+# Phase 0 findings — 2026-09-26, 12:40–12:59 CDT (setup f750659 to findings d7be30e)
 
 Partner mode: **validation** (Pablo delegated the choice to Claude at 12:35 CDT; Claude chose validation because it
 can still turn into look-alike later, while look-alike can never go back to validation). Q3 held the five partner
@@ -25,22 +25,29 @@ row says so and the item waits in the review queue.
 Every [PERGUNTAR] of the handoff, plus the calls Claude made alone. Claude's default is already in use; nothing
 below blocks the next tasks except item 1 (A2 needs the weights first).
 
-1. **Q3 — approve the score weights** (`config/account_score.yaml`). Once approved, A2 reveals the partners.
-   Related: the near-constant threshold (mode ≥ 90%) is Claude's; at 60% `dc_sites` would drop out. Munis rank
-   low on size because county data is apportioned by area (default: accept until EIA customers land).
+1. **Q3 / X4 — pick and approve the score weights.** Two proposals, both fixed without the partners: Q3's
+   (`config/account_score.yaml`, on area-apportioned homes) and X4's (EIA customers from the 861S short form replace
+   homes, customer growth 2019→2024 enters; ρ 0.94 with Q3, 23 of the top 25 kept; table in
+   `docs/analysis/x4_eia861_short_form.md` §3). Claude's recommendation: X4, because it removes the apportionment
+   artifact X5 found (Fannin County EC at #2 with 2.6 apportioned homes per meter). Once approved, A2 reveals the
+   partners. Related: the near-constant threshold (mode ≥ 90%) is Claude's; at 60% `dc_sites` would drop out; X4
+   shows munis rank low because they are small (median 3,012 meters), so ranking within type is the fix if Base
+   wants munis on their own terms.
 2. **Q2 — the 5 crosswalk rows under 90** (CPS Energy, CoServ, PenTex, BTU, Comanche): all proposed accept, each
    pinned by ≥ 99.8% county overlap. Table in `docs/analysis/q2_universe.md`.
 3. **Q5 — spot-check** `docs/large-load-spot-check.md` (10 values with the ERCOT link and page). More than 1 miss →
    plan B (three scenarios). Also confirm the ratio definition (incremental as headline?) and that the
    "realized" side is approved-to-energize, not energized (energized ≈ 65% of approved in Jan 2026).
-4. **Q6 — override the rule?** Claude proposes Aalen–Johansen with the entry and IA-signed landmarks instead of
-   cohort rates: the ordering check assumed FIS approval comes before the IA, which is false for most wind
-   projects, and cohort rates are blind to the 2022+ cohorts. Also confirm COD (not synchronization) as the event
-   and the cut where fewer than 10 projects remain at risk.
+4. **Q6 / X2 — override the rule?** Claude proposes Aalen–Johansen instead of cohort rates: the ordering check
+   assumed FIS approval comes before the IA, which is false for most wind projects, and cohort rates are blind to
+   the 2022+ cohorts. X2 refined it: entry-stage projects need a semi-Markov step (time to IA, then the IA curve),
+   because the marginal entry curve counts COD of projects that already signed and overpredicts entry-stage MW
+   5–11× in the backtest. Also confirm COD (not synchronization) as the event and the cut where fewer than 10
+   projects remain at risk.
 5. **Q7 — which spread sets the A3 band** (default: one-year-ahead rolling errors, not the in-sample SD) and what
    "organic" means (default: fit ≤ 2019 for the flagged zones and ERCOT, post-2020 excess shown as realized large
    load, so the large-load layer is not counted twice). NORTH's 2009 drop and 2022+ jump and WEST's +33% in 2026 are
-   not explained yet (exploration X1).
+   characterized by X1 (causes not verified).
 6. **Q1 — pitch wording and product context.** Say "preliminary long-term forecast"; ERCOT's own April 2026 range
    held the actual. The "demand record of ~87–91 GW" in Jan 2026 (CLAUDE.md, KICKOFF §1) is wrong: the record then
    was 85,508 MW (2023-08-10); it was broken on 2026-07-22 at 91.1 GW (preliminary).
@@ -49,15 +56,41 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    whether "35 of 38 outside the big metros" can go in the video even though Q4 is "signal only".
 8. **Thresholds** adopted as in the handoff: Q7 5% / 10%, Q1 "consistent sign" = ≥ 2/3 of vintages, Q5 ±5%.
 
+9. **X1 — the unattributed layer.** Accept a flat "unattributed" layer (~4.5 GW in 2026) next to 0.51 × the
+   approved stock, or fold it into large load (factor ~1.0)? Check the flatness against ERCOT's distributed-solar
+   estimate before the video says "runs day and night". Don't name WEST's 2026 block (~0.7 GW, flat) in the video.
+10. **X2 — large new gas.** 9.1 GW of the Dec 2027 adjusted queue is gas+other, much of it ≥ 500 MW, where only 2 of
+   16 such projects with an IA reached COD. Default: flag it in the UI now, add a size split if time allows. The
+   Bernoulli band is too narrow to show; use the backtest errors (±13%) or a bootstrap.
+11. **X3 — interval label and dollars.** Confirm the D&E 15-min peak time is interval *ending* against one year of
+   ERCOT's published 4CP (if it is beginning, the window moves 15 minutes later). No $/kW-yr transmission rate is
+   in the repo: source it before any dollar figure reaches the pitch.
+12. **X5 — triggers.** Keep "storage or gas ≥ 50 MW signs its IA" as a strong trigger (25 call-now) or demote it to
+   context (17)? Data centers count in both the score and a trigger (default: keep both). Every trigger threshold
+   is Claude's (list in `docs/analysis/x5_triggers.md`).
+
+## Beyond phase 0 — explorations X1–X5
+
+Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
+is a candidate, not yet in `docs/video-numbers.md`.
+
+| X | Question | Headline | Feeds |
+|---|---|---|---|
+| X1 | Is the peak excess over weather the large loads? | Against a pre-2020 model, the summer peak ran 6.9 / 8.1 / 7.1 / 11.2 GW high in 2023–2026; the overnight minimum rose as much as the peak (flat load); the decks' observed large loads cover a third to half. Split for the Forecast: pre-break organic + 0.51 × approved stock + a flat unattributed layer (2026: 89.1 vs 91.1 GW, −2.3%). Found and fixed a misdated deck in Q5 (ratios unchanged). | Forecast (A3), video |
+| X2 | Raw vs adjusted generation queue by county | 438 GW active (1,810 projects) → ~38.7 GW reaching COD by Dec 2027 (8.8%) and 70.4 GW by Dec 2028; 24-month backtests from 2022, 2023 and 2024 queues miss by −12.5%, +9.4%, +1.8%, while developers' COD dates overstate 4–7×; county ranking beats the raw queue (Spearman 0.64–0.66 vs 0.43–0.45). | Explorer map, A4, video |
+| X3 | 4CP timing and the offer to co-ops | A 2-hour discharge 15:45–17:45 covered 63 of 64 CPs (2010–2025); catching all four with a weather-based call takes ~56 days a summer and near-peak days doubled since 2023; since 2021 no CP fell in its month's top-20 priced intervals and the net-load peak moved to HE 20–21. | Accounts next action / offer, video |
+| X4 | EIA-861 short form | Reading 861S from the lake takes EIA customers from 57% to 99.1% of accounts (munis 27% → 98%); customers replace apportioned homes; Lubbock's −95% is retail choice (105,080 delivery-only customers). Parser spec for later in the doc. | Account score (A2), diagnosis |
+| X5 | Triggers and a ranking dry run | 8 triggers (5 strong); 46 of 107 non-partner accounts have one active; next action: 25 call now, 12 nurture, 34 watch, 36 hold; 14 of the top 15 sit on the metro growth rings; stable to ±0.05 weight shifts (ρ ≥ 0.993). | /accounts, /accounts/[id] |
+
 ## Notes
 
-- **One story across Q1, Q5 and Q7.** The 2026 peak (91.1 GW) was 20.9 GW under the 112 GW preliminary, yet 7 GW over
-  what trend and weather predict. Every hold-out year since 2023 ran above the model, with a break around 2020.
-  Exploration X1 tests whether that excess is the large loads the ERCOT decks report as energized (≈ 5.7 GW in Jan
-  2026).
-- **Follow-up that unblocks the best account signal:** `eia_861` should also parse `Short_Form_<year>.xlsx` (861S).
-  46 of 106 ERCOT co-ops and munis file only that form; with it, EIA customers cover 99% of the universe and replace
-  the area-apportioned homes signal.
-- **Queue scale for the Explorer:** from queue entry, only 8.3% of projects (2.8% of MW) reach COD within 36 months.
-  Exploration X2 turns this into the raw vs adjusted MW map by county, with a backtest.
+- **One story across Q1, Q5, Q7 and X1.** The 2026 peak (91.1 GW) was 20.9 GW under the 112 GW preliminary, yet
+  7 GW over what trend and weather predict (11 GW over a pre-2020 fit). X1 shows the excess is flat load, and ERCOT's
+  large-load reports explain a third to half of it: the official forecast overshoots by taking requests at face
+  value, while the load that does arrive is real and under-reported.
+- **Follow-up that unblocks the best account signal:** `eia_861` should also parse `Short_Form_<year>.xlsx` (861S);
+  X4 has the spec and shows the gain (EIA customers 57% → 99% of accounts). It is a pipeline change, so it waits
+  until Airflow work resumes.
+- **Queue scale for the Explorer:** from queue entry, only 8.3% of projects (2.8% of MW) reach COD within 36 months;
+  X2 turns it into the county map and backtests it.
 - Every figure lives in `analysis/out/` (gitignored); re-run the scripts to regenerate them.
