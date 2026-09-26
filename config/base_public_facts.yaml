@@ -1,0 +1,685 @@
+# Public facts about Base Power Company (basepowercompany.com): utility partners and areas served.
+# Manual config, not a pipeline. One item per fact, only what the source literally says (no inference):
+# fact, entity as written, source URL (fetched), source date, source type (primary = Base's site or
+# press release, news, filing), a short verbatim quote, verified: false until a human re-reads it.
+# Collected 2026-09-26 by a research pass: every URL fetched and every quote matched against the page
+# text; a 5-fact sample was re-checked independently the same day (5/5 matched). Business Wire blocked
+# fetching, so some press releases cite mirror copies (noted in comments).
+#
+# Gaps: no public source describes a partnership with Oncor, CenterPoint, AEP Texas or TNMP (Base lists
+# them only as retail delivery areas); entry dates for the AEP Texas and TNMP areas were not found.
+
+# Public, citable facts about Base Power Company (basepowercompany.com).
+# Collected 2026-09-26. Every source_url was fetched; every quote was matched against the fetched text.
+# source_type: primary = Base's own site/press release, or a partner utility's own release/page;
+#   news = third-party reporting; filing = regulator or city government document.
+# Where businesswire.com blocked fetching (HTTP 403), the same release was fetched from a syndication
+#   mirror (Yahoo Finance, FinancialContent, Morningstar, Silicon UK); see per-fact comments.
+facts:
+  - id: bandera_first_utility_partnership
+    category: utility_partner
+    fact: "Base Power announced a partnership with Bandera Electric Cooperative, described as its first regulated utility partnership, to deploy home batteries."
+    entity: "Bandera Electric Cooperative"
+    source_url: "https://www.prnewswire.com/news-releases/base-power-and-bandera-electric-cooperative-announce-industry-first-distributed-battery-storage-partnership-302393927.html"
+    source_date: 2025-03-06
+    source_type: primary
+    quote: "In its first regulated utility partnership, Base Power teams with Bandera Electric Cooperative to deploy advanced home battery technology that supports the grid"
+    verified: false
+  - id: bandera_program_available
+    category: utility_partner
+    fact: "The Bandera Electric Cooperative battery program was already available to BEC members at announcement."
+    entity: "Bandera Electric Cooperative (BEC)"
+    source_url: "https://www.prnewswire.com/news-releases/base-power-and-bandera-electric-cooperative-announce-industry-first-distributed-battery-storage-partnership-302393927.html"
+    source_date: 2025-03-06
+    source_type: primary
+    quote: "The program is already available to BEC members."
+    verified: false
+  - id: bandera_territory
+    category: other
+    fact: "Bandera Electric Cooperative operates within a seven-county territory in the Texas Hill Country."
+    entity: "Bandera Electric Cooperative"
+    source_url: "https://www.prnewswire.com/news-releases/base-power-and-bandera-electric-cooperative-announce-industry-first-distributed-battery-storage-partnership-302393927.html"
+    source_date: 2025-03-06
+    source_type: primary
+    quote: "BEC operates within a seven-county territory in the picturesque Texas Hill Country."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20250409624698
+  - id: seriesb_bandera_first_utility
+    category: utility_partner
+    fact: "Base's Series B release said its first utility partnership was with Bandera Electric and that it had expanded across the Dallas-Fort Worth, Houston and Austin metro areas."
+    entity: "Bandera Electric; Dallas-Fort Worth, Houston, Austin metro areas"
+    source_url: "https://www.silicon.co.uk/press-release/base-power-raises-200m-series-b-to-reinforce-the-texas-power-grid-accelerate-national-expansion-and-build-american-manufacturing-capabilities"
+    source_date: 2025-04-09
+    source_type: primary
+    quote: "more recently, with its first utility partnership with Bandera Electric, Base Power has expanded rapidly in Texas across the Dallas-Fort Worth, Houston, and Austin metro areas."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20250630186035
+  - id: gvec_partnership_2025
+    category: utility_partner
+    fact: "Base Power and GVEC announced a partnership to deploy a utility-managed fleet of residential batteries, starting in communities built by Lennar."
+    entity: "GVEC"
+    source_url: "https://www.silicon.co.uk/press-release/base-power-and-gvec-partner-on-utility-operated-distributed-battery-program"
+    source_date: 2025-06-30
+    source_type: primary
+    quote: "GVEC, a leading energy distribution cooperative in Texas, today announced a partnership to deploy a utility-managed fleet of residential batteries, starting in communities built by Lennar"
+    verified: false
+  # Quote reproduces the source's grammar ('begun').
+  - id: gvec_pilot_deployment_june_2025
+    category: utility_partner
+    fact: "The GVEC pilot began deployment in June 2025."
+    entity: "GVEC"
+    source_url: "https://www.silicon.co.uk/press-release/base-power-and-gvec-partner-on-utility-operated-distributed-battery-program"
+    source_date: 2025-06-30
+    source_type: primary
+    quote: "The pilot begun deployment in June 2025"
+    verified: false
+  # The 2 MW pilot size is also stated by GVEC's own 2026-04-13 release (gvec_50mw_expansion).
+  - id: gvec_2mw_vpp
+    category: utility_partner
+    fact: "Guadalupe Valley Electric Cooperative partnered with Base Power on a 2-MW virtual power plant."
+    entity: "Guadalupe Valley Electric Cooperative"
+    source_url: "https://www.utilitydive.com/news/base-power-gvec-texas-vpp-virtual-power-plant/752102/"
+    source_date: 2025-07-02
+    source_type: news
+    quote: "Guadalupe Valley Electric Cooperative has partnered with distributed energy developer Base Power on a 2-MW virtual power plant"
+    verified: false
+  - id: gvec_50mw_expansion
+    category: utility_partner
+    fact: "After a 2 MW pilot, the GVEC and Base Power residential battery program expanded to 50 MW."
+    entity: "GVEC"
+    source_url: "https://www.gvec.org/gvec-and-base-power-partnership/"
+    source_date: 2026-04-13
+    source_type: primary
+    quote: "After successful completion of a 2 MW pilot, the program has now expanded to 50 MW."
+    verified: false
+  - id: gvec_full_territory
+    category: service_area
+    fact: "The expanded GVEC program brings Base whole-home backup to households across GVEC's entire service territory."
+    entity: "GVEC service territory"
+    source_url: "https://www.gvec.org/gvec-and-base-power-partnership/"
+    source_date: 2026-04-13
+    source_type: primary
+    quote: "bringing affordable, whole-home backup power to households across GVEC’s entire service territory"
+    verified: false
+  - id: gvec_ader_qualification
+    category: other
+    fact: "The GVEC expansion followed GVEC's qualification of its Base battery aggregation in ERCOT's ADER Pilot Program."
+    entity: "GVEC; ERCOT"
+    source_url: "https://www.gvec.org/gvec-and-base-power-partnership/"
+    source_date: 2026-04-13
+    source_type: primary
+    quote: "This expansion follows GVEC’s qualification of its Base battery aggregation in ERCOT’s Aggregated Distributed Energy Resource (ADER) Pilot Program."
+    verified: false
+  - id: gvec_20mw_by_end_2026
+    category: utility_partner
+    fact: "GVEC aims to have 20 MW of distributed battery capacity online by end of 2026, then add 15-20 MW per year through the Base partnership."
+    entity: "GVEC"
+    source_url: "https://www.utilitydive.com/news/base-power-partnership-to-mitigate-price-spikes-load-peaks-for-south-texas/818221/"
+    source_date: 2026-04-22
+    source_type: news
+    quote: "GVEC aims to have 20 MW of distributed battery capacity online by the end of 2026 and subsequently add 15 MW to 20 MW per year"
+    verified: false
+  # Utility Dive (2026-04-22) quotes GVEC's CEO giving a 3,500 square-mile territory east of San Antonio; the two figures differ.
+  - id: gvec_territory
+    category: other
+    fact: "GVEC serves more than 100,000 members across a 3,200-square-mile region in South Central Texas."
+    entity: "GVEC"
+    source_url: "https://www.silicon.co.uk/press-release/base-power-and-gvec-partner-on-utility-operated-distributed-battery-program"
+    source_date: 2025-06-30
+    source_type: primary
+    quote: "GVEC serves more than 100,000 members across a 3,200-square-mile region in South Central Texas."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: farmers_partnership
+    category: utility_partner
+    fact: "Farmers Electric Cooperative and Base Power announced the first residential battery partnership in Farmers' service area."
+    entity: "Farmers Electric Cooperative"
+    source_url: "https://www.financialcontent.com/article/bizwire-2025-12-8-farmers-electric-cooperative-and-base-power-launch-first-residential-battery-program-in-northeast-texas"
+    source_date: 2025-12-08
+    source_type: primary
+    quote: "Farmers Electric Cooperative (“Farmers”) and Base Power today announced the launch of the first residential battery partnership in Farmers’ service area"
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: farmers_20mw
+    category: utility_partner
+    fact: "Through the Farmers program, Base will deploy 20 MW of dispatchable capacity from networked residential batteries."
+    entity: "Farmers Electric Cooperative"
+    source_url: "https://www.financialcontent.com/article/bizwire-2025-12-8-farmers-electric-cooperative-and-base-power-launch-first-residential-battery-program-in-northeast-texas"
+    source_date: 2025-12-08
+    source_type: primary
+    quote: "Through the program, Base will deploy 20 MW of 24/7 dispatchable capacity through a fleet of networked residential battery systems."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: farmers_installs_jan_2026
+    category: utility_partner
+    fact: "Installations for Farmers members were to begin in January 2026."
+    entity: "Farmers Electric Cooperative"
+    source_url: "https://www.financialcontent.com/article/bizwire-2025-12-8-farmers-electric-cooperative-and-base-power-launch-first-residential-battery-program-in-northeast-texas"
+    source_date: 2025-12-08
+    source_type: primary
+    quote: "with installations beginning in January 2026."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: farmers_counties
+    category: other
+    fact: "Farmers Electric Cooperative provides electric service across twelve named Northeast Texas counties."
+    entity: "Dallas, Collin, Rockwall, Hunt, Kaufman, Rains, Hopkins, Delta, Franklin, Fannin, Wood, Van Zandt counties"
+    source_url: "https://www.financialcontent.com/article/bizwire-2025-12-8-farmers-electric-cooperative-and-base-power-launch-first-residential-battery-program-in-northeast-texas"
+    source_date: 2025-12-08
+    source_type: primary
+    quote: "Farmers provides electric service across Dallas, Collin, Rockwall, Hunt, Kaufman, Rains, Hopkins, Delta, Franklin, Fannin, Wood, and Van Zandt counties."
+    verified: false
+  - id: epe_pilot_program
+    category: utility_partner
+    fact: "El Paso Electric and Base Power announced a pilot program in which Base deploys networked residential batteries in EPE's Texas service region."
+    entity: "El Paso Electric Company (EPE)"
+    source_url: "https://www.epelectric.com/news/el-paso-electric-and-base-power-launch-residential-distributed-energy-storage-program-to-strengthen-grid-reliability"
+    source_date: 2026-02-10
+    source_type: primary
+    quote: "Base Power will deploy a fleet of networked residential battery systems in EPE’s Texas service region"
+    verified: false
+  - id: epe_despp_10mw
+    category: utility_partner
+    fact: "The partnership was selected through EPE's Residential Distributed Energy Storage Pilot Program, which seeks up to 10 MW online ahead of the 2026 summer peak."
+    entity: "El Paso Electric Company (EPE)"
+    source_url: "https://www.epelectric.com/news/el-paso-electric-and-base-power-launch-residential-distributed-energy-storage-program-to-strengthen-grid-reliability"
+    source_date: 2026-02-10
+    source_type: primary
+    quote: "Residential Distributed Energy Storage Pilot Program (DESPP), which seeks to bring up to 10 MW of residential energy storage online ahead of the 2026 summer peak"
+    verified: false
+  - id: epe_territory
+    category: other
+    fact: "El Paso Electric serves approximately 465,000 customers in a 10,000 square mile area from Hatch, New Mexico to Van Horn, Texas."
+    entity: "El Paso Electric"
+    source_url: "https://www.epelectric.com/news/el-paso-electric-and-base-power-launch-residential-distributed-energy-storage-program-to-strengthen-grid-reliability"
+    source_date: 2026-02-10
+    source_type: primary
+    quote: "power approximately 465,000 customers in a 10,000 square mile area from Hatch, New Mexico to Van Horn, Texas."
+    verified: false
+  - id: coserv_100mw
+    category: utility_partner
+    fact: "Base Power announced a collaboration with Denton County Electric Cooperative (CoServ) to deploy 100 MW of residential battery storage across CoServ's North Texas service territory."
+    entity: "Denton County Electric Cooperative (CoServ)"
+    source_url: "https://www.coserv.com/coserv-base-power-press-release/"
+    source_date: 2026-03-06
+    source_type: primary
+    quote: "to deploy 100 MW of residentially-sited battery storage across CoServ’s North Texas service territory."
+    verified: false
+  - id: coserv_fifth_collaboration
+    category: utility_partner
+    fact: "The CoServ agreement marks Base's fifth utility collaboration in Texas."
+    entity: "CoServ"
+    source_url: "https://www.coserv.com/coserv-base-power-press-release/"
+    source_date: 2026-03-06
+    source_type: primary
+    quote: "This effort marks Base’s fifth utility collaboration in Texas"
+    verified: false
+  - id: coserv_territory
+    category: other
+    fact: "CoServ is an electric cooperative and gas distribution company serving eight counties in North Texas."
+    entity: "CoServ"
+    source_url: "https://www.coserv.com/coserv-base-power-press-release/"
+    source_date: 2026-03-06
+    source_type: primary
+    quote: "CoServ is an Electric Cooperative and Gas Distribution company serving eight counties in North Texas"
+    verified: false
+  - id: coserv_two_years_180mw
+    category: utility_partner
+    fact: "Canary Media reports Base will install 100 MW in CoServ territory over two years, and that its five utility deals total 180 MW."
+    entity: "CoServ"
+    source_url: "https://www.canarymedia.com/articles/batteries/base-power-to-launch-100-mw-home-battery-network-for-texas-utility"
+    source_date: 2026-03-11
+    source_type: news
+    quote: "The CoServ collaboration marks the fifth of these deals, and the largest — all five total 180 megawatts."
+    verified: false
+  # Utility's own program page ('PeakTime Perks: Base Battery Program'); page metadata shows datePublished 2026-06-04, no visible date.
+  - id: coserv_lantana_ineligible
+    category: service_area
+    fact: "CoServ's Base program page states that Lantana residents are not currently eligible for the Base Power Program."
+    entity: "Lantana"
+    source_url: "https://www.coserv.com/energy-solutions/peaktime-perks/ptp-base-power/"
+    source_date: null
+    source_type: primary
+    quote: "Lantana residents are not currently eligible for the Base Power Program."
+    verified: false
+  # Council agenda item 8, file 26-1526; 2026-04-23 is the agenda date printed on the document.
+  - id: austin_rca_40mw
+    category: utility_partner
+    fact: "A City of Austin Recommendation for Action authorized a battery storage agreement with Base Power, Inc. for up to 40 MW of capacity."
+    entity: "Austin Energy / City of Austin"
+    source_url: "https://services.austintexas.gov/edims/document.cfm?id=471637"
+    source_date: 2026-04-23
+    source_type: filing
+    quote: "Authorize negotiation and execution of a battery storage agreement with Base Power, Inc., for up to 40 megawatts of electric power capacity"
+    verified: false
+  - id: austin_rca_18_months
+    category: utility_partner
+    fact: "Per the City of Austin RCA, capacity from Base installations grows over an 18-month period until 40 MW is reached."
+    entity: "Austin Energy"
+    source_url: "https://services.austintexas.gov/edims/document.cfm?id=471637"
+    source_date: 2026-04-23
+    source_type: filing
+    quote: "the available capacity provided by the battery installations will grow with each installation over an 18-month period until 40 MW is reached"
+    verified: false
+  - id: austin_energy_agreement
+    category: utility_partner
+    fact: "Austin Energy entered into an agreement with Base Power to deploy 40 MW of residential battery storage across its service territory."
+    entity: "Austin Energy"
+    source_url: "https://austinenergy.com/about/news/news-releases/2026/Austin-Energy-expands-local-battery-storage-to-support-reliable-affordable-power"
+    source_date: 2026-05-19
+    source_type: primary
+    quote: "Austin Energy has entered into an agreement with Base Power to deploy 40 MW of residential battery storage across the utility’s service territory."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20260715702282
+  - id: austin_energy_launch
+    category: utility_partner
+    fact: "Starting July 15, 2026, Austin Energy customers could have a Base battery installed on their home."
+    entity: "Austin Energy"
+    source_url: "https://finance.yahoo.com/energy/articles/power-brings-affordable-home-backup-110000290.html"
+    source_date: 2026-07-15
+    source_type: primary
+    quote: "Starting today, Austin Energy customers can now have a Base battery installed on their home"
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: partner_list_july_2026
+    category: utility_partner
+    fact: "Base's Austin Energy release lists El Paso Electric, CoServ, Farmers Electric, GVEC and Bandera as utilities and cooperatives partnering with Base."
+    entity: "El Paso Electric, CoServ, Farmers Electric, GVEC, Bandera"
+    source_url: "https://finance.yahoo.com/energy/articles/power-brings-affordable-home-backup-110000290.html"
+    source_date: 2026-07-15
+    source_type: primary
+    quote: "Austin Energy joins a growing list of utilities and cooperatives partnering with Base, including El Paso Electric, CoServ, Farmers Electric, GVEC, and Bandera."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20260803203117
+  - id: seriesd_partnerships_200mw
+    category: utility_partner
+    fact: "Base's Series D release says it launched partnerships with utilities including El Paso Electric, Austin Energy and CoServ for over 200 MW of capacity."
+    entity: "El Paso Electric, Austin Energy, CoServ"
+    source_url: "https://www.morningstar.com/news/business-wire/20260803203117/base-power-announces-1b-series-d-and-launches-base-core-first-of-its-kind-home-battery-built-in-the-united-states"
+    source_date: 2026-08-03
+    source_type: primary
+    quote: "launched partnerships with utilities including El Paso Electric, Austin Energy, and CoServ for over 200 MW of capacity."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: aug2025_utility_partners
+    category: utility_partner
+    fact: "Base's August 2025 Dallas release names GVEC and Bandera Electric Cooperative as utility partners and Lennar as a homebuilder partner."
+    entity: "GVEC; Bandera Electric Cooperative"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-8-19-amid-surging-demand-on-the-texas-grid-base-power-expands-to-dallas-to-deliver-reliable-home-energy-and-grid-support"
+    source_date: 2025-08-19
+    source_type: primary
+    quote: "building on partnerships with leading homebuilders like Lennar and forward-thinking utilities including GVEC and Bandera Electric Cooperative."
+    verified: false
+  - id: base_page_coserv
+    category: utility_partner
+    fact: "Base's CoServ page says CoServ can draw on the battery to add capacity during high demand hours."
+    entity: "CoServ"
+    source_url: "https://www.basepowercompany.com/coserv"
+    source_date: null
+    source_type: primary
+    quote: "CoServ can draw on the battery to add capacity during high demand hours, which helps reduce outage risk."
+    verified: false
+  - id: base_page_gvec
+    category: utility_partner
+    fact: "Base's GVEC page says GVEC uses the home batteries to add capacity during peak demand."
+    entity: "GVEC"
+    source_url: "https://www.basepowercompany.com/gvec"
+    source_date: null
+    source_type: primary
+    quote: "GVEC uses these home batteries to add capacity during peak demand."
+    verified: false
+  - id: base_page_farmers
+    category: utility_partner
+    fact: "Base's Farmers page says Farmers uses the home batteries to add capacity during peak demand."
+    entity: "Farmers Electric Cooperative"
+    source_url: "https://www.basepowercompany.com/farmers"
+    source_date: null
+    source_type: primary
+    quote: "Farmers uses these home batteries to add capacity during peak demand."
+    verified: false
+  - id: base_page_epe
+    category: utility_partner
+    fact: "Base's El Paso Electric page says Base handles installation and maintenance while El Paso Electric runs the program."
+    entity: "El Paso Electric"
+    source_url: "https://www.basepowercompany.com/epelectric"
+    source_date: null
+    source_type: primary
+    quote: "Base handles installation and maintenance. El Paso Electric runs the program."
+    verified: false
+  - id: base_page_austin_energy
+    category: utility_partner
+    fact: "Base's Austin Energy page says Austin Energy uses the home batteries to add capacity during peak demand."
+    entity: "Austin Energy"
+    source_url: "https://www.basepowercompany.com/austinenergy"
+    source_date: null
+    source_type: primary
+    quote: "Austin Energy uses these home batteries to add capacity during peak demand."
+    verified: false
+  # llms.txt links per-area pricing pages (/pricing/oncor etc.) that returned HTTP 404 when fetched; the /pricing page itself works.
+  - id: llms_texas_illinois_areas
+    category: service_area
+    fact: "Base's site summary lists its Texas service areas as the power-to-choose areas of Oncor, CenterPoint, AEP Texas and TNMP plus CoServ, GVEC, Farmers Electric and El Paso Electric areas."
+    entity: "Oncor, CenterPoint, AEP Texas, TNMP, CoServ, GVEC, Farmers Electric, El Paso Electric"
+    source_url: "https://www.basepowercompany.com/llms.txt"
+    source_date: null
+    source_type: primary
+    quote: "the power-to-choose areas served by Oncor, CenterPoint, AEP Texas, and TNMP, plus additional utility and cooperative areas including CoServ, GVEC, Farmers Electric, and El Paso Electric"
+    verified: false
+  - id: llms_illinois_comed
+    category: service_area
+    fact: "Base's site summary says Base sells in Texas and Illinois only."
+    entity: "Texas; Illinois"
+    source_url: "https://www.basepowercompany.com/llms.txt"
+    source_date: null
+    source_type: primary
+    quote: "Base sells in Texas and Illinois only."
+    verified: false
+  - id: home_texas_illinois
+    category: service_area
+    fact: "Base's home page says it is now serving homeowners across Texas and Illinois."
+    entity: "Texas; Illinois"
+    source_url: "https://www.basepowercompany.com/"
+    source_date: null
+    source_type: primary
+    quote: "Base is now serving homeowners across Texas and Illinois."
+    verified: false
+  # Quote joins consecutive list lines of the page with single spaces.
+  - id: pricing_centerpoint_oncor
+    category: service_area
+    fact: "Base's pricing page lists CenterPoint Energy (Greater Houston) and Oncor (Central & North Texas) areas with Energy + backup and Energy only plans."
+    entity: "CenterPoint Energy; Oncor"
+    source_url: "https://www.basepowercompany.com/pricing"
+    source_date: null
+    source_type: primary
+    quote: "CenterPoint Energy Greater Houston Energy + backup Energy only Oncor Central & North Texas"
+    verified: false
+  # Quote joins consecutive list lines of the page with single spaces.
+  - id: pricing_aep
+    category: service_area
+    fact: "Base's pricing page lists AEP Texas Central (Corpus Christi & South Texas) and AEP Texas North (West & Northern Texas) areas."
+    entity: "AEP Texas Central; AEP Texas North"
+    source_url: "https://www.basepowercompany.com/pricing"
+    source_date: null
+    source_type: primary
+    quote: "AEP Texas Central Corpus Christi & South Texas See plans AEP Texas North West & Northern Texas"
+    verified: false
+  # Quote joins consecutive list lines of the page with single spaces.
+  - id: pricing_tnmp_comed
+    category: service_area
+    fact: "Base's pricing page lists Texas-New Mexico Power (Gulf Coast & West Texas) and ComEd (Chicago & Northern Illinois) areas."
+    entity: "Texas–New Mexico Power; ComEd"
+    source_url: "https://www.basepowercompany.com/pricing"
+    source_date: null
+    source_type: primary
+    quote: "Texas–New Mexico Power Gulf Coast & West Texas See plans ComEd Chicago & Northern Illinois"
+    verified: false
+  # Quote joins consecutive list lines of the page with single spaces.
+  - id: pricing_gvec_coserv
+    category: service_area
+    fact: "Base's pricing page lists Guadalupe Valley EC and CoServ (Denton & Collin counties) as electric co-op areas."
+    entity: "Guadalupe Valley EC; CoServ"
+    source_url: "https://www.basepowercompany.com/pricing"
+    source_date: null
+    source_type: primary
+    quote: "Guadalupe Valley EC Guadalupe Valley (electric co-op) See plans CoServ Denton & Collin counties (electric co-op)"
+    verified: false
+  # Quote joins consecutive list lines of the page with single spaces. The page lists 11 areas; Bandera Electric Cooperative is not among them.
+  - id: pricing_farmers_austin_epe
+    category: service_area
+    fact: "Base's pricing page lists Farmers EC (North Texas), Austin Energy (Austin, municipal utility) and El Paso Electric (El Paso & far West Texas) areas."
+    entity: "Farmers EC; Austin Energy; El Paso Electric"
+    source_url: "https://www.basepowercompany.com/pricing"
+    source_date: null
+    source_type: primary
+    quote: "Farmers EC North Texas (electric co-op) See plans Austin Energy Austin (municipal utility) See plans El Paso Electric El Paso & far West Texas"
+    verified: false
+  - id: oncor_page_central_north
+    category: service_area
+    fact: "Base's Oncor page says service is available across Central and North Texas."
+    entity: "Oncor"
+    source_url: "https://www.basepowercompany.com/oncor"
+    source_date: null
+    source_type: primary
+    quote: "Available across Central and North Texas"
+    verified: false
+  - id: centerpoint_page_houston
+    category: service_area
+    fact: "Base's CenterPoint page says service is available in the Houston area."
+    entity: "CenterPoint"
+    source_url: "https://www.basepowercompany.com/centerpoint"
+    source_date: null
+    source_type: primary
+    quote: "Available in the Houston area"
+    verified: false
+  # No news or utility source found for any Colorado program.
+  - id: footer_colorado
+    category: service_area
+    fact: "Base's site footer says that in Colorado Base offers home battery equipment and installation but is not an electric utility or retail supplier there."
+    entity: "Colorado"
+    source_url: "https://www.basepowercompany.com/"
+    source_date: null
+    source_type: primary
+    quote: "In Colorado, Base offers home battery equipment and installation. Base is not an electric utility or a retail electric supplier in Colorado."
+    verified: false
+  # No news or utility source found for any Connecticut program.
+  - id: footer_connecticut
+    category: service_area
+    fact: "Base's site footer says that in Connecticut Base offers home battery equipment and installation but is not an electric utility or retail supplier there."
+    entity: "Connecticut"
+    source_url: "https://www.basepowercompany.com/"
+    source_date: null
+    source_type: primary
+    quote: "In Connecticut, Base offers home battery equipment and installation. Base is not an electric utility or a retail electric supplier in Connecticut."
+    verified: false
+  # BIC Magazine republication of the launch announcement; businesswire.com/news/home/20240507687959 returned 403.
+  - id: texas_launch_may_2024
+    category: service_area
+    fact: "At its May 2024 launch, Base was available to select Texas homeowners who can choose their energy provider."
+    entity: "Texas (energy-choice areas)"
+    source_url: "https://www.bicmagazine.com/industry/powergen/base-power-launches-in-texas/"
+    source_date: 2024-05-07
+    source_type: news
+    quote: "Base is available to select Texas homeowners that can choose their energy provider, with plans to expand nationally."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20240826618401
+  - id: dfw_expansion_aug_2024
+    category: service_area
+    fact: "After launching in the Austin area in May 2024, Base became available to select Dallas-Fort Worth homeowners who can choose their energy provider."
+    entity: "Austin area; Dallas-Fort Worth"
+    source_url: "https://www.silicon.co.uk/press-release/base-power-launches-innovative-battery-powered-home-energy-service-in-dallas-fort-worth-bringing-reliable-and-affordable-power-to-north-texan-homeowners"
+    source_date: 2024-08-26
+    source_type: primary
+    quote: "After launching in the Austin area in May, Base is now available to select Dallas-Fort Worth homeowners that can choose their energy provider"
+    verified: false
+  # Article is paywalled after the first paragraphs.
+  - id: georgetown_aug_2024
+    category: service_area
+    fact: "The Williamson County Sun reported Base Power electricity coming to Georgetown."
+    entity: "Georgetown"
+    source_url: "https://www.wilcosun.com/news-georgetown/texas-based-company-brings-new-form-power-georgetown"
+    source_date: 2024-08-26
+    source_type: news
+    quote: "A new source of electricity is coming to Georgetown through Base Power"
+    verified: false
+  # Lennar (homebuilder) newsroom; Lennar is not a utility.
+  - id: lennar_pilot_communities
+    category: service_area
+    fact: "Lennar's collaboration with Base was to pilot in communities across North Austin and DFW, starting with Firefly Pointe (Hutto), Rancho del Cielo (Jarrell) and Rancho Canyon (Haslet)."
+    entity: "North Austin; DFW; Hutto; Jarrell; Haslet"
+    source_url: "https://newsroom.lennar.com/2024-12-05-Lennar-and-Base-Power-to-Provide-Homeowners-a-Battery-Powered-Home-Energy-Service-in-Key-Texas-Markets"
+    source_date: 2024-12-05
+    source_type: primary
+    quote: "Lennar's collaboration with Base will pilot in multiple communities across North Austin and DFW, beginning with Firefly Pointe (Hutto), Rancho del Cielo (Jarrell), and Rancho Canyon (Haslet)."
+    verified: false
+  - id: north_austin_fort_worth_feb_2025
+    category: service_area
+    fact: "Canary Media reported Base had installed more than 1,000 home batteries in North Austin and the Fort Worth area."
+    entity: "North Austin; Fort Worth area"
+    source_url: "https://www.canarymedia.com/articles/batteries/base-power-offers-texans-big-backup-batteries-no-purchase-necessary"
+    source_date: 2025-02-27
+    source_type: news
+    quote: "already has installed more than 1,000 home batteries, around 30 megawatt-hours, in North Austin and the Fort Worth area"
+    verified: false
+  - id: houston_launch_feb_2025
+    category: service_area
+    fact: "Base Power announced its launch in the Houston metro area."
+    entity: "Houston metro area"
+    source_url: "https://www.prnewswire.com/news-releases/base-power-expands-to-the-houston-area-bringing-affordable-battery-powered-electricity-plans-to-more-texans-302379899.html"
+    source_date: 2025-02-19
+    source_type: primary
+    quote: "Base Power, the first and only electricity provider that includes a backup battery in its energy plan, today announced its launch in the Houston metro area."
+    verified: false
+  - id: houston_centerpoint_territory_feb_2025
+    category: service_area
+    fact: "Base's Houston release subheadline says Base now serves millions of homeowners in CenterPoint territory."
+    entity: "CenterPoint territory"
+    source_url: "https://www.prnewswire.com/news-releases/base-power-expands-to-the-houston-area-bringing-affordable-battery-powered-electricity-plans-to-more-texans-302379899.html"
+    source_date: 2025-02-19
+    source_type: primary
+    quote: "Following rapid growth in Austin and DFW, Base now serves millions of homeowners in CenterPoint territory, one of the largest home backup power markets in the U.S."
+    verified: false
+  - id: houston_initial_communities_feb_2025
+    category: service_area
+    fact: "Base initially served Houston-area customers in Cy-Fair, Spring, Cinco Ranch and Mission Bend, planning to expand to the entire Houston area."
+    entity: "Cy-Fair; Spring; Cinco Ranch; Mission Bend"
+    source_url: "https://www.prnewswire.com/news-releases/base-power-expands-to-the-houston-area-bringing-affordable-battery-powered-electricity-plans-to-more-texans-302379899.html"
+    source_date: 2025-02-19
+    source_type: primary
+    quote: "Initially, the company will serve customers in the Cy-Fair, Spring, Cinco Ranch, and Mission Bend communities with plans to expand to the entire Houston area over the coming months."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20250819957678
+  - id: dfw_expansion_aug_2025
+    category: service_area
+    fact: "Base announced its expansion into Dallas, with service available throughout the Dallas-Fort Worth metroplex."
+    entity: "Dallas–Fort Worth metroplex; Dallas; Irving; North Richland Hills; Coppell"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-8-19-amid-surging-demand-on-the-texas-grid-base-power-expands-to-dallas-to-deliver-reliable-home-energy-and-grid-support"
+    source_date: 2025-08-19
+    source_type: primary
+    quote: "With service now available throughout the Dallas–Fort Worth metroplex, including Dallas, Irving, North Richland Hills, Coppell, and beyond"
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: areas_aug_2025_dfw_houston
+    category: service_area
+    fact: "As of August 2025 Base said it served homeowners in DFW (Dallas, Fort Worth, Arlington, Plano) and parts of Houston (Harris County, Katy, Sugar Land, Magnolia)."
+    entity: "Dallas; Fort Worth; Arlington; Plano; Harris County; Katy; Sugar Land; Magnolia"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-8-19-amid-surging-demand-on-the-texas-grid-base-power-expands-to-dallas-to-deliver-reliable-home-energy-and-grid-support"
+    source_date: 2025-08-19
+    source_type: primary
+    quote: "now serving homeowners throughout the Dallas–Fort Worth metroplex, including Dallas, Fort Worth, Arlington, and Plano; key parts of Houston like Harris County, Katy, Sugar Land, and Magnolia;"
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: areas_aug_2025_austin
+    category: service_area
+    fact: "As of August 2025 Base said it served cities around Austin including Round Rock, Pflugerville, Temple and Killeen, having launched in the Austin area the prior year."
+    entity: "Austin area; Round Rock; Pflugerville; Temple; Killeen"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-8-19-amid-surging-demand-on-the-texas-grid-base-power-expands-to-dallas-to-deliver-reliable-home-energy-and-grid-support"
+    source_date: 2025-08-19
+    source_type: primary
+    quote: "and cities around Austin like Round Rock, Pflugerville, Temple, and Killeen."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403. Original: businesswire.com/news/home/20250924992426
+  - id: houston_city_launch_sep_2025
+    category: service_area
+    fact: "Base announced its official launch in the City of Houston."
+    entity: "City of Houston"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-9-24-base-power-launches-in-the-city-of-houston-accelerating-statewide-growth-with-its-innovative-model-for-affordable-reliable-home-energy"
+    source_date: 2025-09-24
+    source_type: primary
+    quote: "Base Power, Texas’ only energy provider that comes with home backup power, today announced its official launch in the City of Houston"
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: regions_sep_2025
+    category: service_area
+    fact: "As of September 2025 Base said it serves homeowners in Greater Houston, the Dallas-Fort Worth Metroplex and the counties north of Austin."
+    entity: "Greater Houston; Dallas–Fort Worth Metroplex; counties north of Austin"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-9-24-base-power-launches-in-the-city-of-houston-accelerating-statewide-growth-with-its-innovative-model-for-affordable-reliable-home-energy"
+    source_date: 2025-09-24
+    source_type: primary
+    quote: "The company now serves homeowners in Greater Houston, the Dallas–Fort Worth Metroplex, and the counties north of Austin."
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: lennar_houston_sep_2025
+    category: service_area
+    fact: "Base extended its Lennar partnership into Houston, serving 20 communities including Sunterra, The Grand Prairie and Anniston."
+    entity: "Houston metro; Sunterra; The Grand Prairie; Anniston"
+    source_url: "https://markets.financialcontent.com/wral/article/bizwire-2025-9-24-base-power-launches-in-the-city-of-houston-accelerating-statewide-growth-with-its-innovative-model-for-affordable-reliable-home-energy"
+    source_date: 2025-09-24
+    source_type: primary
+    quote: "Base is also extending its partnership with Lennar into Houston, now serving 20 communities, including Sunterra, The Grand Prairie, and Anniston, across the metro area."
+    verified: false
+  - id: illinois_pjm_license_apr_2026
+    category: service_area
+    fact: "Latitude Media reported Base expanded into PJM via a retail electricity license in the Commonwealth Edison territory of Illinois."
+    entity: "Commonwealth Edison territory, Illinois (PJM)"
+    source_url: "https://www.latitudemedia.com/news/base-power-is-adapting-its-distributed-battery-storage-program-for-pjm/"
+    source_date: 2026-04-14
+    source_type: news
+    quote: "Residential battery startup Base Power quietly expanded into PJM this month via a retail electricity license in the Commonwealth Edison territory of Illinois."
+    verified: false
+  - id: illinois_launch_jun_2026
+    category: service_area
+    fact: "Base Power launched across the Chicagoland area for homeowners in ComEd's service area."
+    entity: "Chicagoland; ComEd service area"
+    source_url: "https://www.basepowercompany.com/illinois-press"
+    source_date: 2026-06-24
+    source_type: primary
+    quote: "Base Power launched today across the Chicagoland area, bringing homeowners in ComEd’s service area a new way to lower electricity supply costs"
+    verified: false
+  - id: illinois_first_market_outside_texas
+    category: service_area
+    fact: "The Chicagoland area is Base's first market outside Texas."
+    entity: "Chicagoland"
+    source_url: "https://www.basepowercompany.com/illinois-press"
+    source_date: 2026-06-24
+    source_type: primary
+    quote: "The Chicagoland area is the company’s first market outside of Texas."
+    verified: false
+  - id: illinois_communities
+    category: service_area
+    fact: "At launch, Base service was available in ComEd-area communities including Plainfield, Arlington Heights, Rockford, Joliet, Palatine, Evanston, Oswego and Mundelein."
+    entity: "Plainfield; Arlington Heights; Rockford; Joliet; Palatine; Evanston; Oswego; Mundelein"
+    source_url: "https://www.basepowercompany.com/illinois-press"
+    source_date: 2026-06-24
+    source_type: primary
+    quote: "Service is available now in communities across ComEd’s service area, including Plainfield, Arlington Heights, Rockford, Joliet, Palatine, Evanston, Oswego, and Mundelein"
+    verified: false
+  # Press release text; fetched from a syndication mirror because businesswire.com returned HTTP 403.
+  - id: seriesd_texas_illinois
+    category: service_area
+    fact: "Base Core is available to homeowners in select regions of Texas and Illinois."
+    entity: "Texas; Illinois"
+    source_url: "https://www.morningstar.com/news/business-wire/20260803203117/base-power-announces-1b-series-d-and-launches-base-core-first-of-its-kind-home-battery-built-in-the-united-states"
+    source_date: 2026-08-03
+    source_type: primary
+    quote: "Base Core is available today to homeowners in select regions of Texas and Illinois."
+    verified: false
+  # Docket 56081, item 9, Notice of Approval.
+  - id: puct_rep_certificate_10338
+    category: other
+    fact: "The PUCT granted Base Texas REP, LLC option 1 REP certificate number 10338."
+    entity: "Public Utility Commission of Texas; Base Texas REP, LLC"
+    source_url: "https://interchange.puc.texas.gov/Documents/56081_9_1373760.PDF"
+    source_date: 2024-03-08
+    source_type: filing
+    quote: "The Commission grants the application and issues option 1 REP certificate number 10338 to Base Texas REP, LLC."
+    verified: false
+  # Quote reproduces the PDF text layer ('3,2024').
+  - id: puct_application_statewide
+    category: other
+    fact: "Base Texas REP applied on January 3, 2024 for an option 1 REP certificate to provide retail electric service throughout the state of Texas."
+    entity: "Texas"
+    source_url: "https://interchange.puc.texas.gov/Documents/56081_9_1373760.PDF"
+    source_date: 2024-03-08
+    source_type: filing
+    quote: "On January 3,2024, Base Texas REP applied for an option 1 REP certificate to provide retail electric service throughout the state of Texas."
+    verified: false
+  # Footer text, identical on other basepowercompany.com pages.
+  - id: icc_ares_license
+    category: other
+    fact: "Base's site footer says Base Retail, LLC is a registered Alternative Retail Electricity Supplier with the Illinois Commerce Commission, License #26-0121."
+    entity: "Illinois Commerce Commission"
+    source_url: "https://www.basepowercompany.com/illinois-press"
+    source_date: null
+    source_type: primary
+    quote: "Registered Alternative Retail Electricity Supplier (ARES) with the Illinois Commerce Commission (ICC), License #26-0121."
+    verified: false
