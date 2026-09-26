@@ -1,23 +1,23 @@
 # basecast data catalog
 # ERCOT entries: extracted verbatim from docs/ercot-data-catalog.md (research pass, Sep 2026).
-# Non-ERCOT entries at the bottom were added for basecast and are NOT verified yet.
+# Non-ERCOT entries at the bottom were added for basecast; their `verified` fields say what was checked.
 # Each entry's `verified` field says how far it was checked. Never trust an unverified URL, ID or column name.
 
 - id: gis_report
   name: "GIS Report (Generator Interconnection Status)"
   source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=pg7-200-er"
-  api_endpoint: "https://api.ercot.com/api/public-reports/archive/PG7-200-ER  # report_type_id=15933; not tested"
+  api_endpoint: "product page listing (no login): reportListUrl misapp/servlets/IceDocListJsonWS?reportTypeId=15933 + reportDownloadUrl misdownload/servlets/mirDownload?doclookupId=<DocID>, both declared in the page script (verified 2026-09-25). Public API archive not needed; not tested"
   format: xlsx
   frequency: monthly
   spatial_grain: project (INR), county
   temporal_grain: monthly snapshot
-  history_start: "2019-01 (files, per Modo Energy); EMIL first run 2017-02-01"
+  history_start: "listing: 2019-04 onward (99 GIS_Report files as of 2026-09-25); Resource Adequacy year pages 2014-2018 link 60 older monthly workbooks back to 2014-05"
   access: "no login on ercot.com; Public API (registration, 30 req/min, 1000 files/download, US-only)"
   gridstatus_method: "Ercot().get_interconnection_queue()"
   priority: P0
   used_by: [generation_survival_model, supply_overlay, county_map]
-  caveats: "header row varies (scan for 'INR'); INR duplicated across sheets; small-gen detail only since 2022-01; PG7-201-ER cost file in same series since 2026-03; milestone header names not verified"
-  verified: "verified at source (IDs/cadence); columns partially verified"
+  caveats: "header row varies (scan for 'INR'); INR duplicated across sheets; small-gen detail only since 2022-01; PG7-201-ER cost file is a separate report type (27292); the 15933 listing also carries Co-located_Battery_Identification_Report files (since 2020-11); legacy mis.ercot.com GetReports.do needs a client certificate; milestone header names not verified"
+  verified: "verified at source 2026-09-25 (listing, IDs, cadence, downloads); columns partially verified"
 
 - id: gis_interconnection_costs
   name: "GIS Report for Transmission Interconnection Costs"
@@ -43,13 +43,13 @@
   frequency: monthly
   spatial_grain: system, load zone, project type, TSP (aggregated)
   temporal_grain: monthly snapshot; submittal/in-service year bins
-  history_start: "not verified (decks seen 2025-2026)"
+  history_start: "2024-01 (LFLTF 'LLI Queue Status Update'); 24 status decks Jan 2024 - Jun 2026 found on 2026-09-25, none after Jun 2026"
   access: no login
   gridstatus_method: none
   priority: P0
   used_by: [large_load_realization_model, ltlf_benchmark]
-  caveats: "aggregate only, no per-project IDs (LLI-# internal); charts need manual/PDF extraction; categories changed with PGRR115/PGRR145 Batch Zero; TSPs with <5 customers folded into Other"
-  verified: "verified at source (content); archive depth not verified"
+  caveats: "aggregate only, no per-project IDs (LLI-# internal); charts need manual/PDF extraction; categories changed with PGRR115/PGRR145 Batch Zero; TSPs with <5 customers folded into Other. Location/name changed over time: LFLTF pages (2024, 'LLI Queue Status Update'), inside TAC agenda-item zips (Oct 2024 - Jan 2026), LLWG pages ('<Month> TAC Report' Feb-Mar 2026, '<Month> <day> LLWG Report' Apr-Jun 2026). NPRR1267 'Large Load Interconnection Status Report' approved Jun 2025 but not in EMIL"
+  verified: "verified at source 2026-09-25 (archive crawled Jan 2024 - Sep 2026; deck content checked on Mar and Apr 2026 only)"
 
 - id: hourly_load_archive
   name: "Hourly Load Data Archives (Native Load by Weather Zone)"
@@ -64,13 +64,13 @@
   gridstatus_method: "not verified"
   priority: P0
   used_by: [weather_normalized_load_model, peak_backtest]
-  caveats: "columns not verified (expected Hour Ending, COAST, EAST, FWEST, NORTH, NCENT, SOUTH, SCENT, WEST, ERCOT); DST duplicate/missing hour; snapshot current-year file immutably"
-  verified: "verified at source (files); columns not verified"
+  caveats: "columns not verified (expected Hour Ending, COAST, EAST, FWEST, NORTH, NCENT, SOUTH, SCENT, WEST, ERCOT); DST duplicate/missing hour; snapshot current-year file immutably; files 2002-2015 xls, 2016+ zip (33 links on the page, 2026-09-25)"
+  verified: "verified at source 2026-09-25 (files downloaded); columns not verified"
 
 - id: actual_load_weather_zone
   name: "Actual System Load by Weather Zone"
   source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-345-CD"
-  api_endpoint: "report_type_id=13101 (gridstatus); API path not verified"
+  api_endpoint: "product page listing (no login), report_type_id=13101 declared on the page (verified 2026-09-25); API path not verified"
   format: csv (zip)
   frequency: daily
   spatial_grain: 8 weather zones + total
@@ -80,8 +80,8 @@
   gridstatus_method: "Ercot().get_load_by_weather_zone(date)"
   priority: P0
   used_by: [weather_normalized_load_model]
-  caveats: "use to bridge the latest month not yet in archive; DST"
-  verified: partially verified
+  caveats: "use to bridge the latest month not yet in archive; DST; the no-login listing keeps only ~31 days (csv + xml zips), so it must run regularly"
+  verified: "listing verified at source 2026-09-25; columns not verified"
 
 - id: cdr
   name: "Capacity, Demand and Reserves Report (CDR)"
@@ -96,8 +96,8 @@
   gridstatus_method: none
   priority: P0
   used_by: [forecast_vs_actual_backtest, planned_capacity_overlay]
-  caveats: "May 2026 CDR not produced (replaced by Generation_Resource_Forecast_May2026.xlsx); Dec 2026 may be delayed; tab layouts differ by vintage; revised re-issues"
-  verified: verified at source
+  caveats: "May 2026 CDR not produced (replaced by Generation_Resource_Forecast_May2026.xlsx); Dec 2026 may be delayed; tab layouts differ by vintage; revised re-issues; CDR sections also hold companion wind/solar capacity-percentage workbooks (2018-2020)"
+  verified: "verified at source 2026-09-25 (74 spreadsheets 2000 - May 2026 downloaded)"
 
 - id: ltlf
   name: "ERCOT Long-Term Load Forecast (LTLF)"
@@ -112,8 +112,8 @@
   gridstatus_method: none
   priority: P0
   used_by: [official_forecast_benchmark, large_load_realization_calibration]
-  caveats: "2026 preliminary LTLF (PUCT 58777) under adjustment (PUCT 59772, Batch Zero basis), files not on page when checked; xlsb needs pyxlsb; TSP-provided vs ERCOT-adjusted variants"
-  verified: verified at source
+  caveats: "2026 preliminary LTLF (PUCT 58777) under adjustment (PUCT 59772, Batch Zero basis); still no 2026 files or year page on 2026-09-25; xlsb needs pyxlsb; TSP-provided vs ERCOT-adjusted variants; year pages 2013-2025 (no 2015)"
+  verified: "verified at source (re-checked 2026-09-25)"
 
 - id: geo_ziptozone
   name: "Load Profiling Guide Appendix D - Profile Decision Tree (ZipToZone)"
@@ -128,8 +128,8 @@
   gridstatus_method: none
   priority: P0
   used_by: [geo_join_county_weatherzone]
-  caveats: "no official county table; derive county via Census ZCTA crosswalk; load zones are bus-based"
-  verified: verified at source
+  caveats: "no official county table; derive county via Census ZCTA crosswalk; load zones are bus-based; still the 2024-04-30 version on the current Load Profiling Guide page (2026-09-25)"
+  verified: "verified at source (re-checked 2026-09-25)"
 
 - id: settlement_points_mapping
   name: "Settlement Points List and Electrical Buses Mapping"
@@ -187,7 +187,7 @@
   frequency: annual file, updated
   spatial_grain: hub, load zone
   temporal_grain: 15-minute (RTM), hourly (DAM)
-  history_start: "2011"
+  history_start: "2010 (listings show RTMLZHBSPP_2010..2026 and DAMLZHBSPP_2010..2026, ~240 MB total, 2026-09-25)"
   access: no login
   gridstatus_method: "get_rtm_spp(year) / get_dam_spp(year)"
   priority: P1
@@ -304,8 +304,8 @@
   gridstatus_method: none
   priority: P1
   used_by: [pricing_context]
-  caveats: "revised versions possible; replaced SARA"
-  verified: verified at source
+  caveats: "revised versions possible; replaced SARA; older editions on Resource Adequacy year pages 2023-2025"
+  verified: "verified at source 2026-09-25 (Dec 2023 - Nov 2026 editions downloaded)"
 
 - id: disclosure_60d
   name: "60-Day SCED and DAM Disclosure Reports"
@@ -368,14 +368,14 @@
   gridstatus_method: none
   priority: P1
   used_by: [coop_muni_targeting, geo_join]
-  caveats: "HIFLD Open deactivated 2025-08-26 - use EIA Atlas or DataLumos archive (project 239091); PUCT maps and ERCOT co-op/muni list not verified"
-  verified: partially verified
+  caveats: "HIFLD Open deactivated 2025-08-26; the EIA Atlas page above returns 404 (2026-09-25). Used instead: ORNL ArcGIS Online copy, item 597555ce8e4a4892a030784a7c657fdd (services3.arcgis.com/OYP7N6mAJJCyH6hd/.../Electric_Retail_Service_Territories_HIFLD/FeatureServer/0), downloaded from HIFLD 2025-08-21 and frozen. Fields ID (EIA utility id), NAME, STATE (mailing state), TYPE, CNTRL_AREA (e.g. ERCO), PLAN_AREA, CUSTOMERS, SUMMR_PEAK. 256 features intersect the Texas bbox. PUCT maps and ERCOT co-op/muni list not verified"
+  verified: "alternative source verified 2026-09-25"
 
 # --- Non-ERCOT sources added for basecast (not verified) ---
 
 - id: census_zcta_county
   name: "Census 2020 ZCTA to County Relationship File"
-  source_url: "census.gov Relationship Files page (find the 2020 ZCTA520 to county file; do not construct the URL)"
+  source_url: "https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2020.html (links tab20_zcta520_county20_natl.txt + explanation PDF)"
   api_endpoint: none
   format: txt (pipe-delimited)
   frequency: decennial
@@ -387,11 +387,11 @@
   priority: P0
   used_by: [geo_join_county_weatherzone]
   caveats: "ZIP codes are not ZCTAs; report ZIPs from ZipToZone with no ZCTA match"
-  verified: not verified
+  verified: "file located and downloaded 2026-09-25; columns not verified"
 
 - id: census_tx_counties_geo
   name: "Census cartographic boundary file, counties (Texas subset)"
-  source_url: "census.gov Cartographic Boundary Files page (county, 1:500k; filter STATEFP=48)"
+  source_url: "https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html (latest: GENZ2025/shp/cb_2025_us_county_500k.zip; filter STATEFP=48)"
   api_endpoint: none
   format: shapefile / GeoJSON
   frequency: annual
@@ -403,39 +403,39 @@
   priority: P0
   used_by: [county_map, county_utility_overlap]
   caveats: "simplify to a light TopoJSON (< 2 MB) for the app; keep full geometry for overlap math"
-  verified: not verified
+  verified: "file located and downloaded 2026-09-25"
 
 - id: census_bps
   name: "Census Building Permits Survey, county level"
-  source_url: "census.gov Building Permits Survey data page (county files)"
+  source_url: "https://www.census.gov/construction/bps/ -> https://www2.census.gov/econ/bps/County/ (coYYYYa.txt annual 1990-2025; coYYMMc.txt monthly 2000-01..2026-08)"
   api_endpoint: none
   format: csv/txt
   frequency: monthly and annual
   spatial_grain: county
   temporal_grain: monthly / annual
-  history_start: "not verified"
+  history_start: "1990 (annual county files)"
   access: no login
   gridstatus_method: none
   priority: P0
   used_by: [residential_growth, b2c_acquisition]
-  caveats: "units split by structure type (1-unit, 2-4, 5+); keep all"
-  verified: not verified
+  caveats: "units split by structure type (1-unit, 2-4, 5+); keep all; national files, filter Texas at parse"
+  verified: "files located and downloaded 2026-09-25; columns not verified"
 
 - id: census_acs_housing
   name: "ACS 5-year housing: tenure by units in structure"
-  source_url: "https://api.census.gov/data (ACS 5-year; confirm table id, e.g. B25032)"
-  api_endpoint: "Census Data API"
+  source_url: "https://www2.census.gov/programs-surveys/acs/summary_file/<year>/table-based-SF/data/5YRData/acsdt5y<year>-b25032.dat (discovered from the directory listings)"
+  api_endpoint: "Census Data API (http://api.census.gov/data/<year>/acs/acs5, vintages 2009-2024) now requires a key for data queries; the table-based Summary File needs none"
   format: json
   frequency: annual
   spatial_grain: county (ZCTA optional)
   temporal_grain: annual (5-year estimates)
-  history_start: "not verified"
-  access: "no login; optional API key"
+  history_start: "2009 (group B25032 exists in the 2009 and 2024 vintages)"
+  access: "no login (Summary File); API needs a key"
   gridstatus_method: none
   priority: P1
   used_by: [b2c_acquisition]
-  caveats: "5-year estimates overlap; use one vintage per analysis"
-  verified: not verified
+  caveats: "5-year estimates overlap; use one vintage per analysis; label text differs between vintages ('Total:' vs 'Total')"
+  verified: "table id and files verified 2026-09-25"
 
 - id: open_meteo_weather
   name: "Open-Meteo historical weather (archive API)"
@@ -450,21 +450,21 @@
   gridstatus_method: none
   priority: P0
   used_by: [weather_normalized_load_model]
-  caveats: "request in UTC; representative points and weights per weather zone live in config/weather_points.yaml"
-  verified: "endpoint known; parameters not verified"
+  caveats: "request in UTC (timezone=GMT; times come without offset); models=era5 for a consistent series (default best_match blends IFS since 2017); ERA5 lags ~5 days; free tier is non-commercial only (600/min, 5,000/hour, 10,000/day); points and weights in config/weather_points.yaml"
+  verified: "parameters verified 2026-09-25 (docs + test requests)"
 
 - id: eia_861_utilities
   name: "EIA-861 annual utility data (to list ERCOT co-ops and munis)"
-  source_url: "eia.gov EIA-861 page (annual files)"
+  source_url: "https://www.eia.gov/electricity/data/eia861/ (zip/f861YYYY.zip, archive/zip/f861YYYY.zip, early release f861YYYYer.zip)"
   api_endpoint: none
   format: xlsx (zip)
   frequency: annual
   spatial_grain: utility
   temporal_grain: annual
-  history_start: "not verified"
+  history_start: "1990s (f861YYYY.zip format since 2012)"
   access: no login
   gridstatus_method: none
   priority: P0
   used_by: [accounts_list, coop_muni_targeting]
   caveats: "filter by balancing authority / NERC region for ERCOT and by ownership type (cooperative, municipal); field names not verified"
-  verified: not verified
+  verified: "files located and downloaded 2026-09-25; fields not verified"

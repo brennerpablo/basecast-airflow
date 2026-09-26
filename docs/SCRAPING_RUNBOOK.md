@@ -277,28 +277,28 @@ Atualize esta tabela a cada fonte concluída (ou gere pelo `basecast inventory`)
 
 | Source id | Status | Arquivos | Linhas | Intervalo | Observações |
 |---|---|---|---|---|---|
-| ercot_gis | a fazer | | | | |
-| ercot_ziptozone | a fazer | | | | |
-| census_zcta_county | a fazer | | | | |
-| census_tx_counties_geo | a fazer | | | | |
-| ercot_native_load | a fazer | | | | |
-| ercot_load_wz_daily | a fazer | | | | |
-| ercot_ltlf | a fazer | | | | |
-| ercot_cdr | a fazer | | | | |
-| manual_official_figures | a fazer | | | | |
-| ercot_large_load_decks | a fazer | | | | |
-| census_bps | a fazer | | | | |
-| census_acs | a fazer | | | | |
-| open_meteo | a fazer | | | | |
-| eia_territories | a fazer | | | | |
-| eia_861 | a fazer | | | | |
-| ercot_spp_hist | a fazer | | | | |
-| ercot_mora | a fazer | | | | |
+| ercot_gis | raw baixado (2026-09-25) | 227 (202 MB) | — | relatórios mai/2014 → ago/2026 | listagem sem login (abr/2019+) + 60 GIS antigos das páginas por ano; inclui 72 relatórios de baterias co-localizadas |
+| ercot_ziptozone | raw baixado | 1 | — | versão 2024-04-30 | ainda é a versão vigente |
+| census_zcta_county | raw baixado | 2 (6,6 MB) | — | 2020 | arquivo nacional + PDF de layout |
+| census_tx_counties_geo | raw baixado | 1 (11 MB) | — | vintage 2025 | shapefile nacional 1:500k; filtrar STATEFP=48 no parse |
+| ercot_native_load | raw baixado | 24 (34 MB) | — | 2003 → 2026 | arquivo de 2026 é sobrescrito pela ERCOT todo mês |
+| ercot_load_wz_daily | raw baixado | 32 | — | 2026-08-25 → 2026-09-25 | listagem só guarda ~31 dias: rodar com frequência |
+| ercot_ltlf | raw baixado | 88 (871 MB) | — | edições 2013 → 2025 | inclui xlsb horários e os 8 cenários climáticos; LTLF 2026 ainda não publicada |
+| ercot_cdr | raw baixado | 74 (38 MB) | — | edições 2000 → dez/2025 + Gen. Resource Forecast mai/2026 | só planilhas (PDFs opcionais) |
+| manual_official_figures | config criado | — | — | — | `config/manual_official_figures.yaml`, tudo `verified: false` |
+| ercot_large_load_decks | raw baixado | 64 (68 MB) | — | jan/2024 → set/2026 | 24 decks de status (último: LLWG 2026-06-19), 24 board updates, 7 ERCOT Monthly, 9 outros |
+| census_bps | raw baixado | 356 (62 MB) | — | anual 1990 → 2025; mensal 2000-01 → 2026-08 | arquivos nacionais |
+| census_acs | raw baixado | 2 (86 MB) | — | ACS 5 anos 2020–2024 | summary file por tabela (sem chave de API) |
+| open_meteo | em andamento | 288 previstos | — | 2003 → 2026 | ERA5, 12 pontos; ritmo 3 req/min |
+| eia_territories | raw baixado | 14 (38 MB) | — | snapshot HIFLD 2025-08-21 | 256 polígonos no bbox do Texas (cópia ORNL; página do EIA Atlas deu 404) |
+| eia_861 | raw baixado | 13 (57 MB) | — | 2013 → 2024 + 2025 early release | |
+| ercot_spp_hist | raw baixado | 34 (230 MB) | — | 2010 → 2026 | RTM e DAM por hub/load zone |
+| ercot_mora | raw baixado | 74 (47 MB) | — | edições dez/2023 → nov/2026 | xlsx + pdf |
 
 ## 5. Pendências que este trabalho deve responder
 
 - [ ] Nomes reais das colunas de marcos do GIS e como variam entre snapshots (passo 1)
-- [ ] Quantos decks de grandes cargas existem e se algum traz tabelas (passo 10)
+- [~] Quantos decks de grandes cargas existem e se algum traz tabelas (passo 10): 24 decks de status de jan/2024 a jun/2026 (PDF/PPTX, alguns dentro dos zips do TAC); nenhum encontrado após jun/2026. Tabelas: verificar no parse.
 - [ ] Se o recorte por transmissora ajuda a aproximar cooperativas (passo 15)
-- [ ] URLs do Census e do EIA-861 confirmados e registrados no `catalog.yaml` (passos 3, 4, 11, 12, 15)
+- [x] URLs do Census e do EIA-861 confirmados e registrados no `catalog.yaml` (passos 3, 4, 11, 12, 15)
 - [ ] Qual cooperativa usar na demo (depois do passo 15)
