@@ -2,10 +2,12 @@
 # Adapted from the official docker-compose.yaml of Airflow 3.3.2: Celery, Redis and the local Postgres
 # are gone, and so is the triggerer (no deferrable operators yet; add it back if a DAG needs one).
 # Values like ${AIRFLOW_DB_PASSWORD} come from the .env next to this file, written by up.sh on the VM.
+# The repo checkout (DAGs, pipeline code, config/) is mounted read-only from /opt/basecast/src.
 
 x-airflow-common:
   &airflow-common
-  image: apache/airflow:3.3.2-python3.12
+  image: basecast-airflow:3.3.2
+  build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -24,12 +26,20 @@ x-airflow-common:
     AIRFLOW__API_AUTH__JWT_ISSUER: airflow
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/basecast/src/dags
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '120'
+    PYTHONPATH: /opt/basecast/src
+    # Pipelines: raw and Parquet in the lake bucket, tables in the basecast database and BigQuery.
+    STORAGE_ROOT: gs://basecast-509812-lake
+    GCP_PROJECT: basecast-509812
+    BQ_DATASET: basecast
+    BQ_LOCATION: us-central1
+    BASECAST_DB_URL: postgresql://basecast_writer:${BASECAST_DB_PASSWORD}@cloud-sql-proxy:5432/basecast
   volumes:
-    - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./config:/opt/airflow/config
     - ./plugins:/opt/airflow/plugins
-    - /data:/data
+    - /opt/basecast/src:/opt/basecast/src:ro
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -110,6 +120,7 @@ services:
       - |
         mkdir -p /opt/airflow/{logs,dags,plugins,config}
         /entrypoint airflow config list >/dev/null
+        /entrypoint airflow pools import /opt/airflow/config/pools.json
         chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/{logs,dags,plugins,config}
     environment:
       <<: *airflow-common-env

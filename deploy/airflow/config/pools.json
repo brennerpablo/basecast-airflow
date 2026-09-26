@@ -1,0 +1,17 @@
+{
+  "ercot_http": {
+    "slots": 1,
+    "description": "Every ercot.com fetch shares ERCOT's 20 requests/minute budget (keys get suspended for high failure rates).",
+    "include_deferred": false
+  },
+  "open_meteo": {
+    "slots": 1,
+    "description": "Open-Meteo's free tier: ~3 requests/minute.",
+    "include_deferred": false
+  },
+  "heavy_process": {
+    "slots": 1,
+    "description": "Large parses run one at a time: the e2-medium VM leaves ~2.5 GB of memory to tasks.",
+    "include_deferred": false
+  }
+}

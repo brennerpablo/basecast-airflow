@@ -7,7 +7,7 @@ gcloud services enable --project "$PROJECT" \
   compute.googleapis.com sqladmin.googleapis.com run.googleapis.com \
   artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com \
   iap.googleapis.com billingbudgets.googleapis.com cloudresourcemanager.googleapis.com \
-  iam.googleapis.com
+  iam.googleapis.com bigquery.googleapis.com
 
 # Budget alert scoped to this project only (the billing account may pay for other projects).
 billing=$(gcloud billing projects describe "$PROJECT" --format='value(billingAccountName)')
@@ -32,6 +32,12 @@ cat > "$lifecycle" <<'JSON'
 JSON
 gcloud storage buckets update "$LAKE_BUCKET" --project "$PROJECT" --lifecycle-file="$lifecycle"
 rm -f "$lifecycle"
+
+# BigQuery dataset for the large processed datasets (their Parquet source of truth stays in the lake).
+if ! bq --project_id="$PROJECT" show --dataset "$PROJECT:$BQ_DATASET" >/dev/null 2>&1; then
+  bq --project_id="$PROJECT" --location="$REGION" mk --dataset \
+    --description "basecast processed datasets too large for Postgres" "$PROJECT:$BQ_DATASET"
+fi
 
 # SSH only through IAP; no RDP; nothing else open from the internet.
 for rule in default-allow-ssh default-allow-rdp; do

@@ -21,5 +21,6 @@ GRANT CONNECT ON DATABASE basecast TO basecast_reader;
 GRANT ALL ON SCHEMA public TO airflow;
 
 \connect basecast
+CREATE EXTENSION IF NOT EXISTS postgis;
 GRANT USAGE, CREATE ON SCHEMA public TO basecast_writer;
 GRANT USAGE ON SCHEMA public TO basecast_reader;

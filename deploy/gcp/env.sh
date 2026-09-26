@@ -7,6 +7,7 @@ REGION=us-central1
 ZONE=us-central1-a
 
 LAKE_BUCKET=gs://basecast-509812-lake
+BQ_DATASET=basecast
 BUDGET_NAME="basecast monthly"
 # The billing account is in BRL, so the budget is too (~US$ 45).
 BUDGET_AMOUNT=250BRL

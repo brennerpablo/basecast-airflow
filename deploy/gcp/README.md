@@ -6,11 +6,11 @@ duplicates anything. Every command passes `--project`, so the local gcloud defau
 
 | Script | Creates |
 |---|---|
-| `01-bootstrap.sh` | APIs, budget alert (R$ 250/month, 50/90/100%), lake bucket `gs://basecast-509812-lake`, firewall (SSH only from IAP) |
+| `01-bootstrap.sh` | APIs, budget alert (R$ 250/month, 50/90/100%), lake bucket `gs://basecast-509812-lake`, BigQuery dataset `basecast`, firewall (SSH only from IAP) |
 | `02-cloudsql.sh` | Cloud SQL `basecast-pg` (Postgres 17, db-f1-micro), databases `airflow` and `basecast`, roles, passwords in Secret Manager |
-| `03-service-accounts.sh` | `airflow-vm` and `get-data-run` service accounts with least-privilege roles |
+| `03-service-accounts.sh` | `airflow-vm` and `get-data-run` service accounts with least-privilege roles (BigQuery: jobs + dataset write for the VM, read for the API) |
 | `04-vm.sh` | VM `basecast-airflow` (e2-medium, Debian 12, Docker via `vm-startup.sh`) |
-| `05-airflow-up.sh` | Copies `deploy/airflow/` to the VM and starts Airflow (re-run after any change there) |
+| `05-airflow-up.sh` | Deploys the repo's committed `HEAD` and `deploy/airflow/` to the VM and (re)starts Airflow (re-run after any change) |
 
 `02-cloudsql.sh` needs `psql` and the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy)
 (`cloud-sql-proxy` on PATH, or `CLOUD_SQL_PROXY=/path/to/binary`).
@@ -46,8 +46,21 @@ gcloud compute ssh basecast-airflow --project basecast-509812 --zone us-central1
 gcloud secrets versions access latest --secret airflow-admin-password --project basecast-509812
 ```
 
-The local lake lives in `/data` on the VM (same layout as the bucket) until the pipelines write to
-GCS directly.
+The image is `apache/airflow:3.3.2-python3.12` plus the pipeline libraries in
+`deploy/airflow/requirements.txt` (built on the VM). `05-airflow-up.sh` deploys the committed `HEAD`
+of this repo to `/opt/basecast/src` (mounted read-only; `REVISION` holds the commit), which is the DAGs
+folder and the `PYTHONPATH`, then rebuilds and restarts. The pipelines write straight to the lake
+bucket (`STORAGE_ROOT=gs://basecast-509812-lake`), to Postgres as `basecast_writer` and to the
+BigQuery dataset `basecast`. Pools (`deploy/airflow/config/pools.json`): `ercot_http` (1 slot: every
+ercot.com fetch shares the 20 req/min budget), `open_meteo` (1), `heavy_process` (1: large parses run
+alone on the 4 GB VM).
+
+DAGs are paused when created. After a deploy, unpause them (all or one by one):
+
+```bash
+gcloud compute ssh basecast-airflow --project basecast-509812 --zone us-central1-a --tunnel-through-iap \
+  --command "sudo docker exec airflow-airflow-scheduler-1 airflow dags unpause dag_ercot_gis_incremental"
+```
 
 ## Secrets (Secret Manager)
 

@@ -30,6 +30,10 @@ for role in roles/cloudsql.client roles/logging.logWriter roles/monitoring.metri
   project_role "$VM_SA" "$role"
 done
 bucket_role "$VM_SA" roles/storage.objectAdmin
+# BigQuery: run load and query jobs, and write the basecast dataset.
+for role in roles/bigquery.jobUser roles/bigquery.dataEditor; do
+  project_role "$VM_SA" "$role"
+done
 for s in pg-airflow-password pg-basecast-writer-password airflow-admin-password; do
   secret_role "$VM_SA" "$s"
 done
@@ -38,6 +42,9 @@ done
 sa_ensure "$API_SA" "get-data on Cloud Run"
 project_role "$API_SA" roles/cloudsql.client
 bucket_role "$API_SA" roles/storage.objectViewer
+for role in roles/bigquery.jobUser roles/bigquery.dataViewer; do
+  project_role "$API_SA" "$role"
+done
 for s in pg-basecast-reader-password get-data-api-token; do
   secret_role "$API_SA" "$s"
 done

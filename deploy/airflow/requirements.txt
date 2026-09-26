@@ -1,0 +1,9 @@
+# Pipeline libraries missing from apache/airflow:3.3.2-python3.12, at the pyproject.toml pins
+# (tests/test_deploy.py checks they match). httpx, psycopg, google-cloud-storage, google-cloud-bigquery,
+# pyarrow, pyyaml, typer and python-dotenv already ship in the image at the same versions.
+polars==1.44.2
+fastexcel==0.21.0
+pdfplumber==0.11.10
+pyshp==3.1.6
+python-pptx==1.0.2
+xlrd==2.0.2
