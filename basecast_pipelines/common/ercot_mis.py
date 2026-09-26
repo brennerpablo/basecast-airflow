@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from basecast_pipelines.common.http import HttpClient
+from basecast_pipelines.common.raw import RemoteFile
+from basecast_pipelines.config import LOCAL_TZ
 
 PRODUCT_PAGE = "https://www.ercot.com/mp/data-products/data-product-details?id={emil_id}"
 
@@ -90,3 +92,20 @@ def parse_doc_list(payload: dict) -> list[ErcotDoc]:
 
 def list_documents(http: HttpClient, product: ErcotProduct) -> list[ErcotDoc]:
     return parse_doc_list(http.get(f"{product.list_url}{product.report_type_id}").json())
+
+
+def listing_files(http: HttpClient, emil_id: str) -> list[RemoteFile]:
+    """Every document of an ERCOT product listing as a RemoteFile (``dt`` = publish date, America/Chicago)."""
+    product = discover_product(http, emil_id)
+    return [
+        RemoteFile(
+            url=product.doc_download_url(doc),
+            dt=doc.publish_date.astimezone(LOCAL_TZ).date(),
+            filename=doc.filename,
+            source_page=product.page_url,
+            doc_id=doc.doc_id,
+            report_type_id=doc.report_type_id,
+            meta={"friendly_name": doc.friendly_name, "publish_date": doc.publish_date.isoformat()},
+        )
+        for doc in list_documents(http, product)
+    ]

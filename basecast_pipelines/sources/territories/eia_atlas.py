@@ -9,8 +9,7 @@ also catches utilities headquartered out of state. ``dt`` is the fetch date.
 
 from __future__ import annotations
 
-import httpx
-
+from basecast_pipelines.common.arcgis import layer_files, with_params
 from basecast_pipelines.common.http import HttpClient
 from basecast_pipelines.common.raw import RemoteFile, source_runner
 from basecast_pipelines.config import local_today
@@ -20,10 +19,6 @@ ITEM_ID = "597555ce8e4a4892a030784a7c657fdd"
 ITEM_URL = f"https://www.arcgis.com/sharing/rest/content/items/{ITEM_ID}"
 # Texas extent in WGS84 (lon/lat): west, south, east, north.
 TX_BBOX = (-106.65, 25.83, -93.50, 36.51)
-
-
-def _with_params(url: str, params: dict) -> str:
-    return str(httpx.URL(url, params=params))
 
 
 def discover(http: HttpClient, *, page_size: int = 25) -> list[RemoteFile]:
@@ -39,33 +34,12 @@ def discover(http: HttpClient, *, page_size: int = 25) -> list[RemoteFile]:
         "inSR": "4326",
         "spatialRel": "esriSpatialRelIntersects",
     }
-    count = http.get(f"{layer_url}/query", params={**spatial, "returnCountOnly": "true", "f": "json"}).json()["count"]
-    meta = {"item_id": ITEM_ID, "layer_url": layer_url, "bbox": TX_BBOX, "feature_count": count}
+    meta = {"item_id": ITEM_ID, "bbox": TX_BBOX}
     files = [
-        RemoteFile(url=_with_params(ITEM_URL, {"f": "json"}), dt=today, filename="item.json", meta=meta),
-        RemoteFile(url=_with_params(service_url, {"f": "json"}), dt=today, filename="service.json", meta=meta),
-        RemoteFile(url=_with_params(layer_url, {"f": "json"}), dt=today, filename="layer.json", meta=meta),
+        RemoteFile(url=with_params(ITEM_URL, {"f": "json"}), dt=today, filename="item.json", meta=meta),
+        RemoteFile(url=with_params(service_url, {"f": "json"}), dt=today, filename="service.json", meta=meta),
     ]
-    for offset in range(0, count, int(page_size)):
-        params = {
-            **spatial,
-            "outFields": "*",
-            "outSR": "4326",
-            "orderByFields": "OBJECTID",
-            "resultOffset": str(offset),
-            "resultRecordCount": str(page_size),
-            "f": "geojson",
-        }
-        files.append(
-            RemoteFile(
-                url=_with_params(f"{layer_url}/query", params),
-                dt=today,
-                filename=f"features_{offset:05d}.geojson",
-                source_page=layer_url,
-                meta={**meta, "offset": offset, "page_size": int(page_size)},
-            )
-        )
-    return files
+    return files + layer_files(http, layer_url, dt=today, prefix="", where=spatial, page_size=page_size, meta=meta)
 
 
 run = source_runner(SOURCE_ID, discover)

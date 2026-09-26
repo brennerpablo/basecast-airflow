@@ -23,6 +23,25 @@ SOURCE_MODULES: dict[str, str] = {
     "eia_861": "basecast_pipelines.sources.territories.eia_861",
     "ercot_spp_hist": "basecast_pipelines.sources.ercot.spp_hist",
     "ercot_mora": "basecast_pipelines.sources.ercot.mora",
+    # Added after the first backfill (research spike 2026-09-26; see docs/decisions.md).
+    "puct_ccn_territories": "basecast_pipelines.sources.puct.ccn_territories",
+    "puct_directories": "basecast_pipelines.sources.puct.directories",
+    "puct_filings": "basecast_pipelines.sources.puct.interchange",
+    "ercot_tpit": "basecast_pipelines.sources.ercot.tpit",
+    "ercot_rtp": "basecast_pipelines.sources.ercot.rtp",
+    "ercot_settlement_points": "basecast_pipelines.sources.ercot.settlement_points",
+    "ercot_mp_list": "basecast_pipelines.sources.ercot.mp_list",
+    "ercot_members": "basecast_pipelines.sources.ercot.members",
+    "ercot_demand_energy": "basecast_pipelines.sources.ercot.demand_energy",
+    "ercot_fuel_mix": "basecast_pipelines.sources.ercot.fuel_mix",
+    "eia_860m": "basecast_pipelines.sources.eia.eia_860m",
+    "eia_860": "basecast_pipelines.sources.eia.eia_860",
+    "pudl": "basecast_pipelines.sources.eia.pudl",
+    "noaa_ghcnh": "basecast_pipelines.sources.weather.ghcnh",
+    "census_pep": "basecast_pipelines.sources.census.population",
+    "bls_qcew": "basecast_pipelines.sources.bls.qcew",
+    "tceq_air_permits": "basecast_pipelines.sources.texas.tceq_air_permits",
+    "tx_comptroller": "basecast_pipelines.sources.texas.comptroller",
 }
 
 
