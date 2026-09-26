@@ -322,7 +322,7 @@ Atualize esta tabela a cada fonte concluída (ou gere pelo `basecast inventory`)
 | ercot_mora | raw baixado | 74 (47 MB) | — | edições dez/2023 → nov/2026 | xlsx + pdf |
 | puct_ccn_territories | raw baixado (2026-09-26) | 12 (33 MB) | — | edição 2026-06-29 | 68 coop, 72 muni, 8 IOU |
 | puct_directories | raw baixado | 11 | — | diário | coop, muni, iou, pgc, pgc_facility, agg |
-| puct_filings | raw baixado | 564 (578 MB) | — | 58777 (40 itens), 59772 (18), 58481 (217) | todos os documentos com arquivo público; tabela por TSP no slide 5 do `Attachment A.pptx` (58777-38) |
+| puct_filings | raw baixado | 562 (595 MB) | — | 58777 (40 itens), 59772 (18), 58481 (217) | todos os documentos com arquivo público; tabela por TSP no slide 5 do `Attachment A.pptx` (58777-38) |
 | ercot_tpit | raw baixado | 2 (20 MB) | — | 2009 → jul/2026 | ERCOT reaproveita a URL antiga |
 | ercot_rtp | raw baixado | 5 (36 MB) | — | RTP 2014 → 2025 | |
 | ercot_settlement_points | raw baixado | 4 | — | 2026-08-26 → 2026-09-23 | janela de 31 dias: rodar semanalmente |
