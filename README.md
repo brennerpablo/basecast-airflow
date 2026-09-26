@@ -1,21 +1,23 @@
 # basecast-airflow
 
-Data ingestion and models for **basecast**, which forecasts how much of ERCOT's interconnection queues
-(large loads and generation) actually gets built, where and when, and turns that into peak-demand
-forecasts by region.
+Data ingestion, processing and orchestration for **basecast**, which forecasts how much of ERCOT's
+interconnection queues (large loads and generation) actually gets built, where and when, and turns that
+into peak-demand forecasts by region.
 
-This repo pulls public ERCOT, Census, EIA and weather data into a local lake: immutable raw files plus
-typed Parquet. Each source is a plain Python module with a `run()` entry point; Airflow DAGs will be thin
-wrappers added later.
+Every source goes through two stages:
 
-> **Status:** raw ingestion. Every source in `docs/SCRAPING_RUNBOOK.md` downloads into `data/raw/`;
-> parsers into typed Parquet come next.
+1. **raw:** discover and download public ERCOT, PUCT, Census, EIA, BLS, TCEQ, Comptroller and weather
+   files into an immutable lake (`raw/source=<id>/dt=<date>/`, one `_manifest.json` per folder).
+2. **process:** parse them into typed tables. Postgres (`basecast` database, PostGIS on) for the datasets
+   the API reads; typed Parquet in the lake plus BigQuery for the large series.
+
+Airflow runs both stages on a schedule on a GCP VM: one thin DAG per source, built by a factory.
 
 ## Repos
 
 | Repo | Role |
 |---|---|
-| `basecast-airflow` | Ingestion and models (this repo) |
+| `basecast-airflow` | Ingestion, processing and orchestration (this repo) |
 | `basecast-get-data` | FastAPI service; owns the data contract |
 | `basecast-app` | Next.js frontend |
 
@@ -26,38 +28,49 @@ uv sync                # Python 3.12 + pinned dependencies
 cp .env.example .env   # optional; never commit .env
 ```
 
-No credentials are needed for the raw backfill: ERCOT files come from the public product pages and their
-document listings, Census and EIA from their public file servers. `STORAGE_ROOT` (default
-`file://./data`) sets the lake root; `BASECAST_USER_AGENT` overrides the default User-Agent.
+| Variable | Default | What |
+|---|---|---|
+| `STORAGE_ROOT` | `file://./data` | Lake root: `file://...` locally, `gs://basecast-509812-lake` on the VM |
+| `BASECAST_DB_URL` | unset | Postgres `basecast` database (processed tables, `etl_run`, `lake_processed`); needed to process |
+| `GCP_PROJECT` | unset | Needed for the BigQuery datasets and Gemini |
+| `BQ_DATASET` / `BQ_LOCATION` | `basecast` / `us-central1` | BigQuery destination |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Chart values and image-only pages of documents (Vertex AI, location `global`) |
+| `BASECAST_USER_AGENT` | project UA | HTTP User-Agent |
+
+No credentials are needed for the raw stage.
 
 ## Usage
 
 ```bash
 uv run basecast sources                          # source ids, in runbook order
 uv run basecast run ercot_gis --dry-run          # list what would be downloaded
-uv run basecast run ercot_gis                    # download new/changed files into data/raw/
-uv run basecast run ercot_ltlf --opt include_weather_scenarios=true
-uv run basecast runs                             # recent etl_run rows
+uv run basecast run ercot_gis                    # download new/changed files into the lake
+uv run basecast datasets                         # every dataset, its target and write mode
+uv run basecast process ercot_gis --dry-run      # parse and print schema and a sample; write nothing
+uv run basecast process ercot_gis                # parse new raw files into the tables
+uv run basecast process ercot_gis --reprocess    # re-parse everything (add --rebuild after schema changes)
+uv run basecast runs                             # recent etl_run rows (local Parquet)
 uv run basecast audit                            # raw integrity: manifests, sha256, file signatures
-uv run basecast inventory                        # write docs/data-inventory.md
 uv run pytest                                    # tests (offline, small real fixtures)
 ```
 
-Lake layout (identical to the future GCS bucket):
+`docs/processing.md` explains the parser contract, write modes and rules.
 
-```
-data/
-├── raw/source=<id>/dt=<YYYY-MM-DD>/<original file>   # immutable, one _manifest.json per dt folder
-├── _runs/etl_run.parquet                             # one row per run: status, counts, events
-└── _logs/                                            # run logs (local only)
-```
+## Airflow
 
-Re-running a source is idempotent: known ERCOT document ids are skipped, other URLs are re-checked with
-conditional requests, and identical content (same sha256) is never stored twice. See `docs/decisions.md`.
+- `dags/dag_<source>_incremental.py`: one per source, scheduled (cadences in
+  `dags/basecast_dags/config.py`), `fetch_raw` then `process`.
+- `dag_config_facts_incremental`: loads the YAML files in `config/`.
+- `dag_source_full`: manual backfill or reprocessing (params: source, stages, window, options).
+
+Deployment (VM, Cloud SQL, bucket, BigQuery, pools) is in `deploy/gcp/README.md`. The DagBag test needs
+Airflow installed (it skips otherwise); see `tests/test_dags.py`.
 
 ## Docs
 
 - `docs/KICKOFF.md`: project kickoff (Portuguese)
 - `docs/SCRAPING_RUNBOOK.md`: what to download, from where, and what each source produces
+- `docs/processing.md`: raw → typed tables
+- `docs/decisions.md`: decision log
 - `catalog.yaml` and `docs/ercot-data-catalog.md`: source catalog with verification status
 - `CLAUDE.md`: working context for Claude Code

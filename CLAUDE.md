@@ -1,8 +1,9 @@
 # CLAUDE.md — basecast-airflow
 
 **basecast** is being built for the Base Power × AITX Hackathon (Austin, Sep 25–27, 2026). This repo is
-**front A: local data mining**. It downloads public sources into a local lake and will hold the models;
-Airflow comes later as a thin layer on top.
+**front A: data mining**. It downloads public sources into the lake (`gs://basecast-509812-lake`, same
+layout as the local `data/`), parses them into typed tables (Postgres `basecast`; Parquet + BigQuery for the
+large series) and runs both stages from thin Airflow DAGs on a GCP VM. Models come later.
 
 This file carries the stable parts of `docs/KICKOFF.md` (in Portuguese): sections 1, 2 and 7, this repo's
 part of section 3, the working rules from section 0 and the front A principles from section 4. The tasks
@@ -51,12 +52,16 @@ Data is the main track), non-obvious insight, usability, performance.
 
 - **Three repos, same design as Fundsys:** `basecast-airflow` (ingestion and models), `basecast-get-data`
   (API) and `basecast-app` (frontend). No monorepo.
-- **Now:** mining runs locally on the Mac mini (Apple Silicon). Later it moves to a personal GCP project
-  in `us-central1` (the ERCOT API blocks access from outside the US) and a personal Vercel account.
+- **GCP project `basecast-509812`, `us-central1`** (the ERCOT API blocks access from outside the US):
+  Airflow VM, Cloud SQL, the lake bucket and BigQuery; setup in `deploy/gcp/`. The Mac mini still runs
+  backfills and dry runs against the same lake.
 - **Lake:** immutable raw `raw/source=<id>/dt=<snapshot date>/<original file>` plus typed Parquet
   `parquet/<dataset>/dt=<date>/part-*.parquet`. The local layout is identical to the GCS bucket's, so
   moving up is `gcloud storage rsync` plus a BigQuery load, with no code rewrite.
-- **Warehouse (later):** BigQuery, tables partitioned by day. No Cloud SQL (there are no user writes).
+- **Warehouse:** Postgres (Cloud SQL, database `basecast`, PostGIS) for what the API reads; BigQuery
+  (`basecast` dataset, tables partitioned by MONTH because of the 4,000-partition limit) for the large
+  series, whose Parquet in the lake is the source of truth. Both reverse the kickoff's "BigQuery by day,
+  no Cloud SQL" (see `docs/decisions.md`).
 - **Pipelines (`basecast-airflow`):** each source is a pure Python module with
   `run(*, storage, http, since=None, until=None)` that runs on its own from the CLI. The Airflow DAGs
   (later, on a VM with Docker Compose and LocalExecutor) will be thin and only call these `run()`
@@ -91,9 +96,12 @@ basecast-airflow/
 │   │   ├── census/           # permits.py, housing.py, geo.py
 │   │   ├── weather/          # open_meteo.py
 │   │   └── territories/      # eia_atlas.py
+│   ├── processing/           # parser contract (Dataset, SqlDataset), runner, tabular helpers
+│   ├── parsers/              # one module per source, same path as sources/ (docs/processing.md)
 │   ├── adapters/             # fleet_data_source.py, utility_data_source.py (interfaces + simulated)
-│   └── cli.py                # `uv run basecast run <source> [--since --until]`, `basecast inventory`
-├── dags/                     # empty for now; thin DAGs later
+│   └── cli.py                # `basecast run|process|datasets|runs|audit|inventory`
+├── dags/                     # dag_<source>_incremental.py (thin), dag_source_full.py, basecast_dags/ (factory, cadences)
+├── deploy/                   # gcp/ (setup scripts, 05 deploys HEAD to the VM), airflow/ (compose, image, pools)
 ├── tests/                    # pytest with small fixtures (trimmed real samples)
 └── docs/
     ├── KICKOFF.md
@@ -135,8 +143,7 @@ as support (pin the version; its methods vary between versions).
 - Don't invent URLs, IDs or columns; confirm them at the source or mark them "not verified".
 - Contract changed? Update `data-contract.md`, the Pydantic models and `openapi.json` together, and
   regenerate the client in the app.
-- Out of scope for now: Airflow deployment, BigQuery load, models, Fleet API mock, commercial-module
-  logic, real mart reads in the API.
+- Out of scope for now: models, Fleet API mock, commercial-module logic, real mart reads in the API.
 
 ## Sibling repos
 
