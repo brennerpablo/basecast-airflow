@@ -75,8 +75,10 @@ SQL_DATASETS = [
 ]
 ```
 
-Rebuilt after the module's datasets on every non-dry run, swapped in atomically. If an input table does
-not exist yet, the dataset is skipped with a warning.
+Rebuilt after the module's datasets, swapped in atomically, when the run changed one of the module's
+datasets, when `--reprocess`/`--rebuild` or `--dataset <name>` asks for it, or when the table does not
+exist yet (PostGIS overlays take minutes on the small Cloud SQL tier). If an input table does not exist
+yet, the dataset is skipped with a warning.
 
 ### PostGIS
 

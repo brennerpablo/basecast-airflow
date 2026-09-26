@@ -82,8 +82,9 @@ def test_sql_dataset_is_rebuilt_after_the_module_datasets(raw_file, storage, mon
     settings = Settings("file://unused", "ua", db_url=url)
     base, derived = runner.run_process("s", storage=storage, settings=settings, rebuild=True)
     assert (base.rows, derived.rows) == (2, 1)
-    again, _ = runner.run_process("s", storage=storage, settings=settings)
+    again, derived_again = runner.run_process("s", storage=storage, settings=settings)
     assert again.files_skipped == 1 and again.rows == 0
+    assert derived_again.skipped  # nothing changed: the SQL dataset is not rebuilt
 
 
 def _db_or_skip(monkeypatch):

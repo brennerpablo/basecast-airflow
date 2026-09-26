@@ -399,8 +399,15 @@ def run_process(
             log.info("%s: %s", ds.name, summary.event())
             out.append(summary)
         if conn is not None:
+            # SQL datasets can be slow on the small Cloud SQL tier (PostGIS overlays): rebuild them only
+            # when this run changed an input, when asked, or when they do not exist yet.
+            changed = any(not s.skipped and (s.files or s.rows or s.files_pruned) for s in out)
             for sd in derived:
-                summary = _build_sql_dataset(conn, sd)
+                missing = conn.execute("SELECT to_regclass(%s) IS NULL", (f"public.{sd.name}",)).fetchone()[0]
+                if changed or missing or reprocess or rebuild or (datasets and sd.name in datasets):
+                    summary = _build_sql_dataset(conn, sd)
+                else:
+                    summary = DatasetSummary(sd.name, "postgres", "sql", skipped=True)
                 log.info("%s: %s", sd.name, summary.event())
                 out.append(summary)
         return out
