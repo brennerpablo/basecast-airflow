@@ -174,6 +174,8 @@ def truncate_at(events: pl.DataFrame, as_of: date, *, vanished: str = "competing
     Keeps projects first listed before ``as_of``; an event after ``as_of`` becomes censored at ``as_of``;
     a stage milestone dated on or after ``as_of``, or first reported after the month before ``as_of``, is
     set to null (the date columns are overwritten, so :func:`stage_frame` sees the truncated history).
+    A milestone column without its first-report column (:data:`STAGE_FIRST_MONTH`) raises, so the reporting-lag
+    guard is never silently off (X16 #2).
     """
     report_month = date(as_of.year, as_of.month, 1)
     last_report = pl.lit(report_month).dt.offset_by("-1mo") if as_of.day == 1 else pl.lit(report_month)
@@ -188,7 +190,9 @@ def truncate_at(events: pl.DataFrame, as_of: date, *, vanished: str = "competing
         if stage == "entry" or col not in out.columns:
             continue
         known = pl.col(col) < pl.lit(as_of)
-        if (first := STAGE_FIRST_MONTH.get(stage)) and first in out.columns:
+        if first := STAGE_FIRST_MONTH.get(stage):
+            if first not in out.columns:
+                raise ValueError(f"truncate_at needs {first!r} to date when {col!r} was first reported")
             known &= pl.col(first).is_not_null() & (pl.col(first) <= last_report)
         fixes.append(pl.when(known).then(pl.col(col)).otherwise(None).alias(col))
     return out.with_columns(fixes)

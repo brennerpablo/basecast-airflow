@@ -48,8 +48,9 @@ EVENT_COLUMNS = (
     "size_category", "first_seen_month", "first_status", "last_seen_month", "last_status", "months_seen",
     "months_missing", "latest_report_month", "entry_date", "screening_study_started", "fis_requested",
     "fis_approved", "ia_signed", "approved_energization", "approved_synchronization",
-    "commercial_operation_date", "cancel_date", "inactive_date", "cod_first_month", "cancelled_month",
-    "inactive_first_month", "last_active_month", "exit_status", "exit_month", "exit_inferred",
+    "commercial_operation_date", "cancel_date", "inactive_date", "fis_first_month", "ia_first_month",
+    "synchronization_first_month", "cod_first_month", "cancelled_month", "inactive_first_month",
+    "last_active_month", "exit_status", "exit_month", "exit_inferred",
 )
 
 

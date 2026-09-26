@@ -109,6 +109,20 @@ def test_truncate_at_censors_later_events_and_hides_unreported_milestones():
     assert later.filter(pl.col("inr") == "A")["event"].item() == COD
 
 
+def test_truncate_at_raises_without_a_guard_column():
+    # X16 #2: without ia_first_month the guard was skipped and C's backdated IA leaked into the fit
+    with pytest.raises(ValueError, match="ia_first_month"):
+        qa.truncate_at(_events().drop("ia_first_month"), date(2022, 1, 1))
+    # no milestone column, nothing to guard
+    out = qa.truncate_at(_events().drop("ia_signed", "ia_first_month"), date(2022, 1, 1))
+    assert "ia_signed" not in out.columns
+
+
+def test_load_events_selects_every_guard_column():
+    assert set(qa.STAGE_FIRST_MONTH.values()) <= set(sv.EVENT_COLUMNS)
+    assert {"fis_first_month", "cod_first_month", "cancelled_month"} <= set(sv.EVENT_COLUMNS)
+
+
 def test_current_stage_later_stage_wins_even_when_dated_earlier():
     df = pl.DataFrame({
         "entry_date": [date(2020, 1, 1)] * 4,
