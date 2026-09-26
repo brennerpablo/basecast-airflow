@@ -31,8 +31,9 @@ retail power and runs the fleet as a virtual power plant. It makes money from th
 the ERCOT wholesale market, and utilities (co-ops and munis that buy capacity).
 
 **Problem:** Texas plans its grid around inflated interconnection queues. In Jan 2026 ERCOT was tracking
-~232.5 GW of large loads, only 3.8% of them approved to energize, against a demand record of ~87–91 GW.
-ERCOT's own official preliminary 2026 forecast (~112 GW) missed that same year's peak by more than 20 GW.
+~232.5 GW of large loads, only 3.8% of them approved to energize. The demand record was 85,508 MW
+(2023-08-10) until 2026-07-22, when the peak reached 91.1 GW (preliminary). ERCOT's own preliminary
+long-term forecast for 2026 (~112 GW) missed that same year's peak by about 21 GW.
 
 **Product:** forecast how much of the queues (large loads and generation) actually gets built, where and
 when; turn that into a **peak MW** forecast by region and year (P10/P50/P90); and translate it into
