@@ -47,3 +47,10 @@ def test_golden_checks_hold_only_for_x5_switches():
     assert golden and all(c.applies is M._as_x5 for c in golden)
     structural = [c.name for c in M.ACCOUNT_CHECKS if c.as_of is None]
     assert "no is_base_partner column" in structural and "107 accounts (5 held out)" in structural
+
+
+def test_timeline_drops_undated_events_and_fills_missing_titles():
+    tl = pl.DataFrame({"event_date": [date(2026, 5, 1), None, date(2025, 1, 2)], "title": ["A", "B", None],
+                       "detail": ["a", "b", "BEPC 345.0 kV, Planned"]})
+    out = M.timeline({"triggers": tl})
+    assert out["title"].to_list() == ["A", "BEPC 345.0 kV, Planned"]

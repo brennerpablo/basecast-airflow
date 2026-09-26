@@ -260,6 +260,19 @@ def _facts(diag: dict, block: str) -> dict[str, Any]:
     return {f["key"]: f["value"] for f in facts}
 
 
+def timeline(diag: dict) -> pl.DataFrame:
+    """The account's events as the marts publish them: undated events dropped (three expired Ch. 312 agreements
+    with no executed or effective date; they can never be active) and a missing title taken from the detail
+    (TPIT projects without a name)."""
+    return diag["triggers"].filter(pl.col("event_date").is_not_null()).with_columns(
+        pl.coalesce("title", "detail").alias("title")
+    )
+
+
+# The contract's names for the diagnosis' data-center rows (get-data §5).
+DC_KEYS = {"reg_ent_name": "name", "ref_num_txt": "tceq_rn", "first_affil_begin_dt": "first_permit_date"}
+
+
 def flags(diag: dict) -> list[str]:
     """The list flags (``FLAGS``), with the rules of ``diagnosis.data_gaps``."""
     from basecast_pipelines.models import diagnosis as D
@@ -323,7 +336,7 @@ def build_accounts(ctx: MartContext) -> pl.DataFrame:
 
 
 def build_events(ctx: MartContext) -> pl.DataFrame:
-    frames = [d["triggers"].with_columns(pl.lit(a).alias("account_id")) for a, d in diagnoses(ctx).items()]
+    frames = [timeline(d).with_columns(pl.lit(a).alias("account_id")) for a, d in diagnoses(ctx).items()]
     return pl.concat(frames, how="vertical_relaxed").select("account_id", pl.exclude("account_id"))
 
 
@@ -346,12 +359,12 @@ def detail_payload(d: dict, ctx: MartContext) -> dict:
 
     inp, weights_set = diagnosis_inputs(ctx)
     p = D.to_jsonable({k: v for k, v in d.items() if k != "triggers"})
-    tl = d["triggers"]
+    tl = timeline(d)
     active = tl.filter(pl.col("active"))
     context = (
         active.filter(pl.col("strength") == "context")
         .group_by("trigger")
-        .agg(pl.len().alias("count"), pl.col("event_date").max().alias("latest_date"),
+        .agg(pl.col("label").first(), pl.len().alias("count"), pl.col("event_date").max().alias("latest_date"),
              pl.col("county_name").drop_nulls().unique().sort().alias("counties"))
         .sort("trigger")
     )
@@ -361,6 +374,10 @@ def detail_payload(d: dict, ctx: MartContext) -> dict:
     exposed = bool(counties.height and counties["exposed"].any())
     p["territory"]["context_rule"] = "exposed" if exposed else "home_county"
     p["territory"]["context_label"] = label
+    p["territory"]["data_centers"] = [
+        {DC_KEYS.get(k, k): ("name" if v == "name" else "naics") if k == "matched_by" else v for k, v in row.items()}
+        for row in p["territory"]["data_centers"]
+    ]
     p["gaps"] = D.to_jsonable(D.data_gaps(d, as_of=ctx.as_of, stale_days=730))
     p["coverage"] = {"public_data": True, "utility_private_data": False, "fleet_data": False, "resolution": "zone"}
     p["score"]["weights_set"] = weights_set
@@ -447,10 +464,11 @@ ACCOUNTS = Mart(
 ACCOUNT_EVENTS = Mart(
     name="mart_account_events",
     build=build_events,
+    version=2,
     key=("account_id", "trigger", "source_ref"),
     inputs=("mart_accounts",),
     description="Every dated trigger event of every ranked account (ever; active = the last 12 months), with its "
-    "strength, mapping (county or name), exposure, source and offer angle (X5).",
+    "strength, mapping (county or name), exposure, source and offer angle (X5); undated events are left out.",
     caveats=("by_county_not_point",),
     checks=(
         value_check("unique event per account", lambda f: f.select("account_id", "trigger", "source_ref")
@@ -472,6 +490,7 @@ ACCOUNT_COUNTIES = Mart(
 ACCOUNT_DETAIL = Mart(
     name="mart_account_detail",
     build=build_detail,
+    version=2,
     key=("account_id",),
     inputs=("mart_accounts", "mart_account_events", "mart_account_counties"),
     description="The per-account diagnosis (X9 §4) as one JSON payload: header facts, score breakdown, next action, "
