@@ -195,3 +195,21 @@ def registry() -> None:
         raise typer.BadParameter("set BASECAST_DB_URL")
     with connect(settings.db_url) as conn:
         typer.echo(f"published {publish(conn)} registry rows")
+
+
+@app.command("export-geo")
+def export_geo(
+    out_dir: Annotated[Path, typer.Option(help="Output folder (the app's public/geo/).")] = (
+        PROJECT_ROOT.parent / "basecast-app" / "public" / "geo"
+    ),
+    tolerance: Annotated[
+        float | None, typer.Option(help="Simplification tolerance in metres; default: the smallest under 1 MB.")
+    ] = None,
+) -> None:
+    """Write the county and weather-zone GeoJSON for the app's map (reads PostGIS as basecast_reader)."""
+    from basecast_pipelines.marts import geo
+
+    tol, sizes = geo.export(out_dir, tolerance_m=tolerance)
+    for name, size in sizes.items():
+        typer.echo(f"{out_dir / name}: {size:,} bytes")
+    typer.echo(f"tolerance {tol:g} m")

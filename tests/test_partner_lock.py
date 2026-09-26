@@ -21,6 +21,18 @@ def test_analysis_scripts_do_not_read_partners():
     assert not offenders, offenders
 
 
+def test_marts_do_not_read_partners():
+    # the only future exception is marts/validation.py, after Pablo's go (A-M8)
+    marts = ROOT / "basecast_pipelines" / "marts"
+    offenders = [
+        f"{path.name}: {token}"
+        for path in sorted(marts.rglob("*.py"))
+        for token in FORBIDDEN
+        if token in path.read_text()
+    ]
+    assert not offenders, offenders
+
+
 def test_models_other_than_partners_do_not_read_partners():
     models = ROOT / "basecast_pipelines" / "models"
     offenders = [
