@@ -166,6 +166,22 @@ def test_zone_coincidence_ratios():
     assert a["n_months"] == 2
 
 
+def test_zone_coincidence_leaves_dc_ties_out_of_the_shares():
+    rows = []
+    for zone, cp in (("A", 60.0), ("B", 40.0), ("DC_E", 25.0)):
+        rows += [
+            (date(2011, 7, 1), zone, "coincident_peak_15min_mw", cp, datetime(2011, 7, 10, 17, 0)),
+            (date(2011, 7, 1), zone, "noncoincident_peak_15min_mw", cp, datetime(2011, 7, 10, 17, 0)),
+            (date(2011, 7, 1), zone, "energy_mwh", 1000.0, None),
+        ]
+    monthly = pl.DataFrame(rows, schema=["month", "region_id", "metric", "value", "peak_local"], orient="row")
+    monthly = monthly.with_columns(pl.lit("load_zone").alias("region_type"))
+    z = fc.zone_coincidence(monthly, "load_zone").sort("region_id")
+    assert z["region_id"].to_list() == ["A", "B"]
+    assert z["share_4cp"].to_list() == pytest.approx([0.6, 0.4])
+    assert z["share_energy"].to_list() == pytest.approx([0.5, 0.5])
+
+
 def test_hourly_from_15min_keys_by_utc_hour_end_on_fall_back():
     # 2024-11-03: the repeated 01:00 hour (CDT then CST) is two distinct UTC hours.
     start = datetime(2024, 11, 3, 5, 0, tzinfo=UTC)  # 00:00 CDT

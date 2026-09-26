@@ -376,11 +376,18 @@ def normalize_year(fit: DailyFit, frame: pl.DataFrame, normals: pl.DataFrame, *,
         pl.Series("w_draw", fit.weather_effect(draws))
     )
     mean_eff = draw_eff.group_by("date").agg(pl.col("w_draw").mean().alias("w_normal"), pl.len().alias("n_draws"))
+    # Excluded days (Uri) are not in the fits, and their actual is shed load: normalize the model's own day
+    # (fitted) there, or the shed MW would stay in the series as a residual.
+    base = (
+        pl.when(pl.col("excluded")).then(pl.col("fitted")).otherwise(pl.col(fit.target))
+        if "excluded" in frame.columns
+        else pl.col(fit.target)
+    )
     out = (
         frame.with_columns(pl.Series("fitted", fit.predict(frame, flat_after_end=False)),
                            pl.Series("w_actual", fit.weather_effect(frame)))
         .join(mean_eff, on="date", how="left")
-        .with_columns((pl.col(fit.target) - pl.col("w_actual") + pl.col("w_normal")).alias("normalized"),
+        .with_columns((base - pl.col("w_actual") + pl.col("w_normal")).alias("normalized"),
                       pl.lit(f"{fit.start}-{fit.end}").alias("window"))
     )
     return (out, draw_eff) if keep_draws else out

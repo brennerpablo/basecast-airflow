@@ -176,3 +176,5 @@ is a candidate, not yet in `docs/video-numbers.md`.
   Base's revenue; it assumes every interval is hit (a 15:45–17:45 discharge hit 63 of 64 in 2010–2025, ~56 dispatch
   days a summer with a weather-based call); the fleet's kW per home is not verified.
 - Every figure lives in `analysis/out/` (gitignored); re-run the scripts to regenerate them.
+- **X16 review (2026-09-26, `docs/analysis/x16_models_review.md`):** 6 confirmed bugs. Fixed: Uri days now normalize the fitted day in `weather_normalized.py` (X12's ERCOT 2021 energy was 2.2 TWh low; "2.1%/yr in 2010–21" becomes 2.2%, 2022 YoY +5.0% (z 6.0) becomes +4.4% (z 3.9), "5–7 SD" becomes 3.9–5.7 SD; the X12 doc still shows the old numbers) and `DC_` ties left out of `four_cp.zone_coincidence` (< 0.1 pp). Open: `survival.load_events` skips `ia_first_month` (X2 backtest −13.2/+9.3/+1.4% after the fix), `peak_forecast` month-end dates (X7 2027 ≈ 92.8 GW, 2030 ≈ 111.3 GW), two latent NaN cases in `triggers.py`.
+- **Paused to save credits:** X17–X23 stopped mid-run; their partial files stay uncommitted in the working tree.

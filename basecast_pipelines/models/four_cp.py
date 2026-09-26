@@ -321,7 +321,12 @@ def zone_coincidence(monthly: pl.DataFrame, region_type: str = "weather_zone",
     - ``share_4cp`` (of the sum of zones' 4CP load) and ``share_energy`` (of the months' energy);
     - ``ncp_end_hour``: mean local clock hour at which the zone's monthly peaks end (decimal hours);
     - ``n_months``: how many months the year has."""
-    z = monthly.filter((pl.col("region_type") == region_type) & pl.col("month").dt.month().is_in(months))
+    # DC tie rows (``DC_*``, load_zone 2011 only) are not zones: keep them out of the shares' denominators.
+    z = monthly.filter(
+        (pl.col("region_type") == region_type)
+        & pl.col("month").dt.month().is_in(months)
+        & ~pl.col("region_id").str.starts_with("DC_")
+    )
     wide = (
         z.select(
             "region_id", pl.col("month").dt.year().cast(pl.Int32).alias("year"), pl.col("month").alias("m"),

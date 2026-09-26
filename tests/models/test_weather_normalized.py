@@ -119,6 +119,22 @@ def test_normalizing_to_the_same_weather_returns_the_actual():
     assert (out["normalized"] - out["dmean"]).abs().max() == pytest.approx(0.0, abs=1e-6)
 
 
+def test_excluded_days_normalize_the_fitted_day_not_the_shed_load():
+    panel = _synthetic_panel()
+    feats = panel.select("weather_zone", "date", "t_mean", "t_max", "td_mean", "t_lag")
+    fit = wn.fit_daily(panel, "dmean", 2018, 2020, spec=wn.Spec(fourier=0), zone="Z")
+    shed = date(2019, 2, 16)
+    frame = panel.filter(pl.col("date").dt.year() == 2019).with_columns(
+        pl.when(pl.col("date") == shed).then(pl.col("dmean") * 0.4).otherwise(pl.col("dmean")).alias("dmean"),
+        (pl.col("date") == shed).alias("excluded"),
+    )
+    out = wn.normalize_year(fit, frame, wn.normal_weather(feats, (2019, 2019)))
+    day = out.filter(pl.col("date") == shed).row(0, named=True)
+    assert day["normalized"] == pytest.approx(day["fitted"], abs=1e-6)
+    kept = out.filter(pl.col("date") != shed)
+    assert (kept["normalized"] - kept["dmean"]).abs().max() == pytest.approx(0.0, abs=1e-6)
+
+
 def test_normal_weather_is_the_mean_response_over_normal_years():
     panel = _synthetic_panel()
     feats = panel.select("weather_zone", "date", "t_mean", "t_max", "td_mean", "t_lag")
