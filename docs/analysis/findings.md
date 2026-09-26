@@ -53,7 +53,6 @@ re-ran from scratch at 14:30 CDT without errors (~3 minutes in total) and left e
 
 Every [PERGUNTAR] of the handoff, plus the calls Claude made alone. Claude's default is already in use; nothing
 below blocks the next tasks except item 1 (A2 needs the weights first).
-
 1. **Q3 / X4 — pick and approve the score weights.** Two proposals, both fixed without the partners: Q3's
    (`config/account_score.yaml`, on area-apportioned homes) and X4's (EIA customers from the 861S short form replace
    homes, customer growth 2019→2024 enters; ρ 0.94 with Q3, 23 of the top 25 kept; table in
@@ -84,55 +83,53 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    NAICS 518210 (some names are not data centers), dropping the 7 non-ERCOT sites from the ERCOT-facing signal, and
    whether "35 of 38 outside the big metros" can go in the video even though Q4 is "signal only".
 8. **Thresholds** adopted as in the handoff: Q7 5% / 10%, Q1 "consistent sign" = ≥ 2/3 of vintages, Q5 ±5%.
-
 9. **X1 — the unattributed layer.** Accept a flat "unattributed" layer (~4.5 GW in 2026) next to 0.51 × the
    approved stock, or fold it into large load (factor ~1.0)? Check the flatness against ERCOT's distributed-solar
    estimate before the video says "runs day and night". Don't name WEST's 2026 block (~0.7 GW, flat) in the video.
 10. **X2 — large new gas.** 9.1 GW of the Dec 2027 adjusted queue is gas+other, much of it ≥ 500 MW, where only 2 of
    16 such projects with an IA reached COD. Default: flag it in the UI now, add a size split if time allows. The
    Bernoulli band is too narrow to show; use the backtest errors (±13%) or a bootstrap.
-11. **X3 — interval label and dollars.** Confirm the D&E 15-min peak time is interval *ending* against one year of
-   ERCOT's published 4CP (if it is beginning, the window moves 15 minutes later). No $/kW-yr transmission rate is
-   in the repo: source it before any dollar figure reaches the pitch.
+11. **X3 — interval label and dollars.** *Closed by X15:* ERCOT's official 4CP intervals (NP9-83-M) match the D&E
+   15-min peaks in 66 of 68 months 2008–2025 (all of 2022–2025), and the workbook labels the time "Interval
+   ending": the 15:45–17:45 window stands. The ERCOT postage-stamp rate is $68.547/kW-yr for 2025 (Docket 57491,
+   final) and $75.527/kW-yr for 2026 (Docket 59080, order on remand pending); summer Y's 4CP sets year Y+1's bills
+   (16 TAC 25.192). Caveat: the rate is quoted verbatim from the PUCT matrix, but TCOS ÷ average 4CP from the
+   same table gives 2–10% less (67.21 for 2025); the matrix's denominator was not checked. Use the quoted rate.
 12. **X5 — triggers.** Keep "storage or gas ≥ 50 MW signs its IA" as a strong trigger (25 call-now) or demote it to
    context (17)? Data centers count in both the score and a trigger (default: keep both). Every trigger threshold
    is Claude's (list in `docs/analysis/x5_triggers.md`).
-
 13. **X7 — which large-load deck drives the forecast.** The March 2026 deck (before ERCOT's April "Batch Zero"
    intake) gives 111.6 GW for 2030, the June 2026 deck 132.9 GW, and the 2023–25 approval pace 96.4 GW. Default: show
    the three as scenarios, stop at 2030. The band covers 61% of cells in a nominal 80%: calibrate it on the 18
-   backtest cells and say so. No final LTLF 2026 is stored; add it if ERCOT published one.
+   backtest cells and say so. *X15:* ERCOT has not published a final LTLF 2026 (only the April preliminary; final
+   Batch Zero classifications are due in December), so there is nothing to add.
 14. **X9 — accounts API and munis.** Key accounts by `ccn_no`, not the EIA `utility_id`; hold `is_base_partner` until
    A2 (these are basecast-get-data changes, not made). Munis: 55 of 59 never reach the 20% county rule (X10 tests
    city-level Census data as the fix). Show "call now until <date>" when a trigger lapses (the #1 lapses on
    2026-10-22).
-
 15. **X10 — munis.** Add Census place files narrowly (muni diagnosis facts and a muni permit trigger, score
    unchanged) and rank munis within type in `/accounts` (defaults). Confirm BTU (CCN "Rural Electric Division")
    and the EIA id describe the same system (68,685 meters suggest all of BTU).
 16. **X11 — large-load zones.** Accept the Batch Zero base load as the zone shape of the approved stock and the
    f = 0.72 NORTH share of LZ_WEST (from two machine-read charts; f from 0 to 1 moves NORTH between 1.1 and 2.5 GW)?
-   The G&T co-ops in the TSP filing (Brazos 32 GW, Golden Spread 17 GW) are unmapped: their member lists would put
-   that MW in co-op territory, a strong co-op story. Weight TCEQ sites by recency (a 1987 permit counts as much as
+   The G&T co-ops in the TSP filing are sized in X13 (45.7 GW for 2030, 22.9%; see item 19). Weight TCEQ sites by recency (a 1987 permit counts as much as
    a 2026 one today).
 17. **X8 — marts and video lines.** `marts-proposal.md` is the input for A0 and for basecast-get-data's contract
    (nothing changed there); `video-candidates.md` feeds `docs/video-numbers.md` once the items above are settled.
-
-18. **X12 — the normalized series.** Normal weather = ERA5 2003–2022 (the only 20 years in the DB); the Uri
-   exclusion dates and the holiday rule came from memory (not verified). On each summer's 5 hottest days the actual
-   peak runs ~315 MW under what the weather predicts (4CP curtailment? not verified). For the video, "the normalized
-   peak rose every year" holds at P50, but some steps sit inside the P10–P90 band (2019 → 2020: +0.8 GW).
-
+18. **X12 — the normalized series.** Normal weather = ERA5 2003–2022 (the only 20 years in the DB). *X15 confirmed*
+   the Uri exclusion (ERCOT's rotating outages ran Feb 15 01:20 – Feb 18 00:42, 2021; X12 drops Feb 14–20) and the
+   NERC holiday list (the weekend rule's text was not verified). Open: on each summer's 5 hottest days the actual
+   peak runs ~315 MW under what the weather predicts (4CP curtailment? not verified); "the normalized peak rose every
+   year" holds at P50, but some steps sit inside the P10–P90 band (2019 → 2020: +0.8 GW).
 19. **X13 — G&T large-load exposure.** Keep it a context fact (81 of 107 accounts) and let LCRA-supplied munis keep
    the fact but not the trigger (73 → 33; a `triggers.py` change, not made)? Count LCRA as public power (22.9%
    co-op) or with the co-ops as ERCOT does (25.1%)?
-
 20. **X14 — acquisition zones.** The kickoff never defined "priority acquisition zones"; X14 reads them as a county
    priority with two channels (retail-direct in competitive IOU territory, partnership in co-op/muni territory).
    Confirm the reading, the multiplicative form (market × grid) and that channel shares go by land (homes would be
    better); the Lubbock and Nueces retail opt-ins are not verified.
 
-## Beyond phase 0 — explorations X1–X14
+## Beyond phase 0 — explorations X1–X15
 
 Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
 is a candidate, not yet in `docs/video-numbers.md`.
@@ -153,6 +150,7 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X12 | A weather-normalized load series for the Forecast | Daily model per zone (rolling 3-year fits, normal = ERA5 2003–2022): ERCOT daily MAPE 2.9% energy / 4.0% peak with the level known (8.0% / 10.7% without weather). Normalized energy grew 2.1%/yr in 2010–21, then 4.4–5.4%/yr in 2022–25. Normalized summer peak rose every year 2012–2026 (64.8 → 91.1 GW) while the raw peak fell in 7; 2025's 83.7 GW was a mild summer (88.0 normal); 2026 was weather-neutral. | Forecast series, video |
 | X13 | How much of the large-load wave lands with co-ops? | Of 199.5 GW requested for 2030 in the TSP filing, co-op G&Ts hold 45.7 GW (22.9%; Brazos 26.6, Golden Spread 16.6), ~1.9× the co-ops' 12.3% of ERCOT retail MWh, up from 8.8% in 2026. No location below the TSP, so no allocation to members: a context fact for 81 of 107 accounts. Q4 stays signal only. | /accounts context, video |
 | X14 | What are the Explorer's "priority acquisition zones"? | A county priority from territory signals only: market (homes, growth, permits, owner share) scaled by grid value (normalized zone peak growth, flat large-load pressure, load-zone price spread, new data centers), split by channel: 161 partnership, 39 retail-direct, 4 mixed counties. 17 of the top 20 on the metro growth rings; rural NORTH/WEST counties rise on grid value; stable to ±0.05 weights (ρ ≥ 0.996). | Explorer map |
+| X15 | Close the factual review items with primary sources | 4CP label confirmed (66/68 months vs ERCOT NP9-83-M); postage-stamp rate $68.547/kW-yr (2025) and $75.527/kW-yr (2026, pending); no final LTLF 2026 exists; Uri dates and NERC holidays confirmed. Every URL fetched on 2026-09-26. | X3 offer in dollars, X7, X12 |
 
 ## Notes
 
