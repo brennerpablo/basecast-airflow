@@ -43,7 +43,7 @@
   frequency: monthly
   spatial_grain: system, load zone, project type, TSP (aggregated)
   temporal_grain: monthly snapshot; submittal/in-service year bins
-  history_start: "2024-01 (LFLTF 'LLI Queue Status Update'); 24 status decks Jan 2024 - Jun 2026 found on 2026-09-25, none after Jun 2026"
+  history_start: "2022-08 (LFLTF 'LLI Queue Status Update', 14 decks Aug 2022 - Dec 2023 on LFLTF meeting pages); 24 status decks Jan 2024 - Jun 2026; none after Jun 2026. No deck has extractable tables (docs/large-load-deck-audit.md)"
   access: no login
   gridstatus_method: none
   priority: P0
@@ -112,7 +112,7 @@
   gridstatus_method: none
   priority: P0
   used_by: [official_forecast_benchmark, large_load_realization_calibration]
-  caveats: "2026 preliminary LTLF (PUCT 58777) under adjustment (PUCT 59772, Batch Zero basis); still no 2026 files or year page on 2026-09-25; xlsb needs pyxlsb; TSP-provided vs ERCOT-adjusted variants; year pages 2013-2025 (no 2015)"
+  caveats: "2026 preliminary LTLF (PUCT 58777) under adjustment (PUCT 59772, Batch Zero basis); still no 2026 files or year page on 2026-09-26; the ERCOT Board deck of 2026-09-14/15 ('System Planning and Weatherization Update', p2) says a new LTLF 'is not expected until mid-to-late December 2026' and the December CDR moves to early 2027 (PUCT 59772 order of 2026-06-18 adopted the Batch Zero base-load adjustment); xlsb needs pyxlsb; TSP-provided vs ERCOT-adjusted variants; year pages 2013-2025 (no 2015)"
   verified: "verified at source (re-checked 2026-09-25)"
 
 - id: geo_ziptozone
@@ -783,7 +783,7 @@
   frequency: daily (~2-day lag; 2026 file updated 2026-09-24 with data to 2026-09-22)
   spatial_grain: station (USW00012960 KIAH, USW00013972 KTYR, USW00023023 KMAF, USW00013966 KSPS, USW00023042 KLBB, USW00003927 KDFW, USW00012924 KCRP, USW00012959 KMFE, USW00012919 KBRO, USW00013904 KAUS, USW00012921 KSAT, USW00013962 KABI)
   temporal_grain: sub-hourly/hourly observations (METAR FM15 at :53)
-  history_start: "2003 by-year parquet verified for 5 stations; earlier years exist (station POR)"
+  history_start: "1980 (raw extended to 1980-2026 for the 12 airports on 2026-09-26; per-station coverage in docs/source-research-2026-09.md)"
   access: "no login, no key; US federal data, license text not verified"
   gridstatus_method: none
   priority: P0
@@ -863,7 +863,7 @@
   frequency: annual (V2025 released 2026-03-26)
   spatial_grain: county (SUMLEV 050; Texas STATE=48, 254 counties)
   temporal_grain: annual (July 1), 2020-2025
-  history_start: "2020 in this vintage; older vintages in sibling folders (not checked)"
+  history_start: "2000 (raw holds: intercensal 2000-2010 co-est00int-tot.csv; intercensal 2010-2020 cc-est2020int-agesex-48.csv, Texas, YEAR coded; Vintage 2020 co-est2020-alldata.csv; latest postcensal co-est2025-alldata.csv; each with its layout PDF; series/vintage in the manifest)"
   access: "no login; US federal (public domain, not verified on page)"
   gridstatus_method: none
   priority: P0
@@ -982,3 +982,20 @@
   used_by: [large_load_realization_model]
   caveats: "daf802.txt.gz 165.92 MB (9/9/26); uncompressed 1.21 GB (5/6/23 copy). Layout PDF on rrc.texas.gov not requested."
   verified: "data sets page and MFT listing verified 2026-09-26; file not downloaded"
+
+- id: ornl_eaglei
+  name: "EAGLE-I power outage data (ORNL / DOE CESER), county level"
+  source_url: "https://doi.org/10.6084/m9.figshare.24237376"
+  api_endpoint: "https://api.figshare.com/v2/articles/24237376 (files[] with name, size, download_url, computed_md5)"
+  format: csv
+  frequency: "15-minute; annual files; dataset versions (v4 published 2026-02-25)"
+  spatial_grain: county (FIPS)
+  temporal_grain: 15-minute
+  history_start: "2014-11-01 (to 2025-12-31 in v4)"
+  access: "no login; CC BY 4.0 (attribution required)"
+  gridstatus_method: none
+  priority: P2
+  used_by: [reliability_context, b2c_acquisition]
+  caveats: "one national CSV per year, 78 MB (2014) to 1.45 GB (2024), 11.6 GB in total; no Texas subset and rows not sorted by FIPS, so a year must be downloaded whole and filtered to 48xxx; header changes by year (2023 names the count column 'sum'; 2024 adds total_customers); counties with zero outages are absent (zero vs gap ambiguous). Raw holds only the side files so far: MCC.csv (customers per county, 2022), coverage_history.csv (Texas coverage 0.90/0.93/0.63/0.94/0.93 for 2018-2022), DQI.csv. Yearly files wait for the user's go-ahead (> 1 GB each)"
+  verified: "API listing, license, side files (MD5 match) verified 2026-09-26; yearly file headers from the research agent's range reads"
+
