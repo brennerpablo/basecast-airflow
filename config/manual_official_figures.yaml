@@ -1,0 +1,152 @@
+# Official figures that have no tabular file. Loaded into `official_forecasts` (and large-load headlines)
+# with method=manual. Values come from docs/SCRAPING_RUNBOOK.md §9 and docs/ercot-data-catalog.md
+# (research pass, Sep 2026). Every entry stays `verified: false` until someone opens the source document,
+# confirms the number and fills `source_url` and `page`.
+#
+# Fields: category (load_forecast | large_load | peak_record), metric, target (year or season the number
+# refers to), as_of (date of the underlying data), mw, approx (true when the source says "approximately"),
+# source (document), source_date (publication/filing date), source_url, page, verified, notes.
+
+figures:
+  - id: ltlf_2026_preliminary_peak_2029
+    category: load_forecast
+    metric: peak_demand_forecast
+    target: "2029"
+    as_of: null
+    mw: 278003
+    approx: false
+    source: "ERCOT preliminary 2026 Long-Term Load Forecast, PUCT Project 58777"
+    source_date: 2026-04-15
+    source_url: null
+    page: null
+    verified: false
+    notes: "Under adjustment (PUCT Project 59772, Batch Zero basis)."
+
+  - id: ltlf_2026_preliminary_peak_2032
+    category: load_forecast
+    metric: peak_demand_forecast
+    target: "2032"
+    as_of: null
+    mw: 367790
+    approx: false
+    source: "ERCOT preliminary 2026 Long-Term Load Forecast, PUCT Project 58777"
+    source_date: 2026-04-15
+    source_url: null
+    page: null
+    verified: false
+    notes: "Under adjustment (PUCT Project 59772, Batch Zero basis)."
+
+  - id: ltlf_2026_preliminary_summer_2026_peak
+    category: load_forecast
+    metric: peak_demand_forecast
+    target: "2026-summer"
+    as_of: null
+    mw: 112000
+    approx: true
+    source: "ERCOT letter in PUCT Project 58777 (Item 38), quoting the preliminary LTLF"
+    source_date: null
+    source_url: null
+    page: null
+    verified: false
+    notes: "\"preliminary LTLF's forecasted peak demand of approximately 112,000 MW\""
+
+  - id: ercot_summer_2026_peak_range_low
+    category: load_forecast
+    metric: peak_demand_projection_low
+    target: "2026-summer"
+    as_of: null
+    mw: 90500
+    approx: true
+    source: "ERCOT letter in PUCT Project 58777 (Item 38)"
+    source_date: null
+    source_url: null
+    page: null
+    verified: false
+    notes: "\"summer 2026 peak load will fall within a range of approximately 90,500 MW to 98,000 MW\""
+
+  - id: ercot_summer_2026_peak_range_high
+    category: load_forecast
+    metric: peak_demand_projection_high
+    target: "2026-summer"
+    as_of: null
+    mw: 98000
+    approx: true
+    source: "ERCOT letter in PUCT Project 58777 (Item 38)"
+    source_date: null
+    source_url: null
+    page: null
+    verified: false
+    notes: "Upper end of the same range."
+
+  - id: large_load_tracked_2026_01
+    category: large_load
+    metric: tracked_mw
+    target: null
+    as_of: 2026-01-21
+    mw: 232500
+    approx: true
+    source: "ERCOT Monthly, January 2026 issue"
+    source_date: 2026-02-13
+    source_url: null
+    page: null
+    verified: false
+    notes: "\"total approximately 232,500 megawatts\""
+
+  - id: large_load_approved_to_energize_2026_01
+    category: large_load
+    metric: approved_to_energize_mw
+    target: null
+    as_of: 2026-01-21
+    mw: 8786
+    approx: false
+    source: "ERCOT Monthly, January 2026 issue"
+    source_date: 2026-02-13
+    source_url: null
+    page: null
+    verified: false
+    notes: "\"8,786 MW of large load demand has received approval to energize\""
+
+  - id: large_load_approved_to_energize_2026_03
+    category: large_load
+    metric: approved_to_energize_mw
+    target: null
+    as_of: null
+    mw: 9042
+    approx: false
+    source: "Large Load Interconnection Status Update, TAC meeting March 2026"
+    source_date: 2026-03-13
+    source_url: "https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf"
+    page: null
+    verified: false
+    notes: null
+
+  - id: large_load_observed_peak_non_simultaneous_2026_03
+    category: large_load
+    metric: observed_peak_non_simultaneous_mw
+    target: null
+    as_of: null
+    mw: 3883
+    approx: false
+    source: "Large Load Interconnection Status Update, TAC meeting March 2026"
+    source_date: 2026-03-13
+    source_url: "https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf"
+    page: null
+    verified: false
+    notes: "Observed peak of loads approved to energize."
+
+  - id: large_load_observed_peak_simultaneous_2026_03
+    category: large_load
+    metric: observed_peak_simultaneous_mw
+    target: null
+    as_of: null
+    mw: 3801
+    approx: false
+    source: "Large Load Interconnection Status Update, TAC meeting March 2026"
+    source_date: 2026-03-13
+    source_url: "https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf"
+    page: null
+    verified: false
+    notes: null
+
+# To fill: the July 2026 demand record. Record one entry per source with its own metric
+# (hourly integrated vs. instantaneous); do not pick one. Values are not in our docs yet.

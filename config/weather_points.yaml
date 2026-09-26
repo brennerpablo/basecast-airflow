@@ -1,0 +1,23 @@
+# Weather points per ERCOT weather zone, for open_meteo (ERA5 hourly) and the weather-normalized load model.
+#
+# Cities: Figure 1 of ERCOT's 2025 Long-Term Load Forecast report (2025_LTLF_Report.docx, "ERCOT weather
+# zones"), which marks the reference cities of each zone. The report says each zone uses "two or three
+# weather stations" but does not name them in text, so the exact ERCOT station list is NOT verified.
+# Coordinates: each city's primary airport, from NOAA ISD station history (isd-history.csv, fetched
+# 2026-09-25). The airport choice per city is ours (e.g. Houston = IAH, not HOU).
+# Weights: equal within each zone (our choice; ERCOT's own weights are not published in the report).
+# ERA5's grid is ~0.25°, so the exact point inside a city barely matters.
+
+points:
+  - {id: coast_houston_iah, weather_zone: COAST, city: Houston, icao: KIAH, latitude: 29.984, longitude: -95.361, weight: 1.0}
+  - {id: east_tyler, weather_zone: EAST, city: Tyler, icao: KTYR, latitude: 32.359, longitude: -95.404, weight: 1.0}
+  - {id: fwest_midland, weather_zone: FWEST, city: Midland, icao: KMAF, latitude: 31.948, longitude: -102.209, weight: 1.0}
+  - {id: north_wichita_falls, weather_zone: NORTH, city: Wichita Falls, icao: KSPS, latitude: 33.979, longitude: -98.493, weight: 0.5}
+  - {id: north_lubbock, weather_zone: NORTH, city: Lubbock, icao: KLBB, latitude: 33.666, longitude: -101.823, weight: 0.5}
+  - {id: ncent_dfw, weather_zone: NCENT, city: Dallas-Fort Worth, icao: KDFW, latitude: 32.897, longitude: -97.022, weight: 1.0}
+  - {id: south_corpus_christi, weather_zone: SOUTH, city: Corpus Christi, icao: KCRP, latitude: 27.773, longitude: -97.513, weight: 0.3333}
+  - {id: south_mcallen, weather_zone: SOUTH, city: McAllen, icao: KMFE, latitude: 26.179, longitude: -98.245, weight: 0.3333}
+  - {id: south_brownsville, weather_zone: SOUTH, city: Brownsville, icao: KBRO, latitude: 25.915, longitude: -97.423, weight: 0.3334}
+  - {id: scent_austin, weather_zone: SCENT, city: Austin, icao: KAUS, latitude: 30.183, longitude: -97.680, weight: 0.5}
+  - {id: scent_san_antonio, weather_zone: SCENT, city: San Antonio, icao: KSAT, latitude: 29.544, longitude: -98.484, weight: 0.5}
+  - {id: west_abilene, weather_zone: WEST, city: Abilene, icao: KABI, latitude: 32.411, longitude: -99.682, weight: 1.0}
