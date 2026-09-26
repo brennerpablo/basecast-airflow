@@ -283,8 +283,8 @@ class _Tables(HTMLParser):
         self._cell: list[str] | None = None
         self._text: list[str] = []
         self._items: list[str] = []
+        self._li: list[str] = []
         self._in_li = False
-        self._sup = False
 
     def handle_starttag(self, tag, attrs):
         if tag in ("summary", "caption"):
@@ -297,8 +297,6 @@ class _Tables(HTMLParser):
             self._cell, self._text, self._items = [], [], []
         elif tag == "li" and self._cell is not None:
             self._in_li, self._li = True, []
-        elif tag == "sup":
-            self._sup = True
 
     def handle_endtag(self, tag):
         if tag == self._label_tag:
@@ -321,14 +319,12 @@ class _Tables(HTMLParser):
         elif tag == "table" and self._table is not None:
             self.tables.append(self._table)
             self._table = None
-        elif tag == "sup":
-            self._sup = False
 
     def handle_data(self, data):
         if self._label_tag:
             self._label_text.append(data)
         if self._cell is not None:
-            self._text.append("*" if self._sup and data.strip() == "*" else data)
+            self._text.append(data)
             if self._in_li:
                 self._li.append(data)
 
