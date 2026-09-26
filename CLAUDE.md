@@ -20,6 +20,9 @@ which order is in `docs/SCRAPING_RUNBOOK.md`.
   marked "not verified".
 - Log decisions in `docs/decisions.md`, one line each: date, decision, reason. Decisions that affect more
   than one repo go to `basecast-get-data`, which owns the contract.
+- Work on `main` only, in all three repos: no feature branches, no worktrees. Small commits pushed straight
+  to `main`. A push to `main` deploys to the Airflow VM (`.github/workflows/deploy.yml`), so the checks pass
+  before every push: `uv run pytest`, plus `tests/test_dags.py` with Airflow installed.
 
 ## Product context (KICKOFF §1)
 
