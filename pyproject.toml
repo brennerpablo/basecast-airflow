@@ -1,0 +1,30 @@
+[project]
+name = "basecast-pipelines"
+version = "0.1.0"
+description = "basecast data ingestion: public ERCOT, Census, EIA and weather sources into a local lake"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "httpx==0.28.1",
+    "polars==1.44.2",
+    "python-dotenv==1.2.3",
+    "pyyaml==6.0.3",
+    "typer==0.27.2",
+]
+
+[project.scripts]
+basecast = "basecast_pipelines.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+]
