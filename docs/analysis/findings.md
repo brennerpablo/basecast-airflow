@@ -12,7 +12,7 @@ row says so and the item waits in the review queue.
 
 ## Start here
 
-**Decide first** (each unblocks a task; the full queue below has 19 items):
+**Decide first** (each unblocks a task; the full queue below has 20 items):
 
 1. **Score weights, Q3 or X4** (item 1). A2 cannot reveal the partners until one set is approved.
 2. **Spot-check the 10 deck values** (item 3, `docs/large-load-spot-check.md`, ~10 minutes). Q5, X1, X7 and X11 all
@@ -34,8 +34,10 @@ row says so and the item waits in the review queue.
 - Since 2021 the 4CP interval is no longer when power is scarce: a battery aimed at 4CP (15:45–17:45) misses the
   evening price spikes (X3).
 
-**Git state:** pushes to `basecast-airflow` stopped after `214b906`, because each push redeploys the Airflow VM and
-restarts the scheduler, which kept killing the long `puct_filings process` run. Later commits wait locally.
+**Git state:** pushes to `basecast-airflow` paused from `214b906` while the long `puct_filings process` run was
+alive (each push redeploys the Airflow VM and restarts the scheduler, which killed that run 9 times during this session, 10 times today); it
+finished at 19:27 UTC and the waiting commits went up in one push. **Reproducible:** all 19 scripts in `analysis/`
+re-ran from scratch at 14:30 CDT without errors (~3 minutes in total) and left every tracked file unchanged.
 
 | Q | Result (numbers) | Decision | FINAL_SPRINT task affected | Verified |
 |---|---|---|---|---|
@@ -125,7 +127,12 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    the fact but not the trigger (73 → 33; a `triggers.py` change, not made)? Count LCRA as public power (22.9%
    co-op) or with the co-ops as ERCOT does (25.1%)?
 
-## Beyond phase 0 — explorations X1–X13
+20. **X14 — acquisition zones.** The kickoff never defined "priority acquisition zones"; X14 reads them as a county
+   priority with two channels (retail-direct in competitive IOU territory, partnership in co-op/muni territory).
+   Confirm the reading, the multiplicative form (market × grid) and that channel shares go by land (homes would be
+   better); the Lubbock and Nueces retail opt-ins are not verified.
+
+## Beyond phase 0 — explorations X1–X14
 
 Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
 is a candidate, not yet in `docs/video-numbers.md`.
@@ -145,6 +152,7 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X11 | Where are the large loads? | Weather-zone charts exist (Batch Zero Update Sep 2026, QSA Q4 2026, LLIS May 2026); LZ_WEST = FWEST + WEST + 0.72 × NORTH. Approved stock leans NORTH 2.5, FWEST 1.7, NCENT 1.4, WEST 1.2 GW; the pipeline leans NCENT, NORTH, SOUTH. By zone, ~10 GW moves between zones in the 2030 forecast (total ±0.1%). | Forecast by zone, Explorer |
 | X12 | A weather-normalized load series for the Forecast | Daily model per zone (rolling 3-year fits, normal = ERA5 2003–2022): ERCOT daily MAPE 2.9% energy / 4.0% peak with the level known (8.0% / 10.7% without weather). Normalized energy grew 2.1%/yr in 2010–21, then 4.4–5.4%/yr in 2022–25. Normalized summer peak rose every year 2012–2026 (64.8 → 91.1 GW) while the raw peak fell in 7; 2025's 83.7 GW was a mild summer (88.0 normal); 2026 was weather-neutral. | Forecast series, video |
 | X13 | How much of the large-load wave lands with co-ops? | Of 199.5 GW requested for 2030 in the TSP filing, co-op G&Ts hold 45.7 GW (22.9%; Brazos 26.6, Golden Spread 16.6), ~1.9× the co-ops' 12.3% of ERCOT retail MWh, up from 8.8% in 2026. No location below the TSP, so no allocation to members: a context fact for 81 of 107 accounts. Q4 stays signal only. | /accounts context, video |
+| X14 | What are the Explorer's "priority acquisition zones"? | A county priority from territory signals only: market (homes, growth, permits, owner share) scaled by grid value (normalized zone peak growth, flat large-load pressure, load-zone price spread, new data centers), split by channel: 161 partnership, 39 retail-direct, 4 mixed counties. 17 of the top 20 on the metro growth rings; rural NORTH/WEST counties rise on grid value; stable to ±0.05 weights (ρ ≥ 0.996). | Explorer map |
 
 ## Notes
 
