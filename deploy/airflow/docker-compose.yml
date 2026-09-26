@@ -1,0 +1,120 @@
+# Airflow on the GCP VM: LocalExecutor, metadata in Cloud SQL through a proxy sidecar.
+# Adapted from the official docker-compose.yaml of Airflow 3.3.2: Celery, Redis and the local Postgres
+# are gone, and so is the triggerer (no deferrable operators yet; add it back if a DAG needs one).
+# Values like ${AIRFLOW_DB_PASSWORD} come from the .env next to this file, written by up.sh on the VM.
+
+x-airflow-common:
+  &airflow-common
+  image: apache/airflow:3.3.2-python3.12
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD}@cloud-sql-proxy:5432/airflow
+    # db-f1-micro allows 25 connections in total: keep each process's pool small.
+    AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE: '2'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW: '3'
+    AIRFLOW__CORE__PARALLELISM: '4'
+    AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Chicago
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW__API_AUTH__JWT_SECRET: ${JWT_SECRET}
+    AIRFLOW__API_AUTH__JWT_ISSUER: airflow
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./config:/opt/airflow/config
+    - ./plugins:/opt/airflow/plugins
+    - /data:/data
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    cloud-sql-proxy:
+      condition: service_healthy
+
+services:
+  # Authenticates with the VM's service account; reachable only inside this compose network.
+  cloud-sql-proxy:
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.25.4-alpine
+    command:
+      - --address=0.0.0.0
+      - --port=5432
+      - --health-check
+      - --http-address=0.0.0.0
+      - ${SQL_CONNECTION}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/readiness"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+    restart: always
+
+  airflow-apiserver:
+    <<: *airflow-common
+    command: api-server
+    # Loopback only: open it with an SSH tunnel through IAP (see deploy/gcp/README.md).
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # Migrates the metadata database and creates the admin user, then exits.
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        mkdir -p /opt/airflow/{logs,dags,plugins,config}
+        /entrypoint airflow config list >/dev/null
+        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/{logs,dags,plugins,config}
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+    user: "0:0"
