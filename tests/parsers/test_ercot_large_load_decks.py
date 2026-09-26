@@ -207,4 +207,33 @@ def test_native_pptx_charts_inside_a_tac_zip(raw_file, tmp_path: Path):
 
 def test_datasets_are_declared():
     assert {d.name: d.mode for d in DATASETS} == {
-        "large_load_headlines": "by_file", "large_load_status": "by_file", "document_pages": "by_file"}
+        "large_load_chart_values": "by_file", "large_load_headlines": "by_file", "large_load_status": "by_file",
+        "document_pages": "by_file"}
+
+
+def test_chart_values_come_from_the_cached_gemini_answer(raw_file, monkeypatch):
+    """Simulated Gemini answer (no network): rows keep provenance, GW become MW, nothing is verified."""
+    from basecast_pipelines.parsers.ercot import _large_load_charts as charts
+
+    f = raw_file("ercot_large_load_decks", "ercot_ziptozone/appendix_d_trimmed.xlsx", name="deck.pdf")
+    monkeypatch.setattr(charts, "_documents", lambda f: [charts._Doc("deck.pdf", "pdf", b"%PDF-1.4 simulated")])
+
+    class FakeGemini:
+        def extract_json(self, storage, **kwargs):
+            assert kwargs["task"] == charts.TASK and kwargs["parts"][0].mime_type == "application/pdf"
+            return {"model": "gemini-test", "prompt_version": "v1", "answer": {"as_of": "2026-03-26", "items": [
+                {"page": 3, "chart_title": "Growth", "status_label": "No Studies Submitted",
+                 "status_bucket": "no_studies_submitted", "category": 2030, "category_type": "year",
+                 "value": 293.651, "unit": "GW", "confidence": "high"},
+                {"page": 3, "chart_title": "Growth", "status_label": "Observed Energized",
+                 "status_bucket": "observed_energized", "category": "2025", "category_type": "year",
+                 "value": "n/a", "unit": "MW", "confidence": "low"},
+            ]}}
+
+    monkeypatch.setattr(charts.gemini, "runner", lambda: FakeGemini())
+    df = charts.parse_chart_values(f)
+    assert df.height == 1
+    row = df.row(0, named=True)
+    assert row["value_mw"] == 293651.0 and row["category"] == "2030"
+    assert row["extraction_method"] == "gemini" and row["verified"] is False
+    assert str(row["as_of"]) == "2026-03-26"

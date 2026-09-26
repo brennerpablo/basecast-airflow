@@ -8,6 +8,7 @@ charts are images. So:
   to Energize, ERCOT has observed a non-simultaneous monthly peak consumption of 4,004 MW in March 2026").
   Each pattern below matches one known sentence form; anything else is left out (precision over recall).
 - ``large_load_status``: series of native PPTX charts (numbers from the chart XML cache).
+- ``large_load_chart_values``: values printed on the chart images, read by Gemini (``_large_load_charts``).
 - ``document_pages``: page/slide text of every deck, shared with ``puct_filings``.
 
 ``report_date`` is the raw ``dt``: the meeting date (ERCOT Monthly: first day of the issue month). A date
@@ -41,6 +42,7 @@ from basecast_pipelines.parsers._documents import (
     scrub,
     slide_title,
 )
+from basecast_pipelines.parsers.ercot._large_load_charts import parse_chart_values, warm_cache
 from basecast_pipelines.processing.core import Dataset, RawFile
 from basecast_pipelines.processing.tabular import excel_serial_to_date, snake
 from basecast_pipelines.sources.ercot.large_load import NOT_STATUS, OTHER_LARGE_LOAD, STATUS_DECK, normalize
@@ -622,6 +624,16 @@ def _is_document(f: RawFile) -> bool:
 
 
 DATASETS = [
+    Dataset(
+        name="large_load_chart_values",
+        target="postgres",
+        mode="by_file",
+        description="Large-load MW and project counts printed on the decks' charts (status, year, month, zone), "
+        "read by Gemini from the chart images; extraction_method='gemini', verified=false.",
+        parse=parse_chart_values,
+        inputs=_is_document,
+        prepare=warm_cache,
+    ),
     Dataset(
         name="large_load_headlines",
         target="postgres",

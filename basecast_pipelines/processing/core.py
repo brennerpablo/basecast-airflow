@@ -90,6 +90,9 @@ class Dataset:
     inputs: Callable[[RawFile], bool] = lambda f: True
     select: Callable[[list[RawFile]], list[RawFile]] | None = None
     finalize: Callable[[pl.DataFrame], pl.DataFrame] | None = None
+    # Called once with the files about to be parsed (by_file/by_key), e.g. to fetch slow external answers
+    # for all of them in parallel before the sequential parse.
+    prepare: Callable[[list["RawFile"]], None] | None = None
     key: tuple[str, ...] = ()
     version: int = 1
     geometry: Mapping[str, int] = field(default_factory=dict)

@@ -276,6 +276,8 @@ def _process_dataset(
 
     pending = [f for f in files if reprocess or rebuild or not state.is_current(f, ds.version)]
     summary.files_skipped = len(files) - len(pending)
+    if ds.prepare is not None and pending:
+        ds.prepare(pending)
     batch_files: list[RawFile] = []
     batch_frames: dict[str, pl.DataFrame] = {}
     batch_rows = 0
