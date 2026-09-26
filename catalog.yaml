@@ -1,0 +1,470 @@
+# basecast data catalog
+# ERCOT entries: extracted verbatim from docs/ercot-data-catalog.md (research pass, Sep 2026).
+# Non-ERCOT entries at the bottom were added for basecast and are NOT verified yet.
+# Each entry's `verified` field says how far it was checked. Never trust an unverified URL, ID or column name.
+
+- id: gis_report
+  name: "GIS Report (Generator Interconnection Status)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=pg7-200-er"
+  api_endpoint: "https://api.ercot.com/api/public-reports/archive/PG7-200-ER  # report_type_id=15933; not tested"
+  format: xlsx
+  frequency: monthly
+  spatial_grain: project (INR), county
+  temporal_grain: monthly snapshot
+  history_start: "2019-01 (files, per Modo Energy); EMIL first run 2017-02-01"
+  access: "no login on ercot.com; Public API (registration, 30 req/min, 1000 files/download, US-only)"
+  gridstatus_method: "Ercot().get_interconnection_queue()"
+  priority: P0
+  used_by: [generation_survival_model, supply_overlay, county_map]
+  caveats: "header row varies (scan for 'INR'); INR duplicated across sheets; small-gen detail only since 2022-01; PG7-201-ER cost file in same series since 2026-03; milestone header names not verified"
+  verified: "verified at source (IDs/cadence); columns partially verified"
+
+- id: gis_interconnection_costs
+  name: "GIS Report for Transmission Interconnection Costs"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=pg7-201-er"
+  api_endpoint: "report_type_id=27292; API path not verified"
+  format: xlsx
+  frequency: monthly (only if TSPs report costs)
+  spatial_grain: project
+  temporal_grain: monthly
+  history_start: "2026-03"
+  access: no login
+  gridstatus_method: none
+  priority: P1
+  used_by: [generation_survival_model_features]
+  caveats: "new series; months with no TSP costs have no file"
+  verified: verified at source
+
+- id: large_load_status
+  name: "Large Load Interconnection Status Update (TAC/LLWG/Board decks)"
+  source_url: "https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf"
+  api_endpoint: none
+  format: pdf
+  frequency: monthly
+  spatial_grain: system, load zone, project type, TSP (aggregated)
+  temporal_grain: monthly snapshot; submittal/in-service year bins
+  history_start: "not verified (decks seen 2025-2026)"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, ltlf_benchmark]
+  caveats: "aggregate only, no per-project IDs (LLI-# internal); charts need manual/PDF extraction; categories changed with PGRR115/PGRR145 Batch Zero; TSPs with <5 customers folded into Other"
+  verified: "verified at source (content); archive depth not verified"
+
+- id: hourly_load_archive
+  name: "Hourly Load Data Archives (Native Load by Weather Zone)"
+  source_url: "https://www.ercot.com/gridinfo/load/load_hist"
+  api_endpoint: none
+  format: "zip (2016+), xls (2002-2015), txt/zip (1995-2000)"
+  frequency: monthly (~9th, current-year file overwritten)
+  spatial_grain: 8 weather zones + ERCOT (control areas before 2003-04)
+  temporal_grain: hourly (hour ending)
+  history_start: "1995 (weather zones since 2003-04; no 2001)"
+  access: no login
+  gridstatus_method: "not verified"
+  priority: P0
+  used_by: [weather_normalized_load_model, peak_backtest]
+  caveats: "columns not verified (expected Hour Ending, COAST, EAST, FWEST, NORTH, NCENT, SOUTH, SCENT, WEST, ERCOT); DST duplicate/missing hour; snapshot current-year file immutably"
+  verified: "verified at source (files); columns not verified"
+
+- id: actual_load_weather_zone
+  name: "Actual System Load by Weather Zone"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-345-CD"
+  api_endpoint: "report_type_id=13101 (gridstatus); API path not verified"
+  format: csv (zip)
+  frequency: daily
+  spatial_grain: 8 weather zones + total
+  temporal_grain: hourly
+  history_start: "API rows ~2023-12; archive files ~7 years"
+  access: "no login / Public API"
+  gridstatus_method: "Ercot().get_load_by_weather_zone(date)"
+  priority: P0
+  used_by: [weather_normalized_load_model]
+  caveats: "use to bridge the latest month not yet in archive; DST"
+  verified: partially verified
+
+- id: cdr
+  name: "Capacity, Demand and Reserves Report (CDR)"
+  source_url: "https://www.ercot.com/gridinfo/resource"
+  api_endpoint: none
+  format: "pdf + xlsx (xls through 2014; 2000 xls only)"
+  frequency: semiannual (May, December)
+  spatial_grain: system, CDR zones
+  temporal_grain: seasonal/annual, 5-year horizon (10-year in older editions)
+  history_start: "2000"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [forecast_vs_actual_backtest, planned_capacity_overlay]
+  caveats: "May 2026 CDR not produced (replaced by Generation_Resource_Forecast_May2026.xlsx); Dec 2026 may be delayed; tab layouts differ by vintage; revised re-issues"
+  verified: verified at source
+
+- id: ltlf
+  name: "ERCOT Long-Term Load Forecast (LTLF)"
+  source_url: "https://www.ercot.com/gridinfo/load/forecast"
+  api_endpoint: none
+  format: "xlsx, xlsb (~46 MB), docx"
+  frequency: annual (plus PUCT-driven adjustments)
+  spatial_grain: ERCOT + weather zone
+  temporal_grain: hourly, 10-year horizon; monthly peak/energy
+  history_start: "2013 (year pages)"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [official_forecast_benchmark, large_load_realization_calibration]
+  caveats: "2026 preliminary LTLF (PUCT 58777) under adjustment (PUCT 59772, Batch Zero basis), files not on page when checked; xlsb needs pyxlsb; TSP-provided vs ERCOT-adjusted variants"
+  verified: verified at source
+
+- id: geo_ziptozone
+  name: "Load Profiling Guide Appendix D - Profile Decision Tree (ZipToZone)"
+  source_url: "https://www.ercot.com/files/docs/2024/04/30/Appendix_D_Profile_Decision_Tree_050124.xlsx"
+  api_endpoint: none
+  format: xlsx
+  frequency: ad hoc
+  spatial_grain: ZIP code -> weather zone
+  temporal_grain: static
+  history_start: "2024-04-30 version"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [geo_join_county_weatherzone]
+  caveats: "no official county table; derive county via Census ZCTA crosswalk; load zones are bus-based"
+  verified: verified at source
+
+- id: settlement_points_mapping
+  name: "Settlement Points List and Electrical Buses Mapping"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP4-160-SG"
+  api_endpoint: "report_type_id=10008 (gridstatus)"
+  format: zip/csv
+  frequency: with network model updates
+  spatial_grain: bus -> settlement point / load zone / hub
+  temporal_grain: static per model
+  history_start: rolling
+  access: no login
+  gridstatus_method: "not verified"
+  priority: P1
+  used_by: [price_module, geo_join]
+  caveats: "includes NOIE zones (LZ_AEN, LZ_CPS, LZ_LCRA, LZ_RAYBN)"
+  verified: "not verified at source (IDs from gridstatus)"
+
+- id: spp_rt
+  name: "Settlement Point Prices at Resource Nodes, Hubs and Load Zones (RT)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-905-CD"
+  api_endpoint: "report_type_id=12301; path not verified"
+  format: csv (zip)
+  frequency: every 15 minutes
+  spatial_grain: node, hub, load zone
+  temporal_grain: 15-minute
+  history_start: "API rows ~2023-12; archive ~7 years; annual hub/LZ via NP6-785-ER since 2011"
+  access: "no login / Public API"
+  gridstatus_method: "Ercot().get_spp(date, market='REAL_TIME_15_MIN'); get_rtm_spp(year)"
+  priority: P1
+  used_by: [pricing_module]
+  caveats: "RTC+B (2025-12-05) removed ORDC adder, RTSWCAP $2,000; price corrections NP4-197-M; DST flag"
+  verified: partially verified
+
+- id: spp_dam
+  name: "DAM Settlement Point Prices"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP4-190-CD"
+  api_endpoint: "https://api.ercot.com/api/public-reports/np4-190-cd/dam_stlmnt_pnt_prices"
+  format: csv (zip)
+  frequency: daily
+  spatial_grain: node, hub, load zone
+  temporal_grain: hourly
+  history_start: "API rows ~2023-12; annual hub/LZ via NP4-180-ER since 2011"
+  access: "no login / Public API"
+  gridstatus_method: "Ercot().get_spp(date, market='DAY_AHEAD_HOURLY'); get_dam_spp(year)"
+  priority: P1
+  used_by: [pricing_module]
+  caveats: "price corrections NP4-196-M; DST"
+  verified: partially verified
+
+- id: spp_hist_hub_lz
+  name: "Historical RTM and DAM Load Zone and Hub Prices"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-785-ER"
+  api_endpoint: "RTM report_type_id=13061; DAM NP4-180-ER report_type_id=13060"
+  format: xlsx (zip)
+  frequency: annual file, updated
+  spatial_grain: hub, load zone
+  temporal_grain: 15-minute (RTM), hourly (DAM)
+  history_start: "2011"
+  access: no login
+  gridstatus_method: "get_rtm_spp(year) / get_dam_spp(year)"
+  priority: P1
+  used_by: [pricing_module]
+  caveats: "one sheet per month in workbook (not verified)"
+  verified: partially verified
+
+- id: as_dam_mcpc
+  name: "DAM Clearing Prices for Capacity (+ Historical NP4-181-ER)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP4-188-CD"
+  api_endpoint: "np4-188-cd/dam_clear_price_for_cap (report_type_id=12329); hist NP4-181-ER (13091)"
+  format: csv (zip); xlsx (historical)
+  frequency: daily; annual
+  spatial_grain: system
+  temporal_grain: hourly
+  history_start: "historical by year (start not verified)"
+  access: "no login / Public API"
+  gridstatus_method: "Ercot().get_mcpc_dam(date)"
+  priority: P1
+  used_by: [pricing_module]
+  caveats: "product set Reg-Up, Reg-Down, RRS, Non-Spin, ECRS; exclude RTC Market Trials (-rtcmt) products"
+  verified: verified at source
+
+- id: as_rt_mcpc
+  name: "Real-Time Clearing Prices for Capacity (15-min and SCED interval)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-331-CD"
+  api_endpoint: "NP6-331-CD; SCED-interval EMIL ID not verified; hist NP6-796-ER, NP6-795-ER (added to API)"
+  format: csv (zip)
+  frequency: per interval; weekly historical
+  spatial_grain: system
+  temporal_grain: 15-minute; 5-minute (SCED)
+  history_start: "2025-12-05 (RTC+B go-live)"
+  access: "no login / Public API"
+  gridstatus_method: "not verified"
+  priority: P1
+  used_by: [pricing_module]
+  caveats: "no pre-RTC+B equivalent; includes RT Reliability Deployment Price Adders; RTD indicative MCPC in NP6-329-CD"
+  verified: partially verified
+
+- id: rt_price_adders
+  name: "Real-Time Price Adders by SCED Interval / 15-min (post-RTC+B)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP6-324-CD"
+  api_endpoint: "NP6-323-CD, NP6-324-CD; hist NP6-792-ER, NP6-793-ER"
+  format: csv (zip)
+  frequency: per interval; weekly
+  spatial_grain: system
+  temporal_grain: 5-minute; 15-minute
+  history_start: "series break 2025-12-05"
+  access: "no login / Public API"
+  gridstatus_method: "not verified"
+  priority: P2
+  used_by: [pricing_module]
+  caveats: "renamed; ORDC adders removed, RTRDPA remains; several legacy products replaced by NP6-653-M, links kept until 2026-12"
+  verified: verified at source
+
+- id: fuel_mix
+  name: "Fuel Mix (dashboard) and Fuel Mix Report"
+  source_url: "https://www.ercot.com/gridmktinfo/dashboards/fuelmix"
+  api_endpoint: "not verified"
+  format: json (dashboard); xlsx (report)
+  frequency: 5-minute; monthly/annual workbook
+  spatial_grain: system by fuel
+  temporal_grain: 5-minute; 15-minute settlement interval
+  history_start: "not verified"
+  access: no login
+  gridstatus_method: "Ercot().get_fuel_mix(date)"
+  priority: P1
+  used_by: [supply_context]
+  caveats: "EMIL ID of Fuel Mix Report not verified; dashboard capacity differs from MORA (co-located flexible loads)"
+  verified: not verified
+
+- id: solar_wind_actual_forecast
+  name: "Solar/Wind Power Production - Actual and Forecast by Geographical Region"
+  source_url: "https://developer.ercot.com/applications/pubapi/relnotes/"
+  api_endpoint: "np4-745-cd/spp_hrly_actual_fcast_geo (solar hourly); NP4-746-CD (solar 5-min); NP4-742-CD (wind hourly); NP4-743-CD (wind 5-min)"
+  format: csv (zip)
+  frequency: hourly; 5-minute
+  spatial_grain: geographic region
+  temporal_grain: hourly; 5-minute
+  history_start: "API rows ~2023-12; archive ~7 years"
+  access: Public API / no login
+  gridstatus_method: "not verified"
+  priority: P1
+  used_by: [net_load_features]
+  caveats: "region definitions differ from weather zones"
+  verified: "IDs verified (release notes / api-specs discussion)"
+
+- id: load_forecast_7day
+  name: "Seven-Day Load Forecast by Weather Zone"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=np3-561-cd"
+  api_endpoint: "NP3-561-CD (RTID not verified); forecast-zone NP3-560-CD RTID 12311"
+  format: csv (zip)
+  frequency: hourly
+  spatial_grain: weather zone
+  temporal_grain: hourly, 7-day horizon
+  history_start: "API rows ~2023-12"
+  access: "no login / Public API"
+  gridstatus_method: "Ercot().get_load_forecast(date)"
+  priority: P1
+  used_by: [short_term_benchmark]
+  caveats: "multiple vintages per day - keep publish time"
+  verified: partially verified
+
+- id: mora
+  name: "Monthly Outlook for Resource Adequacy (MORA)"
+  source_url: "https://www.ercot.com/gridinfo/resource"
+  api_endpoint: none
+  format: pdf + xlsx
+  frequency: monthly (first Friday, 2 months ahead)
+  spatial_grain: system
+  temporal_grain: hourly for target month
+  history_start: "December 2023 edition (published 2023-10)"
+  access: no login
+  gridstatus_method: none
+  priority: P1
+  used_by: [pricing_context]
+  caveats: "revised versions possible; replaced SARA"
+  verified: verified at source
+
+- id: disclosure_60d
+  name: "60-Day SCED and DAM Disclosure Reports"
+  source_url: "https://www.ercot.com/mp/data-products"
+  api_endpoint: "not verified (commonly NP3-965-ER / NP3-966-ER)"
+  format: zip/csv
+  frequency: daily, 60-day lag
+  spatial_grain: resource
+  temporal_grain: 5-minute / hourly
+  history_start: "archive ~7 years (not verified)"
+  access: Public API archive
+  gridstatus_method: "60-day parsers in gridstatus (method names not verified)"
+  priority: P2
+  used_by: [optional_supply_behaviour]
+  caveats: "large files; RTC+B added new AS offer columns and 2-/3-day disclosures (NP3-906-EX etc.)"
+  verified: not verified
+
+- id: outages
+  name: "Unplanned Resource Outages Report / Hourly Resource Outage Capacity"
+  source_url: "https://www.ercot.com/gridinfo/generation"
+  api_endpoint: "RTID 22912 (unplanned); np3-233-cd/hourly_res_outage_cap"
+  format: xlsx; csv
+  frequency: daily; hourly
+  spatial_grain: resource; zone
+  temporal_grain: event; hourly
+  history_start: "not verified"
+  access: "no login / Public API"
+  gridstatus_method: "not verified"
+  priority: P2
+  used_by: [optional]
+  caveats: "IDs from gridstatus constants"
+  verified: not verified
+
+- id: demand_energy_report
+  name: "Demand and Energy Report (peak records)"
+  source_url: "not verified"
+  api_endpoint: none
+  format: xlsx (not verified)
+  frequency: monthly (not verified)
+  spatial_grain: system
+  temporal_grain: monthly
+  history_start: not verified
+  access: no login
+  gridstatus_method: none
+  priority: P2
+  used_by: [peak_records_ui]
+  caveats: "not located in this pass"
+  verified: not verified
+
+- id: utility_territories
+  name: "Electric Retail Service Territories (HIFLD / EIA Energy Atlas)"
+  source_url: "https://atlas.eia.gov/maps/geoplatform::electric-retail-service-territories-2/about"
+  api_endpoint: "ArcGIS FeatureServer (GeoJSON/JSON/PBF)"
+  format: shapefile / GeoJSON
+  frequency: irregular
+  spatial_grain: utility service polygon
+  temporal_grain: static
+  history_start: "last HIFLD Open snapshot 2024-09-30"
+  access: no login
+  gridstatus_method: none
+  priority: P1
+  used_by: [coop_muni_targeting, geo_join]
+  caveats: "HIFLD Open deactivated 2025-08-26 - use EIA Atlas or DataLumos archive (project 239091); PUCT maps and ERCOT co-op/muni list not verified"
+  verified: partially verified
+
+# --- Non-ERCOT sources added for basecast (not verified) ---
+
+- id: census_zcta_county
+  name: "Census 2020 ZCTA to County Relationship File"
+  source_url: "census.gov Relationship Files page (find the 2020 ZCTA520 to county file; do not construct the URL)"
+  api_endpoint: none
+  format: txt (pipe-delimited)
+  frequency: decennial
+  spatial_grain: ZCTA x county, with land/water areas
+  temporal_grain: static
+  history_start: "2020"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [geo_join_county_weatherzone]
+  caveats: "ZIP codes are not ZCTAs; report ZIPs from ZipToZone with no ZCTA match"
+  verified: not verified
+
+- id: census_tx_counties_geo
+  name: "Census cartographic boundary file, counties (Texas subset)"
+  source_url: "census.gov Cartographic Boundary Files page (county, 1:500k; filter STATEFP=48)"
+  api_endpoint: none
+  format: shapefile / GeoJSON
+  frequency: annual
+  spatial_grain: county polygon
+  temporal_grain: static
+  history_start: "current vintage"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [county_map, county_utility_overlap]
+  caveats: "simplify to a light TopoJSON (< 2 MB) for the app; keep full geometry for overlap math"
+  verified: not verified
+
+- id: census_bps
+  name: "Census Building Permits Survey, county level"
+  source_url: "census.gov Building Permits Survey data page (county files)"
+  api_endpoint: none
+  format: csv/txt
+  frequency: monthly and annual
+  spatial_grain: county
+  temporal_grain: monthly / annual
+  history_start: "not verified"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [residential_growth, b2c_acquisition]
+  caveats: "units split by structure type (1-unit, 2-4, 5+); keep all"
+  verified: not verified
+
+- id: census_acs_housing
+  name: "ACS 5-year housing: tenure by units in structure"
+  source_url: "https://api.census.gov/data (ACS 5-year; confirm table id, e.g. B25032)"
+  api_endpoint: "Census Data API"
+  format: json
+  frequency: annual
+  spatial_grain: county (ZCTA optional)
+  temporal_grain: annual (5-year estimates)
+  history_start: "not verified"
+  access: "no login; optional API key"
+  gridstatus_method: none
+  priority: P1
+  used_by: [b2c_acquisition]
+  caveats: "5-year estimates overlap; use one vintage per analysis"
+  verified: not verified
+
+- id: open_meteo_weather
+  name: "Open-Meteo historical weather (archive API)"
+  source_url: "https://archive-api.open-meteo.com/v1/archive"
+  api_endpoint: "https://archive-api.open-meteo.com/v1/archive"
+  format: json
+  frequency: on demand
+  spatial_grain: point (lat/lon)
+  temporal_grain: hourly
+  history_start: "2003 needed for us"
+  access: no login (be polite, chunk by year)
+  gridstatus_method: none
+  priority: P0
+  used_by: [weather_normalized_load_model]
+  caveats: "request in UTC; representative points and weights per weather zone live in config/weather_points.yaml"
+  verified: "endpoint known; parameters not verified"
+
+- id: eia_861_utilities
+  name: "EIA-861 annual utility data (to list ERCOT co-ops and munis)"
+  source_url: "eia.gov EIA-861 page (annual files)"
+  api_endpoint: none
+  format: xlsx (zip)
+  frequency: annual
+  spatial_grain: utility
+  temporal_grain: annual
+  history_start: "not verified"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [accounts_list, coop_muni_targeting]
+  caveats: "filter by balancing authority / NERC region for ERCOT and by ownership type (cooperative, municipal); field names not verified"
+  verified: not verified
