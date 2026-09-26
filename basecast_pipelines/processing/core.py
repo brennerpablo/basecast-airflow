@@ -13,6 +13,9 @@ Write modes (idempotency):
 - ``replace``: the table is rebuilt from every selected file (reference data, "latest snapshot wins");
 - ``by_file``: rows belong to one raw file; reprocessing a file replaces its rows (report vintages);
 - ``by_key``: new rows replace the rows with the same ``key`` (time series whose files overlap).
+
+A module may also declare ``SQL_DATASETS``: Postgres tables derived from other tables by one ``SELECT``
+(joins, PostGIS overlays, events across snapshots), rebuilt after its datasets on every run.
 """
 
 from __future__ import annotations
@@ -108,6 +111,16 @@ class Dataset:
     def files(self, raw: Sequence[RawFile]) -> list[RawFile]:
         chosen = [f for f in raw if self.inputs(f)]
         return self.select(chosen) if self.select else chosen
+
+
+@dataclass(frozen=True)
+class SqlDataset:
+    """A Postgres table rebuilt from ``sql`` (a SELECT over other tables) and swapped in atomically."""
+
+    name: str
+    sql: str
+    description: str
+    indexes: tuple[tuple[str, ...], ...] = ()
 
 
 def list_raw_files(storage: Storage, source: str) -> list[RawFile]:

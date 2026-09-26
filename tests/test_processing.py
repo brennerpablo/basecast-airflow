@@ -57,3 +57,30 @@ def test_tabular_helpers():
     assert dates.select(excel_date("d")).to_series().to_list() == [
         date(2023, 3, 15), date(2024, 3, 1), date(2024, 3, 5), date(2024, 3, 5), None
     ]
+
+
+def test_sql_dataset_is_rebuilt_after_the_module_datasets(raw_file, storage, monkeypatch):
+    """Needs a Postgres; runs only when BASECAST_TEST_DB_URL is set (e.g. the local PostGIS container)."""
+    import os
+
+    from basecast_pipelines.processing.core import SqlDataset
+
+    url = os.environ.get("BASECAST_TEST_DB_URL")
+    if not url:
+        pytest.skip("BASECAST_TEST_DB_URL not set")
+    monkeypatch.setenv("BASECAST_DB_URL", url)
+    raw_file("s", "ercot_ziptozone/appendix_d_trimmed.xlsx")
+
+    class Module:
+        DATASETS = [
+            Dataset(name="_t_base", target="postgres", mode="by_file", description="",
+                    parse=lambda f: pl.DataFrame({"x": [1, 2]})),
+        ]
+        SQL_DATASETS = [SqlDataset(name="_t_derived", sql="SELECT sum(x) AS total FROM _t_base", description="")]
+
+    monkeypatch.setattr(runner, "get_parser", lambda source: Module)
+    settings = Settings("file://unused", "ua", db_url=url)
+    base, derived = runner.run_process("s", storage=storage, settings=settings, rebuild=True)
+    assert (base.rows, derived.rows) == (2, 1)
+    again, _ = runner.run_process("s", storage=storage, settings=settings)
+    assert again.files_skipped == 1 and again.rows == 0

@@ -18,7 +18,7 @@ from basecast_pipelines.common.db import SchemaMismatchError, connect, ensure_bo
 from basecast_pipelines.common.etl_run import EtlRun
 from basecast_pipelines.common.storage import Storage
 from basecast_pipelines.config import Settings, local_today
-from basecast_pipelines.processing.core import Dataset, RawFile, iter_frames, list_raw_files
+from basecast_pipelines.processing.core import Dataset, RawFile, SqlDataset, iter_frames, list_raw_files
 from basecast_pipelines.parsers import get_parser
 
 log = logging.getLogger(__name__)
@@ -291,6 +291,33 @@ def _process_dataset(
     return summary
 
 
+def _build_sql_dataset(conn, sd: SqlDataset) -> DatasetSummary:
+    import psycopg
+    from psycopg import sql
+
+    summary = DatasetSummary(sd.name, "postgres", "sql")
+    new = sql.Identifier(f"{sd.name}__new")
+    try:
+        with conn.transaction():
+            conn.execute(sql.SQL("DROP TABLE IF EXISTS {}").format(new))
+            conn.execute(sql.SQL("CREATE TABLE {} AS ").format(new) + sql.SQL(sd.sql))
+            conn.execute(sql.SQL("DROP TABLE IF EXISTS {}").format(sql.Identifier(sd.name)))
+            conn.execute(sql.SQL("ALTER TABLE {} RENAME TO {}").format(new, sql.Identifier(sd.name)))
+            for cols in sd.indexes:
+                conn.execute(
+                    sql.SQL("CREATE INDEX {} ON {} ({})").format(
+                        sql.Identifier(f"{sd.name}__{'__'.join(cols)}_idx"[:63]),
+                        sql.Identifier(sd.name),
+                        sql.SQL(", ").join(map(sql.Identifier, cols)),
+                    )
+                )
+            summary.rows = conn.execute(sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(sd.name))).fetchone()[0]
+    except psycopg.errors.UndefinedTable as exc:
+        log.warning("%s: an input table does not exist yet, skipped (%s)", sd.name, exc)
+        summary.skipped = True
+    return summary
+
+
 def run_process(
     source_id: str,
     *,
@@ -307,9 +334,10 @@ def run_process(
     """Process a source's raw files into its datasets. ``reprocess`` ignores the state (re-parse every
     selected file); ``rebuild`` also drops the tables first; ``dry_run`` parses without writing."""
     module = get_parser(source_id)
-    chosen = [d for d in module.DATASETS if not datasets or d.name in datasets]
-    if datasets and len(chosen) != len(set(datasets)):
-        unknown = set(datasets) - {d.name for d in chosen}
+    chosen = [d for d in getattr(module, "DATASETS", []) if not datasets or d.name in datasets]
+    derived = [d for d in getattr(module, "SQL_DATASETS", []) if not datasets or d.name in datasets]
+    if datasets and len(chosen) + len(derived) != len(set(datasets)):
+        unknown = set(datasets) - {d.name for d in [*chosen, *derived]}
         raise ProcessingError(f"{source_id} has no dataset(s) {sorted(unknown)}")
     raw = [
         f for f in list_raw_files(storage, getattr(module, "RAW_SOURCE", source_id))
@@ -327,6 +355,11 @@ def run_process(
             )
             log.info("%s: %s", ds.name, summary.event())
             out.append(summary)
+        if conn is not None:
+            for sd in derived:
+                summary = _build_sql_dataset(conn, sd)
+                log.info("%s: %s", sd.name, summary.event())
+                out.append(summary)
         return out
 
     if dry_run:

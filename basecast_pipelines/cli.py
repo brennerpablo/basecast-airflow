@@ -175,5 +175,8 @@ def datasets() -> None:
     from basecast_pipelines.parsers import get_parser, processable_sources
 
     for source_id in processable_sources():
-        for d in get_parser(source_id).DATASETS:
+        module = get_parser(source_id)
+        for d in getattr(module, "DATASETS", []):
             typer.echo(f"{source_id:26} {d.name:36} {d.target:9} {d.mode:8} v{d.version}")
+        for d in getattr(module, "SQL_DATASETS", []):
+            typer.echo(f"{source_id:26} {d.name:36} postgres  sql")
