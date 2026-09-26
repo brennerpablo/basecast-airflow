@@ -55,6 +55,29 @@ BigQuery dataset `basecast`. Pools (`deploy/airflow/config/pools.json`): `ercot_
 ercot.com fetch shares the 20 req/min budget), `open_meteo` (1), `heavy_process` (1: large parses run
 alone on the 4 GB VM).
 
+### Deploys
+
+As in fundsys, a push to `main` deploys (`.github/workflows/deploy.yml`; also runnable by hand from the
+Actions tab). The workflow signs in to GCP through Workload Identity Federation, reaches the VM over
+SSH through IAP, `git reset --hard`s `/opt/basecast/src` (a clone of this public repo) to the pushed
+commit, copies `deploy/airflow/` to `/opt/basecast/airflow` and writes `.env` there from the
+`AIRFLOW_ENV_FILE` repo secret. Then one of three paths:
+
+- `Dockerfile`, `requirements.txt` or `docker-compose.yml` changed: rebuild the image and `up -d`.
+- only `.env` changed: `up -d --force-recreate` (compose reads `.env` only when a container starts).
+- anything else: restart the scheduler and the DAG processor, because tasks fork from the scheduler
+  and keep the modules it imported at start.
+
+Each path waits for the API server's health check; only then are old images and the build cache
+pruned. Rollback is `git revert` and a push. `05-airflow-up.sh` still works for the first install and
+to try a branch on the VM; the next push to `main` puts `main` back.
+
+`AIRFLOW_ENV_FILE` is the source of truth for the VM's `.env` (seed it from the current file so the
+Fernet key survives). The workflow also reads `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`,
+`GCP_PROJECT_ID`, `GCP_VM_NAME` and `GCP_VM_ZONE`. The deploy service account needs OS Login with sudo
+and IAP tunnel access, as `airflow-deploy` has in fundsys. The pool, the service account and these
+secrets are not set up yet.
+
 DAGs are paused when created. After a deploy, unpause them (all or one by one):
 
 ```bash
@@ -66,7 +89,8 @@ gcloud compute ssh basecast-airflow --project basecast-509812 --zone us-central1
 
 `pg-postgres-password`, `pg-airflow-password`, `pg-basecast-writer-password`,
 `pg-basecast-reader-password`, `airflow-admin-password`, `get-data-api-token`. The Airflow Fernet key
-and JWT secret are generated on the VM and stay in `/opt/basecast/airflow/.env`.
+and JWT secret are generated on the VM and stay in `/opt/basecast/airflow/.env`, which the deploy
+workflow overwrites from the `AIRFLOW_ENV_FILE` repo secret (see Deploys).
 
 ## Cost
 

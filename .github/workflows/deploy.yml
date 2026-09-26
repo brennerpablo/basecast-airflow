@@ -1,0 +1,194 @@
+name: Deploy to Airflow VM
+
+# Adapted from fundsys-airflow's deploy.yml. The setup it needs (Workload Identity Federation, the
+# deploy service account, the secrets it reads) is in deploy/gcp/README.md, "Deploys".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+# Two pushes in quick succession must not deploy against the same VM at once: in fundsys, two
+# overlapping `docker compose up` runs killed airflow-init with exit 137 (OOM), and this VM has the
+# same 4 GB. `cancel-in-progress: false` on purpose: cancelling a deploy mid-flight leaves containers
+# half-recreated. Queue instead; GitHub keeps only the newest pending run.
+concurrency:
+  group: deploy-airflow-vm
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect build-relevant changes
+        id: changes
+        run: |
+          set -uo pipefail
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "Manual dispatch / first push: forcing rebuild"
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            echo "Previous commit ${BEFORE} not in history (force push?): forcing rebuild"
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only "$BEFORE" HEAD -- \
+            deploy/airflow/Dockerfile deploy/airflow/requirements.txt deploy/airflow/docker-compose.yml || true)
+          if [ -n "$CHANGED" ]; then
+            echo "Build-relevant files changed:"
+            echo "$CHANGED"
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No build-relevant files changed; skipping the image build"
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Auth to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Stage .env from AIRFLOW_ENV_FILE secret
+        env:
+          AIRFLOW_ENV_FILE: ${{ secrets.AIRFLOW_ENV_FILE }}
+        run: |
+          if [ -z "$AIRFLOW_ENV_FILE" ]; then
+            echo "::error::Repo secret AIRFLOW_ENV_FILE is empty. Seed it from the VM's /opt/basecast/airflow/.env (deploy/gcp/README.md, Deploys)."
+            exit 1
+          fi
+          # '%s\n': gh secret values keep no trailing newline; a .env without one breaks the next
+          # key anything appends (fundsys, 2026-07-23).
+          printf '%s\n' "$AIRFLOW_ENV_FILE" > /tmp/airflow.env
+          chmod 600 /tmp/airflow.env
+
+      - name: Copy .env to VM
+        run: |
+          gcloud compute scp \
+            --tunnel-through-iap \
+            --zone="${{ secrets.GCP_VM_ZONE }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            /tmp/airflow.env "${{ secrets.GCP_VM_NAME }}:/tmp/airflow.env.staged"
+
+      # /opt/basecast/src is the checkout the containers mount read-only (DAGs folder and PYTHONPATH);
+      # /opt/basecast/airflow is the compose project (deploy/airflow plus .env, logs, config, plugins).
+      - name: Deploy to VM via IAP
+        run: |
+          gcloud compute ssh "${{ secrets.GCP_VM_NAME }}" \
+            --tunnel-through-iap \
+            --zone="${{ secrets.GCP_VM_ZONE }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --command='
+              set -euo pipefail
+              SRC=/opt/basecast/src
+              DEST=/opt/basecast/airflow
+              # safe.directory: 05-airflow-up.sh leaves the checkout owned by uid 50000, not root.
+              src_git() { sudo git -c safe.directory="$SRC" -C "$SRC" "$@"; }
+
+              # Update the checkout in place: the running containers bind-mount this directory, so
+              # replacing it (rm + clone) would leave them on the old inode. The first run turns the
+              # git-archive copy 05-airflow-up.sh made into a clone; reset --hard overwrites its files.
+              if [ ! -d "$SRC/.git" ]; then
+                sudo mkdir -p "$SRC"
+                src_git init --quiet
+                src_git remote add origin "https://github.com/${{ github.repository }}.git"
+              fi
+              src_git fetch --quiet origin main
+              src_git reset --quiet --hard "${{ github.sha }}"
+              src_git clean -fdq
+              src_git rev-parse --short HEAD | sudo tee "$SRC/REVISION" >/dev/null
+              echo "checkout at $(cat "$SRC/REVISION")"
+
+              sudo mkdir -p "$DEST"/{logs,config,plugins}
+              sudo rsync -a --exclude .env "$SRC/deploy/airflow/" "$DEST/"
+              sudo chown -R 50000:0 "$DEST"/{config,plugins}
+              sudo chown 50000:0 "$DEST/logs"
+
+              # A new .env only reaches the containers when they are recreated (compose substitutes
+              # it at start, not live).
+              env_changed=false
+              if ! sudo cmp -s /tmp/airflow.env.staged "$DEST/.env" 2>/dev/null; then
+                env_changed=true
+              fi
+              sudo install -m 600 -o root -g root /tmp/airflow.env.staged "$DEST/.env"
+              sudo rm -f /tmp/airflow.env.staged
+
+              cd "$DEST"
+              wait_healthy() {
+                for i in $(seq 1 "$1"); do
+                  if curl -fsS http://localhost:8080/api/v2/monitor/health >/dev/null 2>&1; then
+                    echo "Airflow apiserver is healthy (attempt $i)"
+                    sudo docker compose ps
+                    return 0
+                  fi
+                  sleep 5
+                done
+                echo "Apiserver did not become healthy"
+                sudo docker compose ps
+                sudo docker compose logs --tail=80 airflow-apiserver
+                return 1
+              }
+
+              if [ "${{ steps.changes.outputs.needs_build }}" = "true" ]; then
+                echo "=== build-relevant change: rebuild ==="
+                sudo docker compose pull --quiet --ignore-buildable
+                sudo docker compose build --quiet
+                sudo docker compose up -d
+                wait_healthy 60
+              elif [ "$env_changed" = "true" ]; then
+                echo "=== .env changed: force-recreate so the new env is picked up ==="
+                sudo docker compose up -d --force-recreate
+                wait_healthy 60
+              else
+                echo "=== code-only change: no rebuild, restart ==="
+                # --no-recreate keeps the running containers; only the one-shot airflow-init re-runs
+                # (migrations, pools.json).
+                sudo docker compose up -d --no-recreate
+                # Task processes fork from the scheduler and keep the modules it imported at start,
+                # so without a restart a deploy keeps running the old pipeline code (fundsys,
+                # 2026-08-24).
+                sudo docker compose restart airflow-scheduler airflow-dag-processor
+                wait_healthy 12
+              fi
+            '
+
+      # Runs only after the health check passed; if the deploy failed, the old image is still
+      # serving and must not be removed. Without it every build leaves orphan layers behind until the
+      # disk fills and every deploy fails (fundsys, 2026-07-12). Rollback is `git revert` and a push,
+      # never an old image.
+      - name: Prune old images and build cache on the VM
+        run: |
+          gcloud compute ssh "${{ secrets.GCP_VM_NAME }}" \
+            --tunnel-through-iap \
+            --zone="${{ secrets.GCP_VM_ZONE }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --command='
+              set -euo pipefail
+              echo "=== disk before ==="
+              df -h / | tail -1
+              sudo docker image prune -af
+              sudo docker builder prune -af
+              echo "=== disk after ==="
+              df -h / | tail -1
+            '
+
+      - name: Cleanup runner staging file
+        if: always()
+        run: rm -f /tmp/airflow.env
