@@ -294,6 +294,7 @@ def marts_check(
     from datetime import date
 
     from basecast_pipelines.marts import catalog, core
+    from basecast_pipelines.marts import config as marts_config
     from basecast_pipelines.models.db import read_sql
 
     ok = True
@@ -305,7 +306,8 @@ def marts_check(
                         {"m": mart.meta_name})
         built_as_of = date.fromisoformat(json.loads(meta["v"][0])) if meta.height else local_today()
         frame = read_sql(f'select * from "{mart.name}"')
-        outcome = core.MartOutcome(mart.name, frame.height, True, core.run_checks(mart, frame, built_as_of), 0.0)
+        checks = core.run_checks(mart, frame, built_as_of, marts_config.load())
+        outcome = core.MartOutcome(mart.name, frame.height, True, checks, 0.0)
         ok = _echo_outcomes([outcome]) and ok
     if not ok:
         raise typer.Exit(1)

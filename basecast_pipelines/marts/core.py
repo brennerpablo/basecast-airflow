@@ -54,15 +54,17 @@ class CheckResult:
 @dataclass(frozen=True)
 class Check:
     """A golden number the mart must reproduce. ``as_of``: the date of the doc it comes from (the check only runs
-    at that ``as_of``); None runs it at every ``as_of`` (a structural check)."""
+    at that ``as_of``); None runs it at every ``as_of`` (a structural check). ``applies(config)``: False skips it
+    when the build switches differ from the doc's (e.g. X5's counts assume the Q3 weights)."""
 
     name: str
     fn: Callable[[pl.DataFrame], CheckResult]
     as_of: date | None = None
+    applies: Callable[[Mapping[str, Any]], bool] | None = None
 
 
 def value_check(name: str, get: Callable[[pl.DataFrame], Any], expected: Any, *, as_of: date | None = None,
-                tol: float = 0.0) -> Check:
+                tol: float = 0.0, applies: Callable[[Mapping[str, Any]], bool] | None = None) -> Check:
     """A check that ``get(frame)`` equals ``expected`` (numbers within ``tol``)."""
 
     def fn(frame: pl.DataFrame) -> CheckResult:
@@ -71,7 +73,7 @@ def value_check(name: str, get: Callable[[pl.DataFrame], Any], expected: Any, *,
             return CheckResult(abs(float(actual) - float(expected)) <= tol, expected, actual)
         return CheckResult(actual == expected, expected, actual)
 
-    return Check(name, fn, as_of)
+    return Check(name, fn, as_of, applies)
 
 
 @dataclass(frozen=True)
@@ -174,13 +176,19 @@ def meta_rows(mart: Mart, frame: pl.DataFrame, ctx: MartContext, *, model_versio
 # --- checks --------------------------------------------------------------------------------------------------
 
 
-def run_checks(mart: Mart, frame: pl.DataFrame, as_of: date) -> list[dict[str, Any]]:
-    """One record per check: ``status`` passed / failed / skipped (golden check at another ``as_of``)."""
+def run_checks(mart: Mart, frame: pl.DataFrame, as_of: date,
+               config: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
+    """One record per check: ``status`` passed / failed / skipped (golden check at another ``as_of``, or for
+    other switches)."""
     out = []
     for check in mart.checks:
         if check.as_of is not None and check.as_of != as_of:
             out.append({"mart": mart.name, "check": check.name, "status": "skipped",
                         "reason": f"golden for as_of {check.as_of}"})
+            continue
+        if check.applies is not None and config is not None and not check.applies(config):
+            out.append({"mart": mart.name, "check": check.name, "status": "skipped",
+                        "reason": "golden for other build switches"})
             continue
         try:
             r = check.fn(frame)
@@ -252,7 +260,7 @@ def build_marts(
             frame = mart.build(ctx)
             model_version = f"{code}.v{mart.version}"
             frame = stamp(frame, mart, code=code, as_of=ctx.as_of, built_at=built_at)
-            checks = run_checks(mart, frame, ctx.as_of)
+            checks = run_checks(mart, frame, ctx.as_of, ctx.config)
             for c in checks:
                 if run is not None:
                     run.event("mart.check", **c)

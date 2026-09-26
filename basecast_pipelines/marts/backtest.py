@@ -2,7 +2,9 @@
 
 ``mart_actual_summer_peaks``: one row per summer (June-September) from ``ercot_monthly_peaks``, the hourly peak
 (the forecasts' definition, hour ending) and the 15-minute one (interval ending, as X15 confirmed), as in Q1 §2.
-A summer counts as final only when all four months are published with final settlements.
+A summer is ``final`` when its four months are published and either the workbook flags them as updated with final
+settlements (``settlement_flagged``) or it is from a year before ``as_of``'s: the D&E workbooks carry that flag only
+from 2015 on, so older summers, long settled, would otherwise read as preliminary.
 """
 
 from __future__ import annotations
@@ -42,7 +44,8 @@ def actual_summer_peaks(ctx: MartContext) -> pl.DataFrame:
             "peak_15min_mw",
             "peak_15min_ts_utc",
             pl.col("_q_local").dt.strftime("%H:%M").alias("interval_end_local_15min"),
-            (pl.col("complete") & pl.col("all_final")).alias("final"),
+            (pl.col("complete") & (pl.col("all_final") | (pl.col("year") < ctx.as_of.year))).alias("final"),
+            pl.col("all_final").alias("settlement_flagged"),
             "months_published",
             pl.col("last_month").dt.month_end().alias("data_as_of"),
         )
@@ -59,6 +62,7 @@ ACTUAL_SUMMER_PEAKS = Mart(
     build=actual_summer_peaks,
     key=("year",),
     inputs=("ercot_monthly_peaks",),
+    version=2,
     description="ERCOT's summer (Jun-Sep) peak per year: hourly (hour ending) and 15-minute (interval ending), "
     "with the settlement status; the actuals the forecasts and the backtest are scored against (Q1 §2).",
     caveats=("preliminary_actuals",),
@@ -72,6 +76,8 @@ ACTUAL_SUMMER_PEAKS = Mart(
         value_check("2026 not final", lambda f: _year(f, 2026, "final"), False, as_of=GOLDEN_AS_OF),
         value_check("2023 hourly peak MW", lambda f: _year(f, 2023, "hourly_peak_mw"), 85_508, as_of=GOLDEN_AS_OF,
                     tol=1),
+        value_check("every complete summer before 2025 final", lambda f: f.filter(
+            pl.col("year") < 2025, pl.col("months_published") == 4, ~pl.col("final")).height, 0, as_of=GOLDEN_AS_OF),
     ),
 )
 
