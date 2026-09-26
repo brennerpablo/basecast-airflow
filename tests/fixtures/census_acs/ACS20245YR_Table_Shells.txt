@@ -1,0 +1,30 @@
+Table ID|Line|Indent|Unique ID|Label|Title|Universe|Type
+B01001|1.0|0|B01001_001|Total:|Sex by Age|Total population|int
+B01001|2.0|1|B01001_002|Male:|Sex by Age|Total population|int
+B01001|3.0|2|B01001_003|Under 5 years|Sex by Age|Total population|int
+B25032|1.0|0|B25032_001|Total:|Tenure by Units in Structure|Occupied housing units|int
+B25032|2.0|1|B25032_002|Owner-occupied housing units:|Tenure by Units in Structure|Occupied housing units|int
+B25032|3.0|2|B25032_003|1, detached|Tenure by Units in Structure|Occupied housing units|int
+B25032|4.0|2|B25032_004|1, attached|Tenure by Units in Structure|Occupied housing units|int
+B25032|5.0|2|B25032_005|2|Tenure by Units in Structure|Occupied housing units|int
+B25032|6.0|2|B25032_006|3 or 4|Tenure by Units in Structure|Occupied housing units|int
+B25032|7.0|2|B25032_007|5 to 9|Tenure by Units in Structure|Occupied housing units|int
+B25032|8.0|2|B25032_008|10 to 19|Tenure by Units in Structure|Occupied housing units|int
+B25032|9.0|2|B25032_009|20 to 49|Tenure by Units in Structure|Occupied housing units|int
+B25032|10.0|2|B25032_010|50 or more|Tenure by Units in Structure|Occupied housing units|int
+B25032|11.0|2|B25032_011|Mobile home|Tenure by Units in Structure|Occupied housing units|int
+B25032|12.0|2|B25032_012|Boat, RV, van, etc.|Tenure by Units in Structure|Occupied housing units|int
+B25032|13.0|1|B25032_013|Renter-occupied housing units:|Tenure by Units in Structure|Occupied housing units|int
+B25032|14.0|2|B25032_014|1, detached|Tenure by Units in Structure|Occupied housing units|int
+B25032|15.0|2|B25032_015|1, attached|Tenure by Units in Structure|Occupied housing units|int
+B25032|16.0|2|B25032_016|2|Tenure by Units in Structure|Occupied housing units|int
+B25032|17.0|2|B25032_017|3 or 4|Tenure by Units in Structure|Occupied housing units|int
+B25032|18.0|2|B25032_018|5 to 9|Tenure by Units in Structure|Occupied housing units|int
+B25032|19.0|2|B25032_019|10 to 19|Tenure by Units in Structure|Occupied housing units|int
+B25032|20.0|2|B25032_020|20 to 49|Tenure by Units in Structure|Occupied housing units|int
+B25032|21.0|2|B25032_021|50 or more|Tenure by Units in Structure|Occupied housing units|int
+B25032|22.0|2|B25032_022|Mobile home|Tenure by Units in Structure|Occupied housing units|int
+B25032|23.0|2|B25032_023|Boat, RV, van, etc.|Tenure by Units in Structure|Occupied housing units|int
+B25032A|1.0|0|B25032A_001|Total:|Units in Structure (White Alone Householder)|Occupied housing units with a householder who is White alone|int
+B25032A|2.0|1|B25032A_002|1, detached|Units in Structure (White Alone Householder)|Occupied housing units with a householder who is White alone|int
+B25032A|3.0|1|B25032A_003|1, attached|Units in Structure (White Alone Householder)|Occupied housing units with a householder who is White alone|int
