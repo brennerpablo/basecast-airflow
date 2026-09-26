@@ -31,6 +31,7 @@ DEFAULT_RATE_LIMITS: dict[str, float] = {
     # ~26 calls (one per two weeks): 3 requests/min keeps a backfill under the hourly cap.
     "open-meteo.com": 3,
     "puc.texas.gov": 30,
+    "ncei.noaa.gov": 30,
 }
 DEFAULT_RPM = 20.0
 CHUNK_SIZE = 1 << 20
