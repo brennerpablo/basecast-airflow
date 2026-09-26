@@ -34,6 +34,8 @@ bucket_role "$VM_SA" roles/storage.objectAdmin
 for role in roles/bigquery.jobUser roles/bigquery.dataEditor; do
   project_role "$VM_SA" "$role"
 done
+# Vertex AI: Gemini reads chart values and image-only pages of the documents.
+project_role "$VM_SA" roles/aiplatform.user
 for s in pg-airflow-password pg-basecast-writer-password airflow-admin-password; do
   secret_role "$VM_SA" "$s"
 done

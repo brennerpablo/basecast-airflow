@@ -7,7 +7,7 @@ gcloud services enable --project "$PROJECT" \
   compute.googleapis.com sqladmin.googleapis.com run.googleapis.com \
   artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com \
   iap.googleapis.com billingbudgets.googleapis.com cloudresourcemanager.googleapis.com \
-  iam.googleapis.com bigquery.googleapis.com
+  iam.googleapis.com bigquery.googleapis.com aiplatform.googleapis.com
 
 # Budget alert scoped to this project only (the billing account may pay for other projects).
 billing=$(gcloud billing projects describe "$PROJECT" --format='value(billingAccountName)')

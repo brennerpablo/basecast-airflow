@@ -35,6 +35,8 @@ x-airflow-common:
     BQ_DATASET: basecast
     BQ_LOCATION: us-central1
     BASECAST_DB_URL: postgresql://basecast_writer:${BASECAST_DB_PASSWORD}@cloud-sql-proxy:5432/basecast
+    # Gemini on Vertex AI (VM service account, no key): the 3.x models answer only on location "global".
+    GEMINI_MODEL: gemini-3.8-flash
   volumes:
     - ./logs:/opt/airflow/logs
     - ./config:/opt/airflow/config
