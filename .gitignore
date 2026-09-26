@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
+
+# Phase 0 analysis figures (docs/analysis/findings.md holds the numbers)
+analysis/out/
