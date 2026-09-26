@@ -247,3 +247,26 @@ def test_rank_stability_reports_every_variant():
     assert stab.height == 2 * 2 + 2
     assert stab.filter(pl.col("variant") == "x +0.05")["spearman"].item() == pytest.approx(1.0)
     assert stab.filter(pl.col("variant") == "without x")["spearman"].item() < 1.0
+
+
+# --- X16 findings 5 and 6: NaN scores ----------------------------------------------------------------------------
+
+
+def test_an_account_without_any_signal_gets_a_null_score_ranked_last():
+    sig = pl.DataFrame({"account_id": ["a", "b", "c", "z"], "x": [1.0, 2.0, 3.0, None], "y": [3.0, 1.0, 2.0, None]})
+    scored = T.score_accounts(T.percentile_ranks(sig, {"x": "higher", "y": "higher"}), {"x": 0.5, "y": 0.5})
+    assert scored["account_id"].to_list() == ["c", "a", "b", "z"]
+    assert scored.filter(pl.col("account_id") == "z").select("score", "rank").row(0) == (None, 4)
+    assert not scored["score"].is_nan().any()
+
+
+def test_a_signal_only_one_account_has_ranks_nobody():
+    # X16 #6: x = [1.0, None] gave pct_x = [NaN, null], and the NaN poisoned the score
+    sig = pl.DataFrame({"account_id": ["a", "b", "c"], "x": [1.0, None, None], "y": [1.0, 2.0, 3.0]})
+    pct = T.percentile_ranks(sig, {"x": "lower", "y": "higher"})
+    assert pct["pct_x"].to_list() == [None, None, None]
+    assert pct["pct_y"].to_list() == [0.0, 0.5, 1.0]
+    scored = T.score_accounts(pct, {"x": 0.5, "y": 0.5})
+    assert scored.select("account_id", "score").rows() == [("c", 1.0), ("b", 0.5), ("a", 0.0)]  # on y alone
+    empty = T.percentile_ranks(sig.with_columns(pl.lit(None, pl.Float64).alias("x")), {"x": "higher"})
+    assert empty["pct_x"].to_list() == [None, None, None]

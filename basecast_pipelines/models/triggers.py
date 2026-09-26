@@ -574,21 +574,28 @@ def next_action(tier: str, n_strong: int, strong_age_days: int | None, *, fresh_
 
 def percentile_ranks(signals: pl.DataFrame, directions: dict[str, str]) -> pl.DataFrame:
     """Each signal as its within-universe percentile rank in [0, 1]: (average rank − 1) / (n − 1) over the
-    accounts that have it; ``lower`` flips it. Nulls stay null."""
+    accounts that have it; ``lower`` flips it. Nulls stay null. A signal fewer than two accounts have is null for
+    all, so it ranks nobody and :func:`score_accounts` renormalizes over the other signals (X16 #6: it was
+    0/0 = NaN)."""
     out = []
     for c, d in directions.items():
         n = pl.col(c).is_not_null().sum()
-        r = (pl.col(c).rank("average") - 1) / (n - 1)
+        r = pl.when(n > 1).then((pl.col(c).rank("average") - 1) / (n - 1)).otherwise(pl.lit(None, pl.Float64))
         out.append((1 - r if d == "lower" else r).alias(f"pct_{c}"))
     return signals.select("account_id", *out)
 
 
 def score_accounts(pct: pl.DataFrame, weights: dict[str, float]) -> pl.DataFrame:
     """Weighted mean of the percentile ranks; an account missing a signal has its weights renormalized over
-    the signals it has. Adds ``score`` and ``rank`` (1 = best, ties by account_id)."""
+    the signals it has. Adds ``score`` and ``rank`` (1 = best, ties by account_id). An account with no weighted
+    signal keeps its row with a null score and ranks after every scored account (X16 #5: it was 0/0 = NaN, which
+    sorted first)."""
     num = sum(pl.col(f"pct_{c}").fill_null(0) * w for c, w in weights.items())
     den = sum(pl.col(f"pct_{c}").is_not_null().cast(pl.Float64) * w for c, w in weights.items())
-    scored = pct.with_columns((num / den).alias("score")).sort(["score", "account_id"], descending=[True, False])
+    score = pl.when(den > 0).then(num / den).otherwise(pl.lit(None, pl.Float64))
+    scored = pct.with_columns(score.alias("score")).sort(
+        ["score", "account_id"], descending=[True, False], nulls_last=True
+    )
     return scored.with_columns(pl.int_range(1, scored.height + 1).alias("rank"))
 
 
