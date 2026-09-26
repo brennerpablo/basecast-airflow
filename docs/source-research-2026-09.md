@@ -117,6 +117,13 @@ into Parquet or the API.
   (Wilbarger, Haskell, Fisher, Deaf Smith, Nolan, Mitchell…), mostly dated 2025–2026.
 - NAICS is unreliable, so match names. There is no MW. The exact meaning of `affil_begin_dt` is not
   verified.
+- Reproducible filter, run 2026-09-26: name matches `DATA ?CENTER|DATACENTER|DATA CTR` or `indus_typ_cd`
+  = 518210, deduplicated by site (`ref_num_txt`), dated by the earliest `affil_begin_dt`.
+  - It finds 88 sites. The yearly count of permit rows rises: 12 (2024), 19 (2025), 30 (2026 to date).
+  - 37 sites have their first permit since 2025, spread over 26 counties; 34 of them are outside the big
+    metros.
+  - Treat it as a lower bound, and it has no MW. The per-county claim above came from the research
+    agent's sampling.
 
 ### Texas Comptroller
 - Ch. 312 abatements and Ch. 380/381 agreements: daily CSVs. The API (`api.comptroller.texas.gov/open-data/v1/tables/...`,

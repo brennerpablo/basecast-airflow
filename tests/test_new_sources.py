@@ -77,3 +77,25 @@ def test_eia_860m_takes_latest_and_decembers(make_http) -> None:
     names = [f.url.rsplit("/", 1)[-1] for f in eia_860m.discover(http)]
     assert names == ["december_generator2024.xlsx", "december_generator2025.xlsx", "august_generator2026.xlsx"]
     assert len(eia_860m.discover(http, all_months=True)) == 5
+
+
+def test_puct_filings_takes_every_item_once(make_http) -> None:
+    from basecast_pipelines.sources.puct import interchange
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if "/search/filings/" in url:
+            control = request.url.params["ControlNumber"]
+            items = "".join(
+                f'<a href="/search/documents/?controlNumber={control}&itemNumber={i}">{i}</a>' for i in (1, 2, 2)
+            )
+            return httpx.Response(200, text=f'<a href="/search/exportfilings/?ControlNumber={control}">Export</a>{items}')
+        control, item = request.url.params["controlNumber"], request.url.params["itemNumber"]
+        return httpx.Response(200, text=f'<a href="/Documents/{control}_{item}_99.PDF">doc</a>')
+
+    files = interchange.discover(make_http(handler))
+    docs = [f for f in files if f.meta["kind"] == "document"]
+    assert len(docs) == 2 * len(interchange.DOCKETS) and all(f.immutable for f in docs)
+    assert len([f for f in files if f.meta["kind"] == "filings_index"]) == len(interchange.DOCKETS)
+    only = interchange.discover(make_http(handler), items="2")
+    assert {f.meta["item"] for f in only if f.meta["kind"] == "document"} == {2}

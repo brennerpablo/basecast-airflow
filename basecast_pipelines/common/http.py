@@ -30,6 +30,7 @@ DEFAULT_RATE_LIMITS: dict[str, float] = {
     # Open-Meteo's free tier allows 5,000 calls/hour and 10,000/day, and a one-year hourly request counts as
     # ~26 calls (one per two weeks): 3 requests/min keeps a backfill under the hourly cap.
     "open-meteo.com": 3,
+    "puc.texas.gov": 30,
 }
 DEFAULT_RPM = 20.0
 CHUNK_SIZE = 1 << 20

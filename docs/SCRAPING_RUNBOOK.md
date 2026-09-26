@@ -196,8 +196,10 @@ Entradas manuais em `config/manual_official_figures.yaml`, cada uma com fonte e 
 - Pico do verão de 2026: ~112.000 MW na previsão preliminar; faixa de ~90.500 a 98.000 MW estimada pela
   própria ERCOT (carta no Projeto 58777, Item 38).
 - Grandes cargas: ~232.500 MW acompanhados e 8.786 MW aprovados para energizar (ERCOT Monthly de
-  jan/2026, dados de 21/jan/2026); 9.042 MW aprovados, com pico não simultâneo observado de 3.883 MW
-  e simultâneo de 3.801 MW (deck do TAC de mar/2026).
+  jan/2026, dados de 21/jan/2026); 9.042 MW aprovados, com pico não simultâneo observado de 4.004 MW
+  e simultâneo de 3.522 MW em mar/2026 (deck do TAC de mar/2026, versão atualizada de 26/mar; a versão de
+  12/mar trazia 3.883 e 3.801 MW rotulados "March 2025"). Conferido em 26/set/2026: ver
+  `config/manual_official_figures.yaml`.
 - Recorde de consumo de jul/2026: registrar os valores de cada fonte com a métrica usada (horária
   integrada vs. instantânea), sem escolher um.
 
