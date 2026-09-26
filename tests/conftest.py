@@ -48,3 +48,10 @@ def make_http(clock: FakeClock):
         )
 
     return factory
+
+
+@pytest.fixture(autouse=True)
+def _no_database(monkeypatch):
+    """Tests never write etl_run to a real database, whatever the shell exports (a test that needs one
+    sets BASECAST_DB_URL itself, from BASECAST_TEST_DB_URL)."""
+    monkeypatch.delenv("BASECAST_DB_URL", raising=False)
