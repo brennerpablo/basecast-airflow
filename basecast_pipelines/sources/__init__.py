@@ -42,6 +42,8 @@ SOURCE_MODULES: dict[str, str] = {
     "bls_qcew": "basecast_pipelines.sources.bls.qcew",
     "tceq_air_permits": "basecast_pipelines.sources.texas.tceq_air_permits",
     "tx_comptroller": "basecast_pipelines.sources.texas.comptroller",
+    # Added 2026-09-26, second round (gaps against the data contract).
+    "ornl_eaglei": "basecast_pipelines.sources.outages.eaglei",
 }
 
 
