@@ -1,0 +1,6 @@
+PrimaryIDNo,TrackNo,CompanyName,DBA,CoTypeDesc,Title1,Title2,Address1,Address2,City,State,Zip,Phone,AltPhone,Fax,Website,Email,MailGroupDesc,textbox17,ComplaintAddress,SelfGen
+21079,PG260082, ARROYO PROJECTCO 3 LLC ,,"Limited Liability Company, L.L.C",ARROYO PROJECTCO 2 LLC,,"21960 MINNETONKA BLVD, SUITE 210 ",,EXCELSIOR ,MN,55331 ,,,,,person@example.test,Company / Physical,True,False,False
+21079,PG260082, ARROYO PROJECTCO 3 LLC ,,"Limited Liability Company, L.L.C",ARROYO PROJECTCO 2 LLC,PERSON NAME,"21960 MINNETONKA BLVD, SUITE 210 ",,EXCELSIOR ,MN,55331 ,5125550100,,,,person@example.test,Company / Physical,False,False,False
+20966,PG250099, BEXAR ESS LLC,,"Limited Liability Company, L.L.C", BEXAR ESS LLC,,2495 BLUE WING RD,,SAN ANTONIO,TX,78221,,,,,person@example.test,Company / Physical,True,False,False
+20966,PG250099, BEXAR ESS LLC,,"Limited Liability Company, L.L.C",BEXAR ESS LLC,PERSON NAME,219060 MINNETONKA BLVD STE 210,,EXCELSOR,MN,55331,5125550100,,,,person@example.test,Company / Physical,False,False,False
+20242,PG090058,JANE Q SAMPLE,,Sole Proprietor,JANE Q SAMPLE,PERSON NAME,1 SAMPLE LANE,,SAMPLETOWN,TX,00000,5125550100,,5125550102,,person@example.test,Company / Physical,True,False,False
