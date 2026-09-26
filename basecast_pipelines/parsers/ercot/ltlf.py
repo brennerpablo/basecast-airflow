@@ -33,6 +33,7 @@ import polars as pl
 from basecast_pipelines.parsers.ercot import _ltlf_hourly as hourly
 from basecast_pipelines.parsers.ercot import _ltlf_tables as tables
 from basecast_pipelines.processing.core import Dataset, RawFile
+from basecast_pipelines.parsers._forecasts import OFFICIAL_FORECASTS
 
 log = logging.getLogger(__name__)
 
@@ -327,8 +328,10 @@ DATASETS = [
     ),
     Dataset(
         name="ltlf_hourly",
-        target="postgres",
+        target="bigquery",
         mode="by_file",
+        partition=("ts_utc", "MONTH"),
+        cluster=("region_id",),
         description="ERCOT LTLF hourly forecasts (2021 onward) by vintage, scenario and region, net load and "
         "components; winter 2025-2026 reliability-standard forecast by transmission operator.",
         parse=parse_hourly,
@@ -348,3 +351,5 @@ DATASETS = [
         version=1,
     ),
 ]
+
+SQL_DATASETS = [OFFICIAL_FORECASTS]

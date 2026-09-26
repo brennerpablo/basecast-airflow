@@ -59,11 +59,13 @@ def load_parquet(
     partition: tuple[str, str] | None = None,
     cluster: Sequence[str] = (),
     recreate: bool = False,
+    order: Sequence[str] = (),
 ) -> None:
     """Replace the write's scope in ``dataset.table`` with the rows of ``sources`` (Parquet URIs or paths).
 
     ``replace`` truncates the table in the load job itself; ``by_file`` and ``by_key`` load into a staging
-    table and swap the scope (same ``source_file`` values, or same key) inside one transaction."""
+    table and swap the scope (same ``source_file`` values, or same key) inside one transaction. ``order``
+    (raw keys, oldest first) makes ``by_key`` keep the newest file's row when files in the load share keys."""
     from google.cloud import bigquery
     from google.api_core.exceptions import NotFound
 
@@ -103,13 +105,28 @@ def load_parquet(
                 raise ValueError(f"{table}: by_key needs key columns")
             match = " AND ".join(f"t.`{c}` = s.`{c}`" for c in key)
             scope = f"DELETE FROM `{target}` t WHERE EXISTS (SELECT 1 FROM `{stage}` s WHERE {match});"
+        rows = f"SELECT {columns} FROM `{stage}`"
+        config = None
+        if mode == "by_key" and order:
+            # Files in one load can share keys (two snapshots of a current-year file): the newest wins.
+            keys = ", ".join(f"s.`{c}`" for c in key)
+            rows = f"""
+                SELECT {columns} FROM (
+                    SELECT s.*, ROW_NUMBER() OVER (PARTITION BY {keys} ORDER BY o DESC) AS _rn
+                    FROM `{stage}` s LEFT JOIN UNNEST(@files) AS f WITH OFFSET o ON f = s.source_file
+                ) WHERE _rn = 1
+            """
+            config = bigquery.QueryJobConfig(
+                query_parameters=[bigquery.ArrayQueryParameter("files", "STRING", list(order))]
+            )
         client.query(
             f"""
             BEGIN TRANSACTION;
             {scope}
-            INSERT INTO `{target}` ({columns}) SELECT {columns} FROM `{stage}`;
+            INSERT INTO `{target}` ({columns}) {rows};
             COMMIT TRANSACTION;
-            """
+            """,
+            job_config=config,
         ).result()
         log.info("%s: %s from %d files", target, mode, len(sources))
     finally:

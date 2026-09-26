@@ -51,6 +51,7 @@ from basecast_pipelines.parsers.ercot._adequacy_common import (
     season_in,
 )
 from basecast_pipelines.processing.core import Dataset, RawFile
+from basecast_pipelines.parsers._forecasts import OFFICIAL_FORECASTS
 
 SOURCE_ID = "ercot_cdr"
 PUBLISHER = "ERCOT"
@@ -500,3 +501,5 @@ DATASETS = [
         select=select_editions,
     ),
 ]
+
+SQL_DATASETS = [OFFICIAL_FORECASTS]

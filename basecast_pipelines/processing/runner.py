@@ -149,10 +149,11 @@ class _Writer:
     def write(self, df: pl.DataFrame, files: Sequence[RawFile], rows: dict[str, int], state: _State,
               parquet_parts: dict[str, pl.DataFrame] | None = None) -> None:
         ds = self.ds
-        if ds.mode == "by_key" and df.height:
-            nulls = df.filter(pl.any_horizontal(pl.col(list(ds.key)).is_null())).height
-            if nulls:
-                raise ProcessingError(f"{ds.name}: {nulls} rows with a null key {ds.key}; keys must be complete")
+        if ds.mode == "by_key":
+            for frame in (parquet_parts or {}).values() if ds.target == "bigquery" else [df]:
+                nulls = frame.filter(pl.any_horizontal(pl.col(list(ds.key)).is_null())).height
+                if nulls:
+                    raise ProcessingError(f"{ds.name}: {nulls} rows with a null key {ds.key}; keys must be complete")
         replace_all = ds.mode == "replace"
         scope = [f.key for f in files]
         if ds.target == "postgres":
@@ -218,6 +219,7 @@ class _Writer:
         load_parquet(
             self.bq, dataset=self.settings.bq_dataset, table=ds.name, sources=uris, mode=ds.mode,
             key=ds.key, partition=ds.partition, cluster=ds.cluster, recreate=self.rebuild,
+            order=[f.key for f in files],
         )
 
 
@@ -283,7 +285,11 @@ def _process_dataset(
         if not batch_files:
             return
         rows = {k: v.height for k, v in batch_frames.items()}
-        df = pl.concat(list(batch_frames.values()), how="diagonal_relaxed") if batch_frames else pl.DataFrame()
+        # BigQuery writes one Parquet per file; only Postgres needs the batch as one frame.
+        if ds.target == "bigquery":
+            df = pl.DataFrame({"_rows": [sum(rows.values())]}) if batch_frames else pl.DataFrame()
+        else:
+            df = pl.concat(list(batch_frames.values()), how="diagonal_relaxed") if batch_frames else pl.DataFrame()
         if writer is not None:
             if df.height or ds.mode == "by_file":
                 if not df.height:

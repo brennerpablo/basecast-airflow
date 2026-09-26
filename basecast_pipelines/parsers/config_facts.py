@@ -18,6 +18,7 @@ import yaml
 
 from basecast_pipelines.config import PROJECT_ROOT
 from basecast_pipelines.processing.core import Dataset, RawFile
+from basecast_pipelines.parsers._forecasts import OFFICIAL_FORECASTS
 
 CONFIG_DIR = PROJECT_ROOT / "config"
 FIGURES = "manual_official_figures.yaml"
@@ -284,3 +285,5 @@ DATASETS = [
         build=build_points,
     ),
 ]
+
+SQL_DATASETS = [OFFICIAL_FORECASTS]
