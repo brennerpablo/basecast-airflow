@@ -78,7 +78,18 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    city-level Census data as the fix). Show "call now until <date>" when a trigger lapses (the #1 lapses on
    2026-10-22).
 
-## Beyond phase 0 — explorations X1–X9
+15. **X10 — munis.** Add Census place files narrowly (muni diagnosis facts and a muni permit trigger, score
+   unchanged) and rank munis within type in `/accounts` (defaults). Confirm BTU (CCN "Rural Electric Division")
+   and the EIA id describe the same system (68,685 meters suggest all of BTU).
+16. **X11 — large-load zones.** Accept the Batch Zero base load as the zone shape of the approved stock and the
+   f = 0.72 NORTH share of LZ_WEST (from two machine-read charts; f from 0 to 1 moves NORTH between 1.1 and 2.5 GW)?
+   The G&T co-ops in the TSP filing (Brazos 32 GW, Golden Spread 17 GW) are unmapped: their member lists would put
+   that MW in co-op territory, a strong co-op story. Weight TCEQ sites by recency (a 1987 permit counts as much as
+   a 2026 one today).
+17. **X8 — marts and video lines.** `marts-proposal.md` is the input for A0 and for basecast-get-data's contract
+   (nothing changed there); `video-candidates.md` feeds `docs/video-numbers.md` once the items above are settled.
+
+## Beyond phase 0 — explorations X1–X11
 
 Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
 is a candidate, not yet in `docs/video-numbers.md`.
@@ -92,7 +103,10 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X5 | Triggers and a ranking dry run | 8 triggers (5 strong); 46 of 107 non-partner accounts have one active; next action: 25 call now, 12 nurture, 34 watch, 36 hold; 14 of the top 15 sit on the metro growth rings; stable to ±0.05 weight shifts (ρ ≥ 0.993). | /accounts, /accounts/[id] |
 | X6 | Do the video numbers hold from the raw files? | All six re-derived without the models or parsers: 2026 peak 91,133.7 MW (HE 18, 2026-07-22), old record 85,508.5 MW, 112 GW and 90.5–98 GW (PUCT 58777 item 38), 232,500 MW tracked and 3.78% approved (Jan 2026), 1,810 projects / 438,262 MW (Aug 2026 GIS), Q5 deck inputs. Careful: the "> 20 GW" margin is 866 MW; the large-load queue reached ~438 GW by May 2026, the same figure as the generation queue. | video |
 | X7 | Does a three-layer peak forecast beat ERCOT? | Rebuilt as of 8 dates (18 cells): MAPE 3.3% vs LTLF 5.1% and CDR 4.8% (the design itself was chosen in 2026, a leak the doc lists). From the March 2026 deck: 93.0 [89.4–96.7] GW in 2027 and 111.6 [104.2–123.7] in 2030, vs LTLF 2025 104.3 and 138.9. After Batch Zero the MW promised by 2027 went from 67 to 201 GW while approved stayed at 8.8–8.9 GW. | Forecast, /backtest (A3), video |
+| X8 | What the screens need, and which lines can go in the video | `marts-proposal.md`: marts per screen (grain, key, columns, the `models/` function, blocking review item). `video-candidates.md`: lines ranked by strength with source, X6 status and caveat; top: 26.8 GW promised by end-2025 vs 8.8 GW approved; 112 vs 91.1 GW; the May 2026 backtest (88.9 GW vs 91.1). Its re-check fixed an X2 cell (+670%, 5–8×). | A0, get-data contract, video |
 | X9 | What the /accounts/[id] page can show | `assemble(ccn_no)` renders score breakdown, triggers with lapse dates, territory, EIA series and next action as facts with source and as-of. Gaps: no public source for an account's own 4CP load (the UtilityDataSource case), munis miss county triggers, apportionment misreads size for 69 accounts. | /accounts/[id], API shape |
+| X10 | Do Census place data fix the munis? | All 59 non-partner munis match a place. Size: homes per meter 0.03 → 0.42, ρ with meters 0.77 → 0.95. Growth: no (ρ 0.53 vs 0.54), cities grow onto land their muni does not serve. Strong triggers for munis 10 → 13 of 59. | /accounts diagnosis, muni ranking |
+| X11 | Where are the large loads? | Weather-zone charts exist (Batch Zero Update Sep 2026, QSA Q4 2026, LLIS May 2026); LZ_WEST = FWEST + WEST + 0.72 × NORTH. Approved stock leans NORTH 2.5, FWEST 1.7, NCENT 1.4, WEST 1.2 GW; the pipeline leans NCENT, NORTH, SOUTH. By zone, ~10 GW moves between zones in the 2030 forecast (total ±0.1%). | Forecast by zone, Explorer |
 
 ## Notes
 
@@ -105,4 +119,11 @@ is a candidate, not yet in `docs/video-numbers.md`.
   until Airflow work resumes.
 - **Queue scale for the Explorer:** from queue entry, only 8.3% of projects (2.8% of MW) reach COD within 36 months;
   X2 turns it into the county map and backtests it.
+- **ERCOT paused approvals to energize large data centers and crypto on 2026-08-03.** Source: ERCOT "Large Load
+  Issues" (https://www.ercot.com/files/docs/2026/08/25/10.-Large-Load-Issues.zip, p. 2): "August 3, 2026 - Issued a
+  Market Notice pausing the Batch Zero study process and delaying final classification of all large loads. Paused
+  approvals to energize data centers or virtual currency mining facilities (crypto facilities) that are 75 MW or
+  greater", in response to Governor Abbott's August 3 directive; the PUCT presentation of 2026-08-20 (p. 7) lists 17
+  large loads (6,608 MW) affected through the end of 2026. It explains why the approved stock sat at 8.8–8.9 GW all of
+  2026 (X7) and biases Q5's partial 2026 ratio (0.28) low: read 2026 as a policy pause, not as realization.
 - Every figure lives in `analysis/out/` (gitignored); re-run the scripts to regenerate them.
