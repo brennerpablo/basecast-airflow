@@ -5,6 +5,7 @@ and inserts the new rows, so readers never see a half-loaded table and re-runnin
 from __future__ import annotations
 
 import io
+import json
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal
@@ -63,17 +64,59 @@ def pg_type(dtype: pl.DataType) -> str:
         return "time without time zone"
     if dtype in (pl.String, pl.Null) or isinstance(dtype, (pl.Categorical, pl.Enum)):
         return "text"
+    if isinstance(dtype, pl.Struct) or (isinstance(dtype, pl.List) and isinstance(dtype.inner, (pl.Struct, pl.List))):
+        return "jsonb"
+    if isinstance(dtype, pl.List):
+        return f"{pg_type(dtype.inner)}[]"
     raise TypeError(f"unsupported column type for Postgres: {dtype} (encode nested values as JSON text)")
 
 
-def column_types(df: pl.DataFrame, geometry: Mapping[str, int] | None = None) -> dict[str, str]:
+def column_types(
+    df: pl.DataFrame, geometry: Mapping[str, int] | None = None, json_columns: Sequence[str] = ()
+) -> dict[str, str]:
+    """Postgres type per column: geometry for ``geometry``, jsonb for ``json_columns`` (JSON text) and structs,
+    arrays for lists of scalars."""
     geometry = geometry or {}
     for name in df.columns:
         check_identifier(name)
     return {
-        name: f"geometry(Geometry,{SRID})" if name in geometry else pg_type(dtype)
+        name: f"geometry(Geometry,{SRID})" if name in geometry else "jsonb" if name in json_columns
+        else pg_type(dtype)
         for name, dtype in df.schema.items()
     }
+
+
+def _staged_as_text(pg: str) -> bool:
+    """Columns COPY cannot load natively: they are staged as text and cast on insert."""
+    return pg == "jsonb" or pg.endswith("[]")
+
+
+def _array_literal(values: list | None) -> str | None:
+    """A Postgres array literal with every element quoted (``{"a","b\\"c",NULL}``)."""
+    if values is None:
+        return None
+    quoted = (
+        "NULL" if v is None else '"' + str(v).replace("\\", "\\\\").replace('"', '\\"') + '"' for v in values
+    )
+    return "{" + ",".join(quoted) + "}"
+
+
+def _json_text(value: object) -> str | None:
+    if value is None:
+        return None
+    return json.dumps(value.to_list() if isinstance(value, pl.Series) else value, default=str)
+
+
+def _encode_nested(df: pl.DataFrame, columns: Mapping[str, str]) -> pl.DataFrame:
+    """Arrays as Postgres array literals and structs / nested lists as JSON text, ready for a text COPY."""
+    exprs = []
+    for name, pg in columns.items():
+        dtype = df.schema[name]
+        if pg.endswith("[]"):
+            exprs.append(pl.col(name).map_elements(_array_literal, return_dtype=pl.String, skip_nulls=False))
+        elif pg == "jsonb" and dtype != pl.String:
+            exprs.append(pl.col(name).map_elements(_json_text, return_dtype=pl.String, skip_nulls=False))
+    return df.with_columns(exprs) if exprs else df
 
 
 def existing_columns(conn: psycopg.Connection, table: str) -> dict[str, str] | None:
@@ -174,19 +217,22 @@ def write_table(
     scope_files: Sequence[str] = (),
     key: Sequence[str] = (),
     geometry: Mapping[str, int] | None = None,
+    json_columns: Sequence[str] = (),
     recreate: bool = False,
 ) -> int:
     """Replace the write's scope with ``df`` in one transaction (the caller commits).
 
     ``replace``: the whole table. ``by_file``: rows whose ``source_file`` is in ``scope_files``.
     ``by_key``: rows sharing a ``key`` with the new data. ``geometry`` maps GeoJSON text columns to their
-    SRID; they are stored as PostGIS geometries in EPSG:4326."""
+    SRID; they are stored as PostGIS geometries in EPSG:4326. ``json_columns`` are text columns holding JSON,
+    stored as jsonb (struct columns become jsonb too, lists of scalars become arrays)."""
     geometry = geometry or {}
     if mode == "by_key":
         if not key:
             raise ValueError(f"{table}: by_key needs key columns")
         df = df.unique(subset=list(key), keep="last", maintain_order=True)
-    columns = column_types(df, geometry)
+    columns = column_types(df, geometry, json_columns)
+    df = _encode_nested(df, columns)
     if recreate:
         conn.execute(sql.SQL("DROP TABLE IF EXISTS {}").format(sql.Identifier(table)))
     indexes = [["source_file"]] if mode == "by_file" else [list(key)] if mode == "by_key" else []
@@ -197,7 +243,9 @@ def write_table(
         sql.SQL("CREATE TEMP TABLE {} ({}) ON COMMIT DROP").format(
             sql.Identifier(stage),
             sql.SQL(", ").join(
-                sql.SQL("{} {}").format(sql.Identifier(c), sql.SQL("text" if c in geometry else t))
+                sql.SQL("{} {}").format(
+                    sql.Identifier(c), sql.SQL("text" if c in geometry or _staged_as_text(t) else t)
+                )
                 for c, t in columns.items()
             ),
         )
@@ -223,6 +271,8 @@ def write_table(
             if src != SRID:
                 expr = sql.SQL("ST_Transform({}, {})").format(expr, sql.Literal(SRID))
             select.append(expr)
+        elif _staged_as_text(columns[c]):
+            select.append(sql.SQL("CAST({} AS {})").format(sql.Identifier(c), sql.SQL(columns[c])))
         else:
             select.append(sql.Identifier(c))
     conn.execute(
