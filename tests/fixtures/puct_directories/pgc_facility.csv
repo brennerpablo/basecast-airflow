@@ -1,0 +1,5 @@
+TrackNo,CompanyName,PrimaryIDNo,PrimaryIDType,FacilityName,GenerationType,County,ServiceAreaCo,ControlArea,GeneratingCapacity,RECDate,NonRenFuels,textbox16
+PG250084, AETS OLD MICHIGAN SOLAR LLC ,,,,,,,,,,,False
+PG260082, ARROYO PROJECTCO 3 LLC ,21079,PGC,ARROYO PROJECTCO 3 LLC,Other,Cameron,AEP TEXAS CENTRAL,ERCOT,25.70,,Energy Storage ,False
+PG250099, BEXAR ESS LLC,20966,PGC,BEXAR ESS,Other,Bexar,CPS ENERGY,ERCOT,100.00,,BESS,False
+PG090058,JANE Q SAMPLE,20242,PGC,Jane Q Sample,Solar,Collin,TEXAS-NEW MEXICO POWER COMPANY,ERCOT,1.00,,,False
