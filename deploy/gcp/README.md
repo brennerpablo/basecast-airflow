@@ -11,6 +11,7 @@ duplicates anything. Every command passes `--project`, so the local gcloud defau
 | `03-service-accounts.sh` | `airflow-vm` and `get-data-run` service accounts with least-privilege roles (BigQuery: jobs + dataset write for the VM, read for the API) |
 | `04-vm.sh` | VM `basecast-airflow` (e2-medium, Debian 12, Docker via `vm-startup.sh`) |
 | `05-airflow-up.sh` | Deploys the repo's committed `HEAD` and `deploy/airflow/` to the VM and (re)starts Airflow (re-run after any change) |
+| `06-github-actions.sh` | GitHub Actions deploys: Workload Identity pool `github-pool` (only `basecast-airflow` and `basecast-get-data`, only from `main`), deploy service accounts `airflow-deploy` and `get-data-deploy`, the repos' secrets |
 
 `02-cloudsql.sh` needs `psql` and the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy)
 (`cloud-sql-proxy` on PATH, or `CLOUD_SQL_PROXY=/path/to/binary`).
@@ -74,9 +75,13 @@ to try a branch on the VM; the next push to `main` puts `main` back.
 
 `AIRFLOW_ENV_FILE` is the source of truth for the VM's `.env` (seed it from the current file so the
 Fernet key survives). The workflow also reads `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`,
-`GCP_PROJECT_ID`, `GCP_VM_NAME` and `GCP_VM_ZONE`. The deploy service account needs OS Login with sudo
-and IAP tunnel access, as `airflow-deploy` has in fundsys. The pool, the service account and these
-secrets are not set up yet.
+`GCP_PROJECT_ID`, `GCP_VM_NAME` and `GCP_VM_ZONE`. `06-github-actions.sh` creates all of it (the
+deploy service account `airflow-deploy` has only OS Login with sudo and IAP tunnel access, as in
+fundsys) and seeds `AIRFLOW_ENV_FILE` from the VM's `.env` when the secret does not exist. To change
+the `.env` later, edit the secret (`gh secret set AIRFLOW_ENV_FILE`) and redeploy.
+
+`basecast-get-data` deploys the same way, to Cloud Run (its `.github/workflows/deploy.yml`, service
+account `get-data-deploy`, environment in the `ENV_YAML` repo secret).
 
 DAGs are paused when created. After a deploy, unpause them (all or one by one):
 

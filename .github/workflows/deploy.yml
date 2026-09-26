@@ -1,7 +1,7 @@
 name: Deploy to Airflow VM
 
-# Adapted from fundsys-airflow's deploy.yml. The setup it needs (Workload Identity Federation, the
-# deploy service account, the secrets it reads) is in deploy/gcp/README.md, "Deploys".
+# Adapted from fundsys-airflow's deploy.yml. Setup (Workload Identity Federation, the deploy service
+# account and every secret this file reads): deploy/gcp/06-github-actions.sh.
 
 on:
   push:
@@ -71,7 +71,7 @@ jobs:
           AIRFLOW_ENV_FILE: ${{ secrets.AIRFLOW_ENV_FILE }}
         run: |
           if [ -z "$AIRFLOW_ENV_FILE" ]; then
-            echo "::error::Repo secret AIRFLOW_ENV_FILE is empty. Seed it from the VM's /opt/basecast/airflow/.env (deploy/gcp/README.md, Deploys)."
+            echo "::error::Repo secret AIRFLOW_ENV_FILE is empty. Seed it from the VM's /opt/basecast/airflow/.env with deploy/gcp/06-github-actions.sh."
             exit 1
           fi
           # '%s\n': gh secret values keep no trailing newline; a .env without one breaks the next
