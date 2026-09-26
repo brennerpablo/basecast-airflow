@@ -89,7 +89,12 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
 17. **X8 — marts and video lines.** `marts-proposal.md` is the input for A0 and for basecast-get-data's contract
    (nothing changed there); `video-candidates.md` feeds `docs/video-numbers.md` once the items above are settled.
 
-## Beyond phase 0 — explorations X1–X11
+18. **X12 — the normalized series.** Normal weather = ERA5 2003–2022 (the only 20 years in the DB); the Uri
+   exclusion dates and the holiday rule came from memory (not verified). On each summer's 5 hottest days the actual
+   peak runs ~315 MW under what the weather predicts (4CP curtailment? not verified). For the video, "the normalized
+   peak rose every year" holds at P50, but some steps sit inside the P10–P90 band (2019 → 2020: +0.8 GW).
+
+## Beyond phase 0 — explorations X1–X12
 
 Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
 is a candidate, not yet in `docs/video-numbers.md`.
@@ -107,6 +112,7 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X9 | What the /accounts/[id] page can show | `assemble(ccn_no)` renders score breakdown, triggers with lapse dates, territory, EIA series and next action as facts with source and as-of. Gaps: no public source for an account's own 4CP load (the UtilityDataSource case), munis miss county triggers, apportionment misreads size for 69 accounts. | /accounts/[id], API shape |
 | X10 | Do Census place data fix the munis? | All 59 non-partner munis match a place. Size: homes per meter 0.03 → 0.42, ρ with meters 0.77 → 0.95. Growth: no (ρ 0.53 vs 0.54), cities grow onto land their muni does not serve. Strong triggers for munis 10 → 13 of 59. | /accounts diagnosis, muni ranking |
 | X11 | Where are the large loads? | Weather-zone charts exist (Batch Zero Update Sep 2026, QSA Q4 2026, LLIS May 2026); LZ_WEST = FWEST + WEST + 0.72 × NORTH. Approved stock leans NORTH 2.5, FWEST 1.7, NCENT 1.4, WEST 1.2 GW; the pipeline leans NCENT, NORTH, SOUTH. By zone, ~10 GW moves between zones in the 2030 forecast (total ±0.1%). | Forecast by zone, Explorer |
+| X12 | A weather-normalized load series for the Forecast | Daily model per zone (rolling 3-year fits, normal = ERA5 2003–2022): ERCOT daily MAPE 2.9% energy / 4.0% peak with the level known (8.0% / 10.7% without weather). Normalized energy grew 2.1%/yr in 2010–21, then 4.4–5.4%/yr in 2022–25. Normalized summer peak rose every year 2012–2026 (64.8 → 91.1 GW) while the raw peak fell in 7; 2025's 83.7 GW was a mild summer (88.0 normal); 2026 was weather-neutral. | Forecast series, video |
 
 ## Notes
 
