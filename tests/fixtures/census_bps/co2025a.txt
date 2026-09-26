@@ -1,0 +1,8 @@
+Survey,FIPS,FIPS,Region,Division,County,,1-unit,,,2-units,,,3-4 units,,,5+ units,,,1-unit rep,,,2-units rep,,,3-4 units rep,,, 5+units rep
+Date,State,County,Code,Code,Name,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value
+ 
+2025,01,001,3,6,Autauga County                ,200,200,82131895,0,0,0,0,0,0,0,0,0,200,200,82131895,0,0,0,0,0,0,0,0,0
+2025,48,001,3,7,Anderson County               ,19,19,4328937,0,0,0,0,0,0,0,0,0,19,19,4328937,0,0,0,0,0,0,0,0,0
+2025,48,003,3,7,Andrews County                ,67,67,15842099,0,0,0,0,0,0,5,26,2925000,48,48,10200000,0,0,0,0,0,0,0,0,0
+2025,48,005,3,7,Angelina County               ,139,139,38249270,9,18,2087753,0,0,0,0,0,0,131,131,36127910,4,8,936813,0,0,0,0,0,0
+2025,48,453,3,7,Travis County                 ,4727,4727,1442213682,239,478,59655023,20,74,10552938,159,9780,1290813148,4501,4501,1367283708,229,458,56946137,17,65,9652938,159,9780,1290813148

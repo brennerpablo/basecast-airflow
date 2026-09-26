@@ -1,0 +1,8 @@
+Survey , FIPS , FIPS , Region , Division , County ,   , 1-unit ,   ,   , 2-unit ,   ,   , 34unit ,   ,   , 5-unit ,   ,   , 1-unit rep ,   ,   , 2-unit rep ,   ,   , 34-unit rep ,   ,   , 5-unit rep ,   ,  
+Date , State , County , Code , Code , Name , Bldgs  , Units , Value  , Bldgs  , Units , Value  , Bldgs  , Units , Value  , Bldgs  ,  Units , Value  , Bldgs  , Units , Value  , Bldgs  , Units , Value  , Bldgs  , Units , Value  , Bldgs  , Units , Value 
+
+9099  ,     01  , 001  , 3  , 6  , Autauga County  , 87  , 87  , 4491772  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 87  , 87  , 4491772  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
+9099  ,     01  , 003  , 3  , 6  , Baldwin County  , 316  , 316  , 23385172  , 6  , 12  , 480000  , 0  , 0  , 0  , 0  , 0  , 0  , 316  , 316  , 23385172  , 6  , 12  , 480000  , 0  , 0  , 0  , 0  , 0  , 0
+9099  ,     48  , 001  , 3  , 7  , Anderson County  , 10  , 10  , 364500  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 10  , 10  , 364500  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
+9099  ,     48  , 003  , 3  , 7  , Andrews County  , 5  , 5  , 499000  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 5  , 5  , 499000  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
+9099  ,     48  , 005  , 3  , 7  , Angelina County  , 64  , 64  , 3686172  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 64  , 64  , 3686172  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0

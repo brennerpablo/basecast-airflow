@@ -1,0 +1,7 @@
+Survey,FIPS,FIPS,Region,Division,County,,1-unit,,,2-units,,,3-4 units,,,5+ units,,,1-unit rep,,,2-units rep,,,3-4 units rep,,, 5+units rep
+Date,State,County,Code,Code,Name,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value
+ 
+200012,48,135,3,7,Ector County                  ,7,7,827182,0,0,0,0,0,0,0,0,0, , , , , , , , , , , , 
+200012,48,207,3,7,Haskell County                ,0,0,0,0,0,0,0,0,0,0,0,0, , , , , , , , , , , , 
+200012,48,039,3,7,Brazoria County               ,99,99,12824409,0,0,0,0,0,0,0,0,0,66,66,9577598,0,0,0,0,0,0,0,0,0
+200012,48,041,3,7,Brazos County                 ,47,47,5279080,0,0,0,0,0,0,5,96,3468120,47,47,5279080,0,0,0,0,0,0,5,96,3468120
