@@ -9,12 +9,14 @@ Idempotency, in order of cost:
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
+import shutil
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
 
 from basecast_pipelines.common.etl_run import EtlRun
@@ -199,3 +201,47 @@ def source_runner(source_id: str, discover: Discover) -> Callable[..., list[Remo
 
     run.__doc__ = f"Download the raw files of ``{source_id}``."
     return run
+
+
+def register_local_file(
+    storage: Storage,
+    source_id: str,
+    path: Path,
+    *,
+    dt: date,
+    origin_url: str | None = None,
+    note: str | None = None,
+) -> str | None:
+    """Store a manually downloaded file as a raw snapshot (copy, never move) with a manifest entry marked
+    ``origin: manual``. Returns the raw key, or None when the same content (sha256) is already held."""
+    params = {"path": path.name, "dt": dt, "origin_url": origin_url, "note": note}
+    with EtlRun(source_id, storage, params=params) as run:
+        tmp = storage.temp_path()
+        shutil.copyfile(path, tmp)
+        digest = hashlib.sha256(tmp.read_bytes()).hexdigest()
+        if ManifestIndex.load(storage, source_id).has_sha256(digest):
+            tmp.unlink(missing_ok=True)
+            run.files_skipped += 1
+            run.event("unchanged", file=path.name, sha256=digest)
+            return None
+        problem = check_download(tmp, path.name)
+        if problem:
+            tmp.unlink(missing_ok=True)
+            raise ValueError(f"{path.name}: {problem}")
+        prefix = dt_prefix(source_id, dt)
+        key = _unique_key(storage, prefix, _safe_name(path.name), digest)
+        size = tmp.stat().st_size
+        storage.put_file(key, tmp)
+        entry = ManifestEntry(
+            file=key.removeprefix(prefix),
+            url=origin_url or f"manual:{path.name}",
+            fetched_at=datetime.now(timezone.utc).isoformat(),
+            sha256=digest,
+            bytes=size,
+            http_status=0,
+            meta={"origin": "manual", "original_name": path.name, "note": note},
+        )
+        Manifest.load(storage, source_id, dt).add(entry, storage)
+        run.files += 1
+        run.bytes += size
+        return key

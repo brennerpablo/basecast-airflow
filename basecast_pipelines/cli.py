@@ -12,9 +12,10 @@ import typer
 
 from basecast_pipelines.common.http import HttpClient
 from basecast_pipelines.common.inventory import render_markdown, runs_table
+from basecast_pipelines.common.raw import register_local_file
 from basecast_pipelines.common.storage import storage_from_uri
 from basecast_pipelines.common.validate import audit_raw
-from basecast_pipelines.config import PROJECT_ROOT, load_settings
+from basecast_pipelines.config import PROJECT_ROOT, load_settings, local_today
 from basecast_pipelines.sources import SOURCE_MODULES, UnknownSourceError, describe, get_source
 
 app = typer.Typer(no_args_is_help=True, help="basecast data pipelines (raw ingestion).")
@@ -113,3 +114,19 @@ def audit() -> None:
     typer.echo(f"{checked} files checked, {len(problems)} problems")
     if problems:
         raise typer.Exit(1)
+
+
+@app.command()
+def register(
+    source: Annotated[str, typer.Argument(help="Raw source id, e.g. lbnl_queued_up.")],
+    path: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="File downloaded by hand.")],
+    dt: Annotated[datetime | None, typer.Option(formats=["%Y-%m-%d"], help="Snapshot date (default: today).")] = None,
+    origin_url: Annotated[str | None, typer.Option(help="Page or URL it was downloaded from.")] = None,
+    note: Annotated[str | None, typer.Option(help="Free-text provenance note.")] = None,
+) -> None:
+    """Register a manually downloaded file as a raw snapshot (copied to raw/source=<id>/dt=<date>/, manifest origin: manual)."""
+    storage = storage_from_uri(load_settings().storage_root)
+    key = register_local_file(
+        storage, source, path, dt=dt.date() if dt else local_today(), origin_url=origin_url, note=note
+    )
+    typer.echo(f"stored {key}" if key else "same content already registered; nothing written")

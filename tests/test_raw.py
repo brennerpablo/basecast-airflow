@@ -125,3 +125,16 @@ def test_arcgis_error_json_is_rejected(storage, make_http) -> None:
     http = make_http(lambda request: httpx.Response(200, json={"error": {"code": 400, "message": "bad"}}))
     _run(storage, http, files=files)
     assert storage.list("raw/") == []
+
+
+def test_register_local_file(storage, tmp_path) -> None:
+    from basecast_pipelines.common.raw import register_local_file
+
+    src = tmp_path / "queued_up_2025.xlsx"
+    src.write_bytes(b"PK\x03\x04 fake workbook")
+    key = register_local_file(storage, "lbnl_queued_up", src, dt=DT, origin_url="https://emp.lbl.gov/queues")
+    assert key == "raw/source=lbnl_queued_up/dt=2026-09-25/queued_up_2025.xlsx" and src.exists()
+    entry = json.loads(storage.read_bytes("raw/source=lbnl_queued_up/dt=2026-09-25/_manifest.json"))["entries"][0]
+    assert entry["meta"]["origin"] == "manual" and entry["url"] == "https://emp.lbl.gov/queues" and entry["http_status"] == 0
+    assert register_local_file(storage, "lbnl_queued_up", src, dt=date(2026, 9, 30)) is None
+    assert read_runs(storage)["files_skipped"].to_list() == [0, 1]
