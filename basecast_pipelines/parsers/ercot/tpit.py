@@ -12,7 +12,7 @@ matched by their header text (``COLUMNS``); unknown columns are ignored.
 - In the archive, a snapshot published in several workbooks (``UPDATED`` re-issues, ``Comparison_Results``
   copies, ``_old`` files) is read once, from the preferred workbook (update > plain > old > comparison).
   The current workbook is also inside the archive, so its snapshot appears in both raw files;
-  ``tpit_project_history`` (SQL) keeps one row per snapshot, project and status sheet.
+  ``tpit_project_history`` (SQL) reads each snapshot from one raw file only.
 - Personal data: the ``TSP/Company Contact`` column (names, emails, phones) is dropped, and emails and phone
   numbers are masked in the free-text columns.
 - Not read: ``RTPProjects``/``TPIT5YearPlanProjects`` (RTP project lists), ``ImprovementCostSummary`` (cost
@@ -244,12 +244,15 @@ SQL_DATASETS = [
     SqlDataset(
         name="tpit_project_history",
         sql=(
-            "SELECT DISTINCT ON (snapshot_date, project_id, sheet_status, project_title) * FROM tpit_projects "
-            "ORDER BY snapshot_date, project_id, sheet_status, project_title, source_file"
+            "SELECT t.* FROM tpit_projects t "
+            "JOIN (SELECT snapshot_date, min(source_file) AS source_file FROM tpit_projects "
+            "      WHERE snapshot_date IS NOT NULL GROUP BY snapshot_date) k "
+            "  ON t.snapshot_date = k.snapshot_date AND t.source_file = k.source_file "
+            "UNION ALL SELECT * FROM tpit_projects WHERE snapshot_date IS NULL"
         ),
         description=(
-            "tpit_projects without the snapshot repeated by the current workbook and the archive: one row per "
-            "snapshot, project, status sheet and title."
+            "tpit_projects with each snapshot read from one raw file only (the current workbook repeats the "
+            "archive's latest snapshot); the undated cumulative 1999-20xx workbooks are kept as published."
         ),
         indexes=(("project_id",), ("snapshot_date",), ("county_start_fips",)),
     ),
