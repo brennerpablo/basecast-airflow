@@ -48,6 +48,30 @@
 | 16 | A9 | `ercot_spp_hist` | `spp_hist_hub_lz` | P1 | `prices_rtm_hub_lz`, `prices_dam_hub_lz` |
 | 17 | A9 | `ercot_mora` | `mora` | P1 | `mora_outlook` |
 
+**Fontes adicionadas em 26/set/2026** (pesquisa noturna, ver `docs/source-research-2026-09.md`; já com
+módulo e raw baixado):
+
+| Source id | Entrada no `catalog.yaml` | Para quê |
+|---|---|---|
+| `puct_ccn_territories` | `puct_ccn_service_areas` | polígonos oficiais (não-oficiais segundo a PUCT) de cooperativas, municipais e IOUs, com CCN e G&T |
+| `puct_directories` | `puct_utility_directories`, `puct_pgc_facilities` | lista de contas (CCN = `PrimaryIDNo`); usinas por território anfitrião |
+| `puct_filings` | `puct_ltlf_tsp_rfi_2026`, `puct_interchange_filings` | pedidos de grandes cargas por transmissora e por tipo, 2026–2032 (58777 item 38) |
+| `ercot_tpit` | `ercot_tpit` | projetos de transmissão por condado e data, 2009–2026 |
+| `ercot_rtp` | `ercot_rtp_public` | carga submetida pelas TSPs vs. previsão da ERCOT por weather zone, 2014–2025 |
+| `ercot_settlement_points` | `settlement_points_mapping` | mapeamento das zonas NOIE (LZ_AEN, LZ_CPS, LZ_LCRA, LZ_RAYBN); janela de 31 dias |
+| `ercot_mp_list` | `ercot_mp_list` | TDSPs registradas na ERCOT |
+| `ercot_members` | `ercot_members` | membros por segmento, 2013–2026 |
+| `ercot_demand_energy` | `demand_energy_report` | picos mensais com hora, por load zone e weather zone, 2008–2026 |
+| `ercot_fuel_mix` | `fuel_mix` | geração por fonte a cada 15 min, 2007–2026 |
+| `eia_860m` | `eia_860m` | geradores planejados/operando (último mês + dezembros) |
+| `eia_860` | `eia_860_annual` | dono da rede de transmissão/distribuição de cada usina |
+| `pudl` | `pudl_release`, `pudl_ferc714_forecast` | previsões oficiais de pico da ERCOT 2006–2025 (FERC 714) e changelog do EIA-860M |
+| `noaa_ghcnh` | `noaa_ghcnh` | temperatura horária sem restrição de licença, 12 aeroportos |
+| `census_pep` | `census_pep_county` | população por condado 2020–2025 |
+| `bls_qcew` | `bls_qcew_county` | empregos em data centers (NAICS 518210) por condado |
+| `tceq_air_permits` | `tceq_central_registry` | licenças de ar (geradores de backup de data centers) por condado |
+| `tx_comptroller` | `cpa_local_dev_agreements`, `cpa_data_centers`, `cpa_jeti` | incentivos fiscais a grandes projetos por condado |
+
 **Fora do MVP** (não baixar agora): `as_dam_mcpc`, `as_rt_mcpc`, `rt_price_adders`, `disclosure_60d`,
 `outages`, `demand_energy_report`, `spp_rt`/`spp_dam` diários, `load_forecast_7day`,
 `gis_interconnection_costs`. `fuel_mix` e `solar_wind_actual_forecast` ficam para depois do A9: são
@@ -289,11 +313,29 @@ Atualize esta tabela a cada fonte concluída (ou gere pelo `basecast inventory`)
 | ercot_large_load_decks | raw baixado | 64 (68 MB) | — | jan/2024 → set/2026 | 24 decks de status (último: LLWG 2026-06-19), 24 board updates, 7 ERCOT Monthly, 9 outros |
 | census_bps | raw baixado | 356 (62 MB) | — | anual 1990 → 2025; mensal 2000-01 → 2026-08 | arquivos nacionais |
 | census_acs | raw baixado | 2 (86 MB) | — | ACS 5 anos 2020–2024 | summary file por tabela (sem chave de API) |
-| open_meteo | em andamento | 288 previstos | — | 2003 → 2026 | ERA5, 12 pontos; ritmo 3 req/min |
+| open_meteo | raw baixado | 288 (71.7 MB) | — | 2003 → 2026-09 | ERA5, 12 pontos; ritmo 3 req/min; plano gratuito só não comercial |
 | eia_territories | raw baixado | 14 (38 MB) | — | snapshot HIFLD 2025-08-21 | 256 polígonos no bbox do Texas (cópia ORNL; página do EIA Atlas deu 404) |
 | eia_861 | raw baixado | 13 (57 MB) | — | 2013 → 2024 + 2025 early release | |
 | ercot_spp_hist | raw baixado | 34 (230 MB) | — | 2010 → 2026 | RTM e DAM por hub/load zone |
 | ercot_mora | raw baixado | 74 (47 MB) | — | edições dez/2023 → nov/2026 | xlsx + pdf |
+| puct_ccn_territories | raw baixado (2026-09-26) | 12 (33 MB) | — | edição 2026-06-29 | 68 coop, 72 muni, 8 IOU |
+| puct_directories | raw baixado | 11 | — | diário | coop, muni, iou, pgc, pgc_facility, agg |
+| puct_filings | raw baixado | 12 (4,7 MB) | — | 58777, 59772, 58481 | tabela por TSP no slide 5 do `Attachment A.pptx` (58777-38) |
+| ercot_tpit | raw baixado | 2 (20 MB) | — | 2009 → jul/2026 | ERCOT reaproveita a URL antiga |
+| ercot_rtp | raw baixado | 5 (36 MB) | — | RTP 2014 → 2025 | |
+| ercot_settlement_points | raw baixado | 4 | — | 2026-08-26 → 2026-09-23 | janela de 31 dias: rodar semanalmente |
+| ercot_mp_list | raw baixado | 1 | — | 2026-09-25 | só o último arquivo fica listado |
+| ercot_members | raw baixado | 14 | — | 2013 → 2026 | |
+| ercot_demand_energy | raw baixado | 22 (4 MB) | — | 2008 → 2026 | arquivo do ano corrente é sobrescrito todo mês |
+| ercot_fuel_mix | raw baixado | 3 (56 MB) | — | 2007 → 2026 | |
+| eia_860m | raw baixado | 12 (107 MB) | — | dez/2015 → ago/2026 | opção `all_months=true` para os ~130 meses |
+| eia_860 | raw baixado | 1 (24 MB) | — | 2025 final | |
+| pudl | raw baixado | 8 (25 MB) | — | release v2026.9.0 | CC-BY-4.0: citar Catalyst Cooperative |
+| noaa_ghcnh | raw baixado | 288 (296 MB) | — | 2003 → 2026-09 | parquet por estação e ano |
+| census_pep | raw baixado | 1 | — | 2020 → 2025 | Latin-1 |
+| bls_qcew | raw baixado | 12 | — | 2014 → 2025 (anual) | muitos condados suprimidos |
+| tceq_air_permits | raw baixado | 16 (359 MB) | 690.719 | diário | só programa AIRNSR; bate com a contagem da API |
+| tx_comptroller | raw baixado | 9 (8 MB) | — | diário | Ch. 312/380 CSV + registros de data centers e JETI (HTML) |
 
 ## 5. Pendências que este trabalho deve responder
 

@@ -134,18 +134,18 @@
 - id: settlement_points_mapping
   name: "Settlement Points List and Electrical Buses Mapping"
   source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP4-160-SG"
-  api_endpoint: "report_type_id=10008 (gridstatus)"
-  format: zip/csv
-  frequency: with network model updates
-  spatial_grain: bus -> settlement point / load zone / hub
+  api_endpoint: "page script: reportTypeID 10008, reportListUrl misapp/servlets/IceDocListJsonWS?reportTypeId=, reportDownloadUrl misdownload/servlets/mirDownload?doclookupId= (verified 2026-09-26)"
+  format: "zip of 5 csv (Settlement_Points, NOIE_Mapping, Resource_Node_to_Unit, CCP_Resource_Names, Hub_Name_AND_DC_Ties)"
+  frequency: weekly (with each network model load)
+  spatial_grain: "electrical bus / PSS/E bus -> settlement point, load zone, hub; physical load -> NOIE zone"
   temporal_grain: static per model
-  history_start: rolling
+  history_start: "rolling 31-day window (4 docs on 2026-09-26, ~252 KB each, CIM_<Mon>_ML<n>_1_<MMDDYYYY>_SP_List_and_EB_Mapping)"
   access: no login
   gridstatus_method: "not verified"
   priority: P1
-  used_by: [price_module, geo_join]
-  caveats: "includes NOIE zones (LZ_AEN, LZ_CPS, LZ_LCRA, LZ_RAYBN)"
-  verified: "not verified at source (IDs from gridstatus)"
+  used_by: [price_module, geo_join, coop_muni_targeting]
+  caveats: "Settlement_Points (19,389 rows) SETTLEMENT_LOAD_ZONE has only LZ_HOUSTON/NORTH/SOUTH/WEST; NOIE zones come from NOIE_Mapping (817 rows: LZ_AEN 182, LZ_CPS 252, LZ_LCRA 227, LZ_RAYBN 156; cols PHYSICAL_LOAD, NOIE, VOLTAGE_NAME, SUBSTATION, ELECTRICAL_BUS); no county or coordinates; snapshot weekly or lose history; PSSE_BUS_NUMBER joins TPIT SSWG bus numbers"
+  verified: "verified at source 2026-09-26 (page script, listing, latest zip and columns)"
 
 - id: spp_rt
   name: "Settlement Point Prices at Resource Nodes, Hubs and Load Zones (RT)"
@@ -244,20 +244,20 @@
   verified: verified at source
 
 - id: fuel_mix
-  name: "Fuel Mix (dashboard) and Fuel Mix Report"
-  source_url: "https://www.ercot.com/gridmktinfo/dashboards/fuelmix"
-  api_endpoint: "not verified"
-  format: json (dashboard); xlsx (report)
-  frequency: 5-minute; monthly/annual workbook
+  name: "Fuel Mix Report (annual workbooks, 15-minute generation by fuel)"
+  source_url: "https://www.ercot.com/gridinfo/generation (section 'Fuel Mix')"
+  api_endpoint: "none; no EMIL product linked (plain /files/docs/ documents)"
+  format: "xlsx (current and previous year); zip (2007-2024)"
+  frequency: monthly update of the current-year file
   spatial_grain: system by fuel
-  temporal_grain: 5-minute; 15-minute settlement interval
-  history_start: "not verified"
+  temporal_grain: 15-minute settlement interval; monthly and YTD totals
+  history_start: "2007 (FuelMixReport_PreviousYears.zip, 50,971,482 B); older 'Energy by Fuel Type 2002-2015' xls on year pages"
   access: no login
-  gridstatus_method: "Ercot().get_fuel_mix(date)"
+  gridstatus_method: "Ercot().get_fuel_mix(date) covers the dashboard, not these workbooks (not verified)"
   priority: P1
   used_by: [supply_context]
-  caveats: "EMIL ID of Fuel Mix Report not verified; dashboard capacity differs from MORA (co-located flexible loads)"
-  verified: not verified
+  caveats: "2026 file https://www.ercot.com/files/docs/2026/02/09/IntGenbyFuel2026-1-.xlsx (2,047,512 B, LM 2026-09-08); sheets Disclaimer, Summary, data_Summary_*, Jan..Dec; month sheets: Date, Fuel, Settlement Type (FINAL/INITIAL), Total, 0:15..24:00; header text varies inside one workbook ('Fuel Type', 'Settlement Type ' with trailing space); dashboard differs from MORA"
+  verified: "located and verified at source 2026-09-26 (HEADs, 2026 workbook read); 2025 file not requested"
 
 - id: solar_wind_actual_forecast
   name: "Solar/Wind Power Production - Actual and Forecast by Geographical Region"
@@ -340,20 +340,20 @@
   verified: not verified
 
 - id: demand_energy_report
-  name: "Demand and Energy Report (peak records)"
-  source_url: "not verified"
+  name: "Demand and Energy Report (monthly peaks, energy, load/weather zone breakdown)"
+  source_url: "https://www.ercot.com/news/presentations (section 'Data Reports & Links'; year pages /news/presentations/<year>)"
   api_endpoint: none
-  format: xlsx (not verified)
-  frequency: monthly (not verified)
-  spatial_grain: system
-  temporal_grain: monthly
-  history_start: not verified
+  format: "xlsx (2017+ at least), xls (older)"
+  frequency: monthly update of the current-year file
+  spatial_grain: "system; load zones LZ_AEN, LZ_CPS, LZ_HOUSTON, LZ_LCRA, LZ_NORTH, LZ_RAYBN, LZ_SOUTH, LZ_WEST; 8 weather zones"
+  temporal_grain: monthly (peak with date and hour ending; coincident and non-coincident zone peaks; energy)
+  history_start: "2009 (ERCOT 2009 Demand and Energy on the 2010 year page); none on the 2004 page"
   access: no login
   gridstatus_method: none
-  priority: P2
-  used_by: [peak_records_ui]
-  caveats: "not located in this pass"
-  verified: not verified
+  priority: P1
+  used_by: [peak_records_ui, peak_backtest, coop_muni_targeting]
+  caveats: "discover links whose text matches 'Demand and Energy' (names vary: ercot_2009_demand_and_energy.xls, ercot2012d_e.xls, DemandandEnergy2017.xlsx, DemandandEnergy2026-for-Corp-Comms.xlsx); file for year Y often sits on the Y+1 page; current file overwritten in place (2026: 85,336 B, LM 2026-09-08); sheets Demand, Energy, Load Zones, Weather Zones, Energy by Fuel Type; '*' = months updated with final settlements; older layouts not verified"
+  verified: "located and verified at source 2026-09-26 (2026 file read; 2025 and 2012 files HEAD; 2010/2012/2017 year pages)"
 
 - id: utility_territories
   name: "Electric Retail Service Territories (HIFLD / EIA Energy Atlas)"
@@ -468,3 +468,517 @@
   used_by: [accounts_list, coop_muni_targeting]
   caveats: "filter by balancing authority / NERC region for ERCOT and by ownership type (cooperative, municipal); field names not verified"
   verified: "files located and downloaded 2026-09-25; fields not verified"
+
+# --- Added 2026-09-26 by the research spike (see docs/source-research-2026-09.md); `verified` says what was checked ---
+
+- id: puct_ccn_service_areas
+  name: "PUCT electric CCN service areas (UNOFFICIAL GIS layers: COOP_DIST, MUNI, IOU)"
+  source_url: "https://www.arcgis.com/sharing/rest/content/items/366445b63acd4dbda6d60f9244e89c23/data?f=json (PUCT 'Electric Service Territory/Outage Map Locator Viewer', owner gis.user.puct)"
+  api_endpoint: "ArcGIS FeatureServer, discovered from the item JSON: https://services6.arcgis.com/N6Lzvtb46cpxThhu/arcgis/rest/services/COOP_DIST/FeatureServer/310, .../MUNI/FeatureServer/320, .../IOU/FeatureServer/300; /query?where=1=1&outFields=*&outSR=4326&f=geojson with resultOffset paging (maxRecordCount 2000)"
+  format: GeoJSON / JSON
+  frequency: irregular (last edit 2026-06-29 on all three layers)
+  spatial_grain: utility certificated service-area polygon (68 co-ops, 72 munis, 8 IOUs)
+  temporal_grain: static (current state)
+  history_start: "current only; utility-submitted boundaries dated Jul-Oct 2023 (DATA_SOURCE_DATE), Platts base"
+  access: no login, no key; license not stated (licenseInfo null)
+  gridstatus_method: none
+  priority: P0
+  used_by: [coop_muni_targeting, county_utility_overlap, accounts_list]
+  caveats: "layers self-described as UNOFFICIAL (official = county mylar maps at PUCT Central Records); CCN_NO can hold a comma list; ISO field can list several ISOs (co-ops: 39 ERCOT-only, 13 ERCOT+other); GENERATION_TRANSMISSION_COOPERATIVE gives the G&T (not in IOU layer); CCN_NO joins PUCT directory PrimaryIDNo; capability Query only; generalization of geometry not verified"
+  verified: "verified 2026-09-26 (item JSON, 3 layer JSONs, attribute queries, one GeoJSON polygon)"
+
+- id: ercot_tpit
+  name: "Transmission Project and Information Tracking (TPIT), current + archive"
+  source_url: "https://www.ercot.com/gridinfo/planning (links 'Transmission Project and Information Tracking' and 'Archived Transmission Project and Information Tracking')"
+  api_endpoint: none
+  format: "xlsx (2015+), xls (2009-2014), zip archive"
+  frequency: "Feb, Jun, Oct + ad hoc updates"
+  spatial_grain: project; county (start/end), TSP, terminals, SSWG bus numbers
+  temporal_grain: snapshot per release; projected and actual in-service month
+  history_start: "2009 (archive zip: 74 entries incl. cumulative 1999-2010 files); current file = 2026-07-13 ad hoc update"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [transmission_realization, coop_buildout_signals, county_map, large_load_realization_model]
+  caveats: "current link path is stale (/files/docs/2022/03/02/ERCOT-July-Ad-Hoc-TPIT-No-Cost-071326-UPDATE.xlsx, 560,265 B, LM 2026-07-17): ERCOT re-uses paths, idempotency by ETag/sha256; archive 19,705,062 B; sheet names embed the date (Future/Planned/Completed/Cancelled...TPIT<MMDDYY>NoCost); header on row 2 with line breaks and double spaces; personal contacts in 'TSP/Company Contact' and sheet TransmissionOwnerProjContac (drop at parse); owner codes abbreviated (ONCOR, CNP, STEC, BEPC, PEC, RCEC, AEN, GVEC...); old xls layouts not verified"
+  verified: "verified 2026-09-26 (current file downloaded, columns read; archive listed via zip central directory)"
+
+- id: puct_ltlf_tsp_rfi_2026
+  name: "2026 preliminary LTLF: TSP Large Load RFI submissions by TSP and by load type (PUCT Project 58777, item 38)"
+  source_url: "https://interchange.puc.texas.gov/search/documents/?controlNumber=58777&itemNumber=38"
+  api_endpoint: "https://interchange.puc.texas.gov/Documents/58777_38_1622646.ZIP (850,831 B, LM 2026-04-15) -> 'Attachment A.pptx' slides 4-5 (native tables)"
+  format: "zip (docx, pdf, pptx)"
+  frequency: one-off per LTLF cycle
+  spatial_grain: TSP (AEP, Brazos, CenterPoint, CPS, Golden Spread, LCRA, Lone Star, Oncor, Rayburn, STEC, TNMP, WETT, aggregate of TSPs with <3 sites); load type
+  temporal_grain: annual 2026-2032 (MW)
+  history_start: "2026 LTLF (earlier cycles not checked)"
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, coop_muni_targeting, official_forecast_benchmark]
+  caveats: "TSP submissions (unadjusted, preliminary); values are text with thousands separators and '-' for none; ERCOT's Batch Zero adjustment approved in Project 59772 item 18 (2026-06-18); parse pptx tables, not charts"
+  verified: "verified 2026-09-26 (file downloaded, tables extracted)"
+
+- id: ercot_rtp_public
+  name: "Regional Transmission Plan report, public version (with Appendix B input assumptions and Appendix E projects)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=pg7-048-m"
+  api_endpoint: "page script: reportTypeID 24735 + IceDocListJsonWS / mirDownload (verified); archive link on /gridinfo/planning: '2014-2023 Regional Transmission Plan Report Archive' (https://www.ercot.com/files/docs/2024/12/11/2014-2023_RTP_Report_Public_Archive.zip, 26,281,420 B)"
+  format: "zip (pdf + xlsx appendices); archive = zip of 10 yearly zips"
+  frequency: annual (December)
+  spatial_grain: weather zone (loads); project/INR/county (gen additions, reliability projects)
+  temporal_grain: study years (e.g. 2027, 2028, 2030, 2031)
+  history_start: "2014 (archive) ; listing holds 2024 (DocID 1062307435, 3,223,093 B) and 2025 (DocID 1174193585, 4,071,887 B)"
+  access: no login (ECEII-redacted version)
+  gridstatus_method: none
+  priority: P0
+  used_by: [official_forecast_benchmark, large_load_realization_calibration, generation_survival_model_features]
+  caveats: "Appendix B sheet 'Reliability Case-Load Forecast' has SSWG (TSP) NCP load, ERCOT 90th pct CP forecast and RTP-adjusted load by weather zone; 'Gen Add. Ret. and Mothball' lists GINR, County, Projected COD, Fuel, MW For Grid, PG 6.9 flag; presentation-style sheets (locate tables by title); older appendix layouts not verified; staff emails in some sheets"
+  verified: "verified 2026-09-26 (page, listing, 2025 zip downloaded and read; archive listed)"
+
+- id: eia_860m
+  name: "EIA-860M Preliminary Monthly Electric Generator Inventory"
+  source_url: "https://www.eia.gov/electricity/data/eia860m/"
+  api_endpoint: "links *_generator<YYYY>.xlsx on the page after stripping HTML comments (latest under /xls/, older under /archive/xls/)"
+  format: xlsx
+  frequency: monthly (~2-month lag; released 2026-09-24 = Aug 2026 data; next 2026-10-23)
+  spatial_grain: generator (plant, county, state, balancing authority, lat/lon)
+  temporal_grain: monthly snapshot; operating / planned operation month-year
+  history_start: "2015-07 (134 live monthly files through 2026-08)"
+  access: no login; public domain
+  gridstatus_method: none
+  priority: P0
+  used_by: [generation_survival_model, gis_cross_check, supply_overlay]
+  caveats: "sheets Operating, Planned, Retired, Canceled or Postponed (+ _PR); title row 1, header row 3; latest file 13,955,142 B, 2015-07 file 2,730,620 B; full history estimated 0.8-1.3 GB (not measured) -> ask before full backfill; no INR id (fuzzy match to GIS on name/county/MW/fuel); Planned sheet columns 19-20 names not decoded (expected Planned Operation Month/Year, not verified); ERCOT BA code expected ERCO (not verified in sample)"
+  verified: "verified 2026-09-26 (page, HEADs, Operating header and sheet list via range reads)"
+
+- id: eia_860_annual
+  name: "EIA-860 annual generator survey (final 2025)"
+  source_url: "https://www.eia.gov/electricity/data/eia860/"
+  api_endpoint: "zip links on the page: xls/eia8602025.zip; archive/xls/eia860YYYY.zip; eia860a/eia860aYYYY.zip (1990-2000)"
+  format: xlsx (zip)
+  frequency: annual (final Sep; early release Jun)
+  spatial_grain: utility, plant, generator (proposed detail), owner
+  temporal_grain: annual
+  history_start: "1990 (eia860a); final 2025 released 2026-09-10"
+  access: no login; public domain
+  gridstatus_method: none
+  priority: P1
+  used_by: [generation_survival_model_features, coop_muni_targeting]
+  caveats: "eia8602025.zip 23,622,347 B, 13 entries (1___Utility, 2___Plant, 3_1_Generator ... LayoutY2025.xlsx); Plant file has 'Transmission or Distribution System Owner' (+ID, State) and Grid Voltage; Proposed sheet has Effective and Current Month/Year; status codes P, L, T, U, V, TS, OT, IP, CN, OP, SB, OS, OA, RE (from Layout); per-sheet header rows not verified"
+  verified: "verified 2026-09-26 (page, zip listing, LayoutY2025 field directory via range read)"
+
+- id: lbnl_queued_up
+  name: "LBNL Queued Up: U.S. interconnection queue data (project-level, with outcomes)"
+  source_url: "https://emp.lbl.gov/queues (HTTP 403 Cloudflare for scripted access on 2026-09-26)"
+  api_endpoint: none
+  format: "xlsx (not verified)"
+  frequency: "annual edition (not verified)"
+  spatial_grain: "project, ISO/utility, state/county (not verified)"
+  temporal_grain: queue entry date, status, COD/withdrawal date (not verified)
+  history_start: "not verified (data through end of 2025 per search results)"
+  access: "blocked for scripts (Cloudflare 403 on emp.lbl.gov and eta.lbl.gov); manual browser download; license CC BY 4.0 per search results (not verified)"
+  gridstatus_method: none
+  priority: P2
+  used_by: [generation_survival_model_priors]
+  caveats: "do not script against LBNL hosts; OSTI record https://www.osti.gov/biblio/3376147 has slides only; if added manually, record URL, date and sha256 in the manifest"
+  verified: "not verified (blocked)"
+
+- id: ercot_mp_list
+  name: "List of Market Participants in ERCOT Region (NP12-215-ER)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=NP12-215-ER"
+  api_endpoint: "page script: reportTypeID 21129 + IceDocListJsonWS / mirDownload (verified)"
+  format: zip (one xlsx; sheets CRRAH, IMRE, LSE, QSE, RE, TDSP)
+  frequency: daily
+  spatial_grain: market participant registration
+  temporal_grain: daily snapshot
+  history_start: "display duration 1 day: only the latest file is listed (MPList, 338,440 B, 2026-09-25)"
+  access: no login
+  gridstatus_method: none
+  priority: P1
+  used_by: [accounts_list, coop_muni_targeting]
+  caveats: "columns NAME, SHORT NAME, DUNS NUMBER, AR/BAR names and emails (PII: drop), MARKET PARTICIPANT TYPE, SFA EFFECTIVE DATE; TDSP sheet = 177 registrations (several per entity); no ownership-type/NOIE flag; excludes power marketers"
+  verified: "verified 2026-09-26 (page, listing, file downloaded)"
+
+- id: ercot_members
+  name: "ERCOT membership list by market segment"
+  source_url: "https://www.ercot.com/about/governance/members (link '2026 ERCOT Members'; year pages /about/governance/members/2013 .. /2025)"
+  api_endpoint: none
+  format: xlsx
+  frequency: annual
+  spatial_grain: member entity by segment (Cooperatives, Municipals, IOUs, ...)
+  temporal_grain: membership year
+  history_start: "2013 (year pages); 2026 file 35,631 B, LM 2026-09-14"
+  access: no login
+  gridstatus_method: none
+  priority: P2
+  used_by: [accounts_list]
+  caveats: "voluntary membership (subset: ~40 co-ops, ~17 munis); columns Corporate/Associate per sheet; explicit segment label useful to classify names"
+  verified: "verified 2026-09-26 (2026 file downloaded)"
+
+- id: puct_utility_directories
+  name: "PUCT electric market directories, bulk copy (co-ops, munis; also IOU, TDU, REP, river authorities)"
+  source_url: "https://www.puc.texas.gov/industry/electric/directories/Default.aspx"
+  api_endpoint: "links on the page: /bulkcopy/coop.csv, /bulkcopy/muni.csv (and .xlsx, iou, tdu, ra, rep)"
+  format: csv / xlsx
+  frequency: daily regeneration (LM 2026-09-25 08:00)
+  spatial_grain: utility (PrimaryIDNo = CCN number), address rows
+  temporal_grain: current
+  history_start: current only
+  access: no login
+  gridstatus_method: none
+  priority: P0
+  used_by: [accounts_list, coop_muni_targeting]
+  caveats: "coop.csv 56,359 B (76 co-ops), muni.csv 40,571 B (73 munis); columns PrimaryIDNo, TrackNo, CompanyName, DBA, Title1, Title2, textbox17, Address1, Address2, City, State, Zip, Phone, AltPhone, Fax, Website, Email, MailGroupDesc, PrimaryAddress, ComplaintAddress, CoServiceDesc; several rows per utility (Company / Physical, Mailing / PO Box, Contact); named contacts = PII, decide before keeping; statewide (filter ERCOT via GIS ISO field or EIA-861)"
+  verified: "verified 2026-09-26 (page and both csv downloaded)"
+
+- id: puct_pgc_facilities
+  name: "PUCT registered power generation company facilities"
+  source_url: "https://www.puc.texas.gov/industry/electric/directories/Default.aspx (link pgc_facility.csv)"
+  api_endpoint: "https://www.puc.texas.gov/bulkcopy/pgc_facility.csv (228,620 B, LM 2026-09-25)"
+  format: csv
+  frequency: daily regeneration
+  spatial_grain: facility; county; host service-area utility (ServiceAreaCo); control area
+  temporal_grain: current
+  history_start: current only
+  access: no login
+  gridstatus_method: none
+  priority: P1
+  used_by: [gis_cross_check, coop_muni_targeting, supply_overlay]
+  caveats: "1,650 rows (1,560 ERCOT, ~197.9 GW); columns TrackNo, CompanyName, PrimaryIDNo, PrimaryIDType, FacilityName, GenerationType, County, ServiceAreaCo, ControlArea, GeneratingCapacity, RECDate, NonRenFuels, textbox16; GenerationType coarse ('Other' 979 incl. storage/gas); some blank facility rows; no INR"
+  verified: "verified 2026-09-26 (file downloaded)"
+
+- id: puct_interchange_filings
+  name: "PUC Interchange filing lists and documents (projects 58481, 58777, 59772)"
+  source_url: "https://interchange.puc.texas.gov/search/filings/?UtilityType=A&ControlNumber=<n>&ItemMatch=Equal&DocumentType=ALL&SortOrder=Descending"
+  api_endpoint: "'Export to Excel' link on that page (/search/exportfilings/?...&SortBy=ItemNumber&SortOrder=Descending -> FilingExport.xlsx); document pages /search/documents/?controlNumber=<n>&itemNumber=<i> link /Documents/<n>_<i>_<docid>.<EXT>"
+  format: html; xlsx (export); pdf/zip/docx documents
+  frequency: ad hoc
+  spatial_grain: filing
+  temporal_grain: filing date
+  history_start: "per project (58481: 219 filings from 2025-07-31; 58777: 41 items; 59772: 18 items)"
+  access: no login
+  gridstatus_method: none
+  priority: P2
+  used_by: [official_figures_provenance]
+  caveats: "58481 case style = 'RULEMAKING TO IMPLEMENT LARGE LOAD INTERCONNECTION STANDARDS UNDER PURA 37.0561'; 58777 = 'Triennial Reliability Assessment for the ERCOT Region under §25.508'; 59772 item 18 = ORDER GRANTING ADJUSTMENT REQUEST (2026-06-18); only structured large-load table found is 58777-38 (see puct_ltlf_tsp_rfi_2026)"
+  verified: "verified 2026-09-26 (list, export for 58777 and 59772, one document page, one file)"
+
+- id: sswg_cases
+  name: "SSWG steady-state base cases (bus-level load and topology)"
+  source_url: "https://www.ercot.com/committees/ros/sswg (procedures only)"
+  api_endpoint: "MIS Secure Area (digital certificate), not tested"
+  format: "PSS/E raw (not verified)"
+  frequency: seasonal / annual updates
+  spatial_grain: bus
+  temporal_grain: study year / season
+  history_start: not verified
+  access: "not public: ECEII on MIS Secure Area (per Planning Guide wording and search results; access not attempted)"
+  gridstatus_method: none
+  priority: none
+  used_by: []
+  caveats: "use public derivatives instead: RTP Appendix B weather-zone SSWG loads (ercot_rtp_public), TSP RFI table (puct_ltlf_tsp_rfi_2026), TPIT SSWG bus numbers (ercot_tpit)"
+  verified: "not verified (not accessed)"
+
+- id: ercot_nso_notices
+  name: "Notice of Suspension of Operations (NP3-47-AN)"
+  source_url: "https://www.ercot.com/mp/data-products/data-product-details?id=np3-47-an"
+  api_endpoint: "page script: reportTypeID 13043 + IceDocListJsonWS / mirDownload"
+  format: pdf
+  frequency: event
+  spatial_grain: resource
+  temporal_grain: notice date
+  history_start: "rolling 1,095-day window (17 PDFs, 6.4 MB on 2026-09-26)"
+  access: no login
+  gridstatus_method: none
+  priority: P2
+  used_by: [optional_retirements]
+  caveats: "PDF letters only; retirements better from EIA-860M Retired sheet and GIS; SKIP for MVP"
+  verified: "verified 2026-09-26 (page and listing)"
+
+- id: tceq_central_registry
+  name: "TCEQ Central Registry Files (5 regional datasets), air NSR authorizations (AIRNSR)"
+  source_url: "https://api.us.socrata.com/api/catalog/v1?domains=data.texas.gov&q=Central%20Registry&only=datasets"
+  api_endpoint: "SODA https://data.texas.gov/resource/<id>.json|.csv with $where=program_code='AIRNSR' (+$limit/$offset paging); ids msah-s2rv (Central Texas), 5eqq-7nad (North Texas), t34q-qzi3 (Dallas/Fort Worth), tzyg-j7q4 (Coastal & East Texas), 9iad-hrn8 (Border & Permian Basin); metadata https://data.texas.gov/api/views/<id>.json"
+  format: json / csv (Socrata)
+  frequency: daily (data_updated_at 2026-09-25 on all five)
+  spatial_grain: regulated entity (site) with physical county, city, address
+  temporal_grain: event dates (affil_begin_dt, affil_end_dt, status_dt)
+  history_start: "decades back (DFW data-center sample 2003-2026); exact start not verified"
+  access: "no login; SODA without app token at low volume (throttle limits not verified); license not stated in metadata"
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, county_map, large_load_early_signals]
+  caveats: "4.3 M rows total, ~690 k AIRNSR (Central 66,100; North 70,550; DFW 95,605; Coastal/East 344,040; Border/Permian 114,424): always filter server-side. One site has many rows (dedupe ref_num_txt + additional_id_text). NAICS (indus_typ_cd) often null or wrong, so also match reg_ent_name/princ_name keywords. additional_id_status PENDING/ACTIVE. affil_begin_dt semantics (affiliation vs permit date) not verified. No MW size. Standard permit vs PBR not distinguishable in these fields."
+  verified: "verified 2026-09-26: catalog search, view metadata (35 columns), SoQL group-by and filter queries on all five ids, CSV export"
+
+- id: cpa_local_dev_agreements
+  name: "Texas Comptroller Local Development Agreement Database: Ch. 312 abatements and Ch. 380/381 agreements"
+  source_url: "https://comptroller.texas.gov/economy/development/search-tools/sb1340/"
+  api_endpoint: "https://api.comptroller.texas.gov/open-data/v1/tables/ch312-abatement and /tables/ch380 (endpointPath values declared in results.php tableRouter; DataTables params incl. columns[i][name]); the JSON downloadLink field lists the CSVs: open-data-files/ch312-abatement.csv, ch312-abatement-detail.csv, ch380.csv on assets.comptroller.texas.gov. Tables ch312-abatement-zone and ch312-abatement-report declared, not requested"
+  format: csv
+  frequency: daily (lastUpdated 2026-09-25; CSV Last-Modified 2026-09-25 11:24-11:26 GMT)
+  spatial_grain: agreement x taxing unit; county via CAD name (appraisal district), lead taxing unit, ISD
+  temporal_grain: agreement dates (executed, effective, expiration, modification, cancellation, submission)
+  history_start: "reporting since 2021 (HB 2404) / SB 1340; earliest agreement date not verified"
+  access: "no login; license not stated"
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, county_map, large_load_early_signals]
+  caveats: "ch312-abatement 1,410 agreements (206,681 B); detail 7,599 rows x 63 cols (2,554,111 B), one row per taxing unit; ch380 4,451 records (3,992,050 B). NAICS Code 94% null; dates MM/DD/YYYY text; inconsistent free text; two column names have trailing spaces. Read CSV URLs from downloadLink, never hard-code (JETI's downloadLink is a dead object)."
+  verified: "verified 2026-09-26: API responses, HEAD of 3 CSVs, detail CSV downloaded and profiled"
+
+- id: cpa_data_centers
+  name: "Texas Comptroller registered Qualifying Data Centers and Qualifying Large Data Center Projects"
+  source_url: "https://comptroller.texas.gov/taxes/data-centers/data-center-lists.php"
+  api_endpoint: none (two HTML tables)
+  format: html
+  frequency: "irregular (not stated); newest effective date seen 07/24/2026"
+  spatial_grain: project (no address or county)
+  temporal_grain: effective date, exemption end date
+  history_start: "effective dates from 2021 onward seen; not verified further"
+  access: "no login; license not stated"
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, large_load_early_signals]
+  caveats: "64 qualifying (reg. DC…) + 103 large projects (reg. LD…) on 2026-09-26. Columns: Data Center (row header), Effective Date, Owner Name, Owner Registration Number, Occupant Name, Occupant Registration Number, Operator Name, Operator Registration Number, Exemption End Date; cells can hold several names. County must be inferred (name hints; match owners to TCEQ / Ch. 312). Program thresholds ($500 M, 20 MW) from secondary sources, not verified on page."
+  verified: "page fetched and both tables parsed 2026-09-26"
+
+- id: cpa_jeti
+  name: "Texas Comptroller JETI (Tax Code Ch. 403) applications and executed agreements"
+  source_url: "https://comptroller.texas.gov/economy/development/prop-tax/jeti/current-agreements.php"
+  api_endpoint: "applications list: https://api.comptroller.texas.gov/open-data/v1/tables/jeti (declared in applications.php; 39 records; fields id, school_district, applicant, negative). Its downloadLink open-data-files/jeti.csv returns 403 AccessDenied. PDFs per application under assets.comptroller.texas.gov/open-data/jeti/<id>/ (linked from application-details.php?id=<id>)"
+  format: html table + json + pdf
+  frequency: irregular
+  spatial_grain: project, by school district (map to county via TEA ISD number)
+  temporal_grain: agreement
+  history_start: "2024 (program start; first application documents posted 02/2024)"
+  access: "no login; license not stated"
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, large_load_early_signals]
+  caveats: "21 executed agreements: Application #, Applicant, School District, Project Type, Proposed Investment (text like '$1.7 billion'), Limitation Percentage, Minimum Required Jobs. Includes 9 semiconductor fabs ($6-24 B) in Anderson-Shiro CISD and Iola ISD (Grimes County). MW and county inside the PDFs not verified. The API's lastUpdated says 2023-09-15 (stale metadata)."
+  verified: "table and API verified 2026-09-26"
+
+- id: cpa_ch313
+  name: "Texas Comptroller Chapter 313 (legacy) agreements list"
+  source_url: "https://comptroller.texas.gov/economy/development/prop-tax/ch313/agreement-docs.php"
+  api_endpoint: "none (HTML table); ISD numbers on https://comptroller.texas.gov/economy/development/prop-tax/ch313/values.php"
+  format: html
+  frequency: static (program closed; applications through 2022)
+  spatial_grain: project by school district
+  temporal_grain: application date, first full tax year
+  history_start: "early 2000s (app numbers from ~1000); not verified"
+  access: "no login; license not stated"
+  gridstatus_method: none
+  priority: P1
+  used_by: [large_load_realization_calibration]
+  caveats: "734 rows: School District, App. No., Applying Entity, Application Date, First Full Tax Year, Phase. By name ~217 solar, ~192 wind, 6 LNG, ~319 other (petrochemicals, manufacturing). ISD # prefix (e.g. 227-901) = county number 001-254, county FIPS = 2n-1: rule consistent with samples, not verified in an official doc."
+  verified: "tables parsed 2026-09-26"
+
+- id: noaa_ghcnh
+  name: "NOAA NCEI Global Historical Climatology Network hourly (GHCNh), 12 Texas airports"
+  source_url: "https://www.ncei.noaa.gov/products/global-historical-climatology-network-hourly"
+  api_endpoint: "S3-compatible listing https://www.ncei.noaa.gov/oa/global-historical-climatology-network?list-type=2&prefix=hourly/access/by-year/<YEAR>/parquet/GHCNh_<ID>&delimiter=/ ; files at https://www.ncei.noaa.gov/oa/global-historical-climatology-network/<Key>; station list .../hourly/doc/ghcnh-station-list.txt"
+  format: parquet (also psv)
+  frequency: daily (~2-day lag; 2026 file updated 2026-09-24 with data to 2026-09-22)
+  spatial_grain: station (USW00012960 KIAH, USW00013972 KTYR, USW00023023 KMAF, USW00013966 KSPS, USW00023042 KLBB, USW00003927 KDFW, USW00012924 KCRP, USW00012959 KMFE, USW00012919 KBRO, USW00013904 KAUS, USW00012921 KSAT, USW00013962 KABI)
+  temporal_grain: sub-hourly/hourly observations (METAR FM15 at :53)
+  history_start: "2003 by-year parquet verified for 5 stations; earlier years exist (station POR)"
+  access: "no login, no key; US federal data, license text not verified"
+  gridstatus_method: none
+  priority: P0
+  used_by: [weather_normalized_load_model]
+  caveats: "329 columns: STATION, Station_name, DATE (ISO string, UTC per docs, doc not fetched), Year..Minute (strings), LATITUDE, LONGITUDE, ELEVATION, temperature (float °C) + _Measurement_Code/_Quality_Code/_Report_Type/_Source_Code/_Source_Station_ID, dew_point_temperature (+5), pressures, wind... Many rows lack temperature: filter non-null and Report_Type FM15, dedupe to hour-ending. Sizes: parquet ~0.6-1.2 MB per station-year (~250-350 MB for 12 x 2003-2026); avoid by-station POR PSV (Austin 660 MB). Replaces ISD/Global Hourly (frozen 2025)."
+  verified: "listing, station list, 2026 Austin parquet downloaded and read 2026-09-26"
+
+- id: noaa_isd_global_hourly
+  name: "NOAA ISD / Global Hourly CSV / ISD-Lite"
+  source_url: "https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv"
+  api_endpoint: "https://www.ncei.noaa.gov/data/global-hourly/access/<YEAR>/<USAF><WBAN>.csv ; https://www.ncei.noaa.gov/pub/data/noaa/isd-lite/<YEAR>/<USAF>-<WBAN>-<YEAR>.gz"
+  format: csv / gz fixed-width
+  frequency: none (frozen)
+  spatial_grain: station
+  temporal_grain: hourly
+  history_start: "1940s-1970s per station"
+  access: no login
+  gridstatus_method: none
+  priority: skip
+  used_by: []
+  caveats: "isd-history.csv LM 2025-08-30, station END dates 2025-08-25..27; Global Hourly Austin 2025 LM 2025-10-01, 2026 = 404; ISD-Lite 2025 LM 2025-08-29. Superseded by GHCNh."
+  verified: "HEAD/GET 2026-09-26"
+
+- id: pudl_ferc714_forecast
+  name: "PUDL: FERC Form 714 planning-area demand forecasts (ERCOT 10-year peak forecast vintages)"
+  source_url: "https://docs.catalyst.coop/pudl/en/stable/data_access.html"
+  api_endpoint: "S3 listing https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop?list-type=2&prefix=<version>/&delimiter=/ ; tables https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/<version>/core_ferc714__yearly_planning_area_demand_forecast.parquet (+ core_ferc714__respondent_id, out_ferc714__summarized_demand); pin v2026.9.0"
+  format: parquet
+  frequency: PUDL releases ~monthly; FERC 714 annual
+  spatial_grain: FERC 714 respondent (ERCOT = respondent_id_ferc714 58, eia_code 5723)
+  temporal_grain: annual report year x 10 forecast years
+  history_start: "report year 2006"
+  access: "no login; CC-BY-4.0 (Zenodo record 22720286, v2026.9.0, published 2026-09-11): commercial use OK with attribution"
+  gridstatus_method: none
+  priority: P0
+  used_by: [official_forecast_benchmark, forecast_vs_actual_backtest]
+  caveats: "Columns: respondent_id_ferc714, report_year, forecast_year, summer_peak_demand_forecast_mw, winter_peak_demand_forecast_mw, net_demand_forecast_mwh (0.3 MB, 22,405 rows). Austin Energy, CPS, LCRA, Pedernales, Brazos, Oncor, CenterPoint are not FERC 714 respondents: no utility-level hourly load inside ERCOT. FERC's own site returned 403 to our UA."
+  verified: "S3 listing, Zenodo API and table downloads verified 2026-09-26"
+
+- id: pudl_release
+  name: "Catalyst Cooperative PUDL data release (full)"
+  source_url: "https://zenodo.org/records/22720286"
+  api_endpoint: "s3://pudl.catalyst.coop/{stable,nightly,vYYYY.M.x}/ via https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/"
+  format: parquet (per table), pudl_parquet.zip 12,688 MB, pudl.sqlite.zip 3,464 MB, pudl.duckdb 9,480 MB
+  frequency: stable ~monthly; nightly on weekdays
+  spatial_grain: utility, plant, generator, BA, county (varies by table)
+  temporal_grain: varies (hourly to annual)
+  history_start: "varies (EIA-861 2001+, FERC 714 2006+, EIA-930 2015+)"
+  access: "no login; CC-BY-4.0. Kaggle mirror not verified (HEAD 404)"
+  gridstatus_method: none
+  priority: P1
+  used_by: [coop_muni_targeting, accounts_list]
+  caveats: "Take single tables only, e.g. core_eia861__yearly_service_territory (1.6 MB, utility -> county per year; columns not verified), out_eia__yearly_plants (3.6 MB), core_eia860m__changelog_generators (3.4 MB). Never pull the bundles."
+  verified: "S3 listing verified 2026-09-26 (sizes from listing)"
+
+- id: eia_930_subregion
+  name: "EIA-930 Hourly Electric Grid Monitor, subregion demand (six-month files)"
+  source_url: "https://www.eia.gov/electricity/gridmonitor/about"
+  api_endpoint: "https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/EIA930_SUBREGION_<YYYY>_<Jan_Jun|Jul_Dec>.csv (pattern from PUDL docs; About page is JS-rendered)"
+  format: csv (~26-27 MB per half-year, all BAs)
+  frequency: near real time (files regenerated; LM 2026-09-25)
+  spatial_grain: BA subregion; ERCO = COAS, EAST, FWES, NCEN, NRTH, SCEN, SOUT, WEST
+  temporal_grain: hourly
+  history_start: "2018 H2 for subregions"
+  access: no login
+  gridstatus_method: "not verified"
+  priority: skip
+  used_by: []
+  caveats: "Columns: Balancing Authority, Data Date, Hour Number, Sub-Region, Demand (MW), Local Time at End of Hour, UTC Time at End of Hour. ERCOT subregions = the 8 weather zones we already have. Server ignores Range headers."
+  verified: "HEAD of two files + ERCO rows checked 2026-09-26"
+
+- id: census_pep_county
+  name: "Census Population Estimates Program, Vintage 2025, county totals and components of change"
+  source_url: "https://www.census.gov/data/datasets/time-series/demo/popest/2020s-counties-total.html"
+  api_endpoint: "https://www2.census.gov/programs-surveys/popest/datasets/2020-2025/counties/totals/co-est2025-alldata.csv (only file in the directory listing)"
+  format: csv (Latin-1)
+  frequency: annual (V2025 released 2026-03-26)
+  spatial_grain: county (SUMLEV 050; Texas STATE=48, 254 counties)
+  temporal_grain: annual (July 1), 2020-2025
+  history_start: "2020 in this vintage; older vintages in sibling folders (not checked)"
+  access: "no login; US federal (public domain, not verified on page)"
+  gridstatus_method: none
+  priority: P0
+  used_by: [residential_growth, b2c_acquisition, coop_muni_targeting]
+  caveats: "2,071,735 B, LM 2026-03-26. Encoding Latin-1, not UTF-8. Every vintage revises all years: keep vintage in raw path. Columns SUMLEV, REGION, DIVISION, STATE, COUNTY, STNAME, CTYNAME, ESTIMATESBASE2020, POPESTIMATE2020..2025, NPOPCHG*, BIRTHS*, DEATHS*, NATURALCHG*, INTERNATIONALMIG*, DOMESTICMIG*, NETMIG*, RESIDUAL*, GQESTIMATES*, R* rates."
+  verified: "file downloaded and header verified 2026-09-26"
+
+- id: bls_qcew_county
+  name: "BLS QCEW open-data CSV slices (county x NAICS, quarterly)"
+  source_url: "https://data.bls.gov/cew/doc/access/csv_data_slices.htm"
+  api_endpoint: "https://data.bls.gov/cew/data/api/<YEAR>/<QTR>/industry/<NAICS>.csv (area slices .../area/<FIPS>.csv per docs, not requested)"
+  format: csv
+  frequency: quarterly (2026 Q1 available, LM 2026-08-21)
+  spatial_grain: county (area_fips 48xxx), state, MSA
+  temporal_grain: quarterly with monthly employment
+  history_start: "not verified for slices"
+  access: "no login; www.bls.gov returned 403 to our UA (data.bls.gov works); US federal"
+  gridstatus_method: none
+  priority: P0
+  used_by: [large_load_realization_model, county_map]
+  caveats: "518210 Texas: 120 private county rows in 2025 Q4, 82 suppressed (disclosure_code N): good for metro trends, weak for rural siting. Suggested NAICS: 518210, 211, 213, 2121, 324, 325, 3344 (codes other than 518210 not requested). ~0.3-0.4 MB per slice."
+  verified: "two slices downloaded/HEAD 2026-09-26"
+
+- id: census_cbp_county
+  name: "Census County Business Patterns, county file"
+  source_url: "https://www.census.gov/programs-surveys/cbp/data/datasets.html"
+  api_endpoint: "https://www2.census.gov/programs-surveys/cbp/datasets/<YEAR>/cbp<YY>co.zip (discover from the directory listing)"
+  format: zip (csv txt)
+  frequency: annual (2023 released 2025-06-26; no 2024 folder yet)
+  spatial_grain: county x NAICS
+  temporal_grain: annual (March employment, annual payroll)
+  history_start: "1986 (directory years; not checked individually)"
+  access: "no login; US federal"
+  gridstatus_method: none
+  priority: P1
+  used_by: [large_load_realization_model]
+  caveats: "cbp23co.zip 12,919,520 B. Columns fipstate, fipscty, naics, emp_nf, emp, qp1_nf, qp1, ap_nf, ap, est, n<5 ... n1000_4. National file: filter fipstate=48. Older than QCEW."
+  verified: "directory listing + 400 KB range read of header 2026-09-26"
+
+- id: cpa_sales_tax_permits
+  name: "Texas Comptroller Active Sales Tax Permit Holders (outlet NAICS by county)"
+  source_url: "https://data.texas.gov/api/views/jrea-zgmq.json"
+  api_endpoint: "SODA https://data.texas.gov/resource/jrea-zgmq.json|.csv"
+  format: json / csv
+  frequency: daily-ish (2026-09-19)
+  spatial_grain: outlet (address, city, zip, Comptroller county code 001-254)
+  temporal_grain: permit issue date, first sales date
+  history_start: "active permits only (snapshot)"
+  access: "no login; license Public Domain (Socrata metadata)"
+  gridstatus_method: none
+  priority: P1
+  used_by: [large_load_early_signals]
+  caveats: "887,244 rows. NAICS 518210 is dominated by small software LLCs: noisy for data centers. Snapshot only (no closed permits)."
+  verified: "metadata, group-by and CSV sample verified 2026-09-26"
+
+- id: tdc_population_projections
+  name: "Texas Demographic Center population projections, Vintage 2024 (counties, 2020-2060)"
+  source_url: "https://demographics.texas.gov/Projections/"
+  api_endpoint: "form tool https://demographics.texas.gov/Projections/Download (POST form frmTPEPP; area lists via api/Geography/tpepp/<id>); no static bulk file found"
+  format: csv/xlsx export from the form (not tested)
+  frequency: biennial
+  spatial_grain: county
+  temporal_grain: annual 2020-2060, three migration scenarios, by age/sex/race
+  history_start: "2020"
+  access: "no login; license not stated"
+  gridstatus_method: none
+  priority: P1
+  used_by: [long_term_demand_driver, residential_growth]
+  caveats: "Manual one-off export (county totals, mid scenario) stored as raw with manifest and marked manual. Methodology PDF .../Resources/TPEPP/Projections/2024/2024_Methodology.pdf (421,066 B, LM 2026-03-17). Resources directory listing returns 500."
+  verified: "pages verified 2026-09-26; export not tested"
+
+- id: twdb_swp_projections
+  name: "TWDB 2027 State Water Plan projections (county population 2030-2080; water demand by category)"
+  source_url: "https://www.twdb.texas.gov/waterplanning/data/projections/2027/municipal.asp"
+  api_endpoint: "population: SARA report 83 'Population Projections by County' at https://www3.twdb.texas.gov/apps/SARA/reports/list (SSRS ReportViewer, manual export). Water demand: https://www.twdb.texas.gov/waterplanning/data/dashboard/Sources/HistoricalUseAndProjections.xlsx (linked from dashboard/index.asp)"
+  format: xlsx
+  frequency: every 5 years (planning cycle); xlsx LM 2026-09-01
+  spatial_grain: county, regional water planning group
+  temporal_grain: annual 2000-2024 actuals; decadal 2030-2080 projections
+  history_start: "2000"
+  access: "no login; license not stated"
+  gridstatus_method: none
+  priority: P1
+  used_by: [long_term_demand_driver]
+  caveats: "xlsx 2,389,655 B, sheet 'wateruse', 81,024 rows: Yr, RegionLetter, CountyName, Category (Irrigation, Livestock, Manufacturing, Mining, Municipal, Steam-Electric), Demands (acre-feet), Data Source (WUS, 2026_RWP_Adopted). Population itself needs a manual SARA export."
+  verified: "pages and xlsx verified 2026-09-26; SARA export not tested"
+
+- id: eia_861m
+  name: "EIA-861M monthly sales to ultimate customers by utility"
+  source_url: "https://www.eia.gov/electricity/data/eia861m/"
+  api_endpoint: "page links ./xls/sales_ult_cust_<YEAR>.xlsx (current) and ./archive/xls/sales_ult_cust_<YEAR>.xlsx"
+  format: xlsx
+  frequency: monthly (2026-09-24 release = July 2026 data)
+  spatial_grain: utility x state (sample)
+  temporal_grain: monthly
+  history_start: "1990 (f826 archive)"
+  access: no login
+  gridstatus_method: none
+  priority: P2
+  used_by: []
+  caveats: "Texas 2026: 14 utilities; only Nueces Electric Cooperative and City of San Antonio (CPS) among co-ops/munis."
+  verified: "page + 2026 file verified 2026-09-26"
+
+- id: rrc_drilling_permits
+  name: "Railroad Commission of Texas drilling permit master (daf802)"
+  source_url: "https://www.rrc.texas.gov/resource-center/research/data-sets-available-for-download/"
+  api_endpoint: "GoAnywhere MFT share link from the page (e.g. https://mft.rrc.texas.gov/link/beeeab0c-7d07-4111-af88-783c93677b2c) listing daf802.txt.gz; download needs a web session (JS/POST)"
+  format: fixed-width ASCII (gz)
+  frequency: "monthly? (gz dated 9/9/26); not verified"
+  spatial_grain: well permit (county, lat/lon in the trailer file)
+  temporal_grain: permit dates
+  history_start: "not verified"
+  access: "no login; session-based download"
+  gridstatus_method: none
+  priority: P1
+  used_by: [large_load_realization_model]
+  caveats: "daf802.txt.gz 165.92 MB (9/9/26); uncompressed 1.21 GB (5/6/23 copy). Layout PDF on rrc.texas.gov not requested."
+  verified: "data sets page and MFT listing verified 2026-09-26; file not downloaded"
