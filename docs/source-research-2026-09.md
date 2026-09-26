@@ -167,3 +167,16 @@ into Parquet or the API.
 - EIA-930 subregions: the 8 weather zones we already have.
 - FERC 714 hourly (no ERCOT co-op/muni filers).
 - EIA-861M: only CPS and Nueces EC among Texas co-ops/munis.
+
+## Second round — gaps against the data contract (2026-09-26)
+
+| Item | Result |
+|---|---|
+| 1. Adjusted 2026 LTLF (Batch Zero) | **Not published.** PUCT 59772 ends with the order adopting the Batch Zero base-load adjustment (item 18, 2026-06-18). ERCOT's proposal (item 1, 2026-05-18, p8) expected the LTLF could be finalized in mid-August 2026. The staff memo in 58777 (item 41, 2026-07-02, attachment p8) plans the reliability model on the Batch Zero LTLF, with base large loads as of the 2026-08-07 target date plus low/medium/high studied-load scenarios. ERCOT's Board deck of 2026-09-14/15 ("System Planning and Weatherization Update", p2) says a new LTLF "is not expected until mid-to-late December 2026" and the December CDR moves to early 2027. The Load Forecast page has no 2026 files (checked 2026-09-26). There is no annual summer peak table yet. |
+| 2. GHCNh 1980–2002 | Downloaded for the same 12 airports (276 files). All stations have files for every year 1980–2026. Gaps (share of hours with temperature): KBRO 1985 71%, 1986 43%, 1987 44%, 1988 8%, 1989 1%; KTYR 1983–1998 55–79%; KMFE 1987 78%; KAUS 1996 76%. All others are at ≥ 80% every year. Station moves under the same id were not checked (e.g. KAUS data before Austin-Bergstrom opened in 1999). |
+| 3. Population 2000–2019 | `census_pep` now holds `co-est00int-tot.csv` (intercensal 2000–2010, all counties), `cc-est2020int-agesex-48.csv` (intercensal 2010–2020, Texas, YEAR coded per its layout), `co-est2020-alldata.csv` (Vintage 2020) and the latest `co-est2025-alldata.csv`, each with its layout PDF. Series and vintage are in the manifest. |
+| 4. Large loads before 2024 | 13 "LLI Queue (Status) Update" decks on LFLTF meeting pages, 2022-08-22 → 2023-12-11; no status deck in the 2022–2023 TAC zips. Stages are comparable from 2023-05-31 on (the four 2024 buckets). The 8 decks from Aug 2022 to Apr 2023 use earlier categories (received/operational, connection type, behind-the-meter), so only queue totals compare. Later breaks: January 2024 misclassification fix; July 2024 default in-service date moved to 2028; "Observed Energized" split out in 2026. |
+| 5. Base Power public facts | `config/base_public_facts.yaml`: 70 facts (28 utility partner, 33 service area, 9 other; 59 primary sources). Partners: Bandera EC (Mar 2025), GVEC (2 MW pilot Jun 2025 → 50 MW Apr 2026), Farmers EC (Dec 2025, 20 MW), El Paso Electric (Feb 2026 pilot, up to 10 MW), CoServ (Mar 2026, 100 MW), Austin Energy (40 MW, launch 2026-07-15). No source describes a partnership with Oncor, CenterPoint, AEP Texas or TNMP. |
+| 6. EAGLE-I outages | figshare 24237376, v4 (2026-02-25), CC BY 4.0, county FIPS every 15 min, 2014-11 → 2025-12. One national CSV per year (78 MB to 1.45 GB; 11.6 GB total); no Texas subset; headers change by year. Raw holds only the side files (MCC, coverage history, DQI; MD5 checked). Yearly files wait for a decision. |
+| 7. Deck audit | `docs/large-load-deck-audit.md`: 37 decks, none with an extractable table. See decisions.md. |
+| 9. Manual files | `uv run basecast register <source_id> <file> --origin-url <page>` (e.g. `lbnl_queued_up`). |

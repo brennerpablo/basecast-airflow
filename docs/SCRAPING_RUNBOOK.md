@@ -312,7 +312,7 @@ Atualize esta tabela a cada fonte concluída (ou gere pelo `basecast inventory`)
 | ercot_ltlf | raw baixado | 88 (871 MB) | — | edições 2013 → 2025 | inclui xlsb horários e os 8 cenários climáticos; LTLF 2026 ainda não publicada |
 | ercot_cdr | raw baixado | 74 (38 MB) | — | edições 2000 → dez/2025 + Gen. Resource Forecast mai/2026 | só planilhas (PDFs opcionais) |
 | manual_official_figures | config criado | — | — | — | `config/manual_official_figures.yaml`, tudo `verified: false` |
-| ercot_large_load_decks | raw baixado | 64 (68 MB) | — | jan/2024 → set/2026 | 24 decks de status (último: LLWG 2026-06-19), 24 board updates, 7 ERCOT Monthly, 9 outros |
+| ercot_large_load_decks | raw baixado | 77 (73 MB) | — | ago/2022 → set/2026 | 37 decks de status (13 da LFLTF 2022–23), board updates, ERCOT Monthly; nenhum com tabela extraível |
 | census_bps | raw baixado | 356 (62 MB) | — | anual 1990 → 2025; mensal 2000-01 → 2026-08 | arquivos nacionais |
 | census_acs | raw baixado | 2 (86 MB) | — | ACS 5 anos 2020–2024 | summary file por tabela (sem chave de API) |
 | open_meteo | raw baixado | 288 (71.7 MB) | — | 2003 → 2026-09 | ERA5, 12 pontos; ritmo 3 req/min; plano gratuito só não comercial |
@@ -333,11 +333,12 @@ Atualize esta tabela a cada fonte concluída (ou gere pelo `basecast inventory`)
 | eia_860m | raw baixado | 12 (107 MB) | — | dez/2015 → ago/2026 | opção `all_months=true` para os ~130 meses |
 | eia_860 | raw baixado | 1 (24 MB) | — | 2025 final | |
 | pudl | raw baixado | 8 (25 MB) | — | release v2026.9.0 | CC-BY-4.0: citar Catalyst Cooperative |
-| noaa_ghcnh | raw baixado | 288 (296 MB) | — | 2003 → 2026-09 | parquet por estação e ano |
-| census_pep | raw baixado | 1 | — | 2020 → 2025 | Latin-1 |
+| noaa_ghcnh | raw baixado | 564 (441 MB) | — | 1980 → 2026-09 | parquet por estação e ano; lacunas: KBRO 1985–89, KTYR 1983–98 |
+| census_pep | raw baixado | 8 | — | 2000 → 2025 | intercensitárias 2000–2010 e 2010–2020, vintage 2020 e 2025, com layouts |
 | bls_qcew | raw baixado | 12 | — | 2014 → 2025 (anual) | muitos condados suprimidos |
 | tceq_air_permits | raw baixado | 16 (359 MB) | 690.719 | diário | só programa AIRNSR; bate com a contagem da API |
 | tx_comptroller | raw baixado | 9 (8 MB) | — | diário | Ch. 312/380 CSV + registros de data centers e JETI (HTML) |
+| ornl_eaglei | só arquivos auxiliares | 3 | — | 2014–2025 disponível | anos nacionais (1,1–1,4 GB cada) aguardam decisão |
 
 ## 5. Pendências que este trabalho deve responder
 
