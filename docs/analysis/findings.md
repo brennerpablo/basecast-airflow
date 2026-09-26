@@ -12,7 +12,7 @@ row says so and the item waits in the review queue.
 
 ## Start here
 
-**Decide first** (each unblocks a task; the full queue below has 18 items):
+**Decide first** (each unblocks a task; the full queue below has 19 items):
 
 1. **Score weights, Q3 or X4** (item 1). A2 cannot reveal the partners until one set is approved.
 2. **Spot-check the 10 deck values** (item 3, `docs/large-load-spot-check.md`, ~10 minutes). Q5, X1, X7 and X11 all
@@ -121,7 +121,11 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    peak runs ~315 MW under what the weather predicts (4CP curtailment? not verified). For the video, "the normalized
    peak rose every year" holds at P50, but some steps sit inside the P10–P90 band (2019 → 2020: +0.8 GW).
 
-## Beyond phase 0 — explorations X1–X12
+19. **X13 — G&T large-load exposure.** Keep it a context fact (81 of 107 accounts) and let LCRA-supplied munis keep
+   the fact but not the trigger (73 → 33; a `triggers.py` change, not made)? Count LCRA as public power (22.9%
+   co-op) or with the co-ops as ERCOT does (25.1%)?
+
+## Beyond phase 0 — explorations X1–X13
 
 Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
 is a candidate, not yet in `docs/video-numbers.md`.
@@ -140,6 +144,7 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X10 | Do Census place data fix the munis? | All 59 non-partner munis match a place. Size: homes per meter 0.03 → 0.42, ρ with meters 0.77 → 0.95. Growth: no (ρ 0.53 vs 0.54), cities grow onto land their muni does not serve. Strong triggers for munis 10 → 13 of 59. | /accounts diagnosis, muni ranking |
 | X11 | Where are the large loads? | Weather-zone charts exist (Batch Zero Update Sep 2026, QSA Q4 2026, LLIS May 2026); LZ_WEST = FWEST + WEST + 0.72 × NORTH. Approved stock leans NORTH 2.5, FWEST 1.7, NCENT 1.4, WEST 1.2 GW; the pipeline leans NCENT, NORTH, SOUTH. By zone, ~10 GW moves between zones in the 2030 forecast (total ±0.1%). | Forecast by zone, Explorer |
 | X12 | A weather-normalized load series for the Forecast | Daily model per zone (rolling 3-year fits, normal = ERA5 2003–2022): ERCOT daily MAPE 2.9% energy / 4.0% peak with the level known (8.0% / 10.7% without weather). Normalized energy grew 2.1%/yr in 2010–21, then 4.4–5.4%/yr in 2022–25. Normalized summer peak rose every year 2012–2026 (64.8 → 91.1 GW) while the raw peak fell in 7; 2025's 83.7 GW was a mild summer (88.0 normal); 2026 was weather-neutral. | Forecast series, video |
+| X13 | How much of the large-load wave lands with co-ops? | Of 199.5 GW requested for 2030 in the TSP filing, co-op G&Ts hold 45.7 GW (22.9%; Brazos 26.6, Golden Spread 16.6), ~1.9× the co-ops' 12.3% of ERCOT retail MWh, up from 8.8% in 2026. No location below the TSP, so no allocation to members: a context fact for 81 of 107 accounts. Q4 stays signal only. | /accounts context, video |
 
 ## Notes
 
