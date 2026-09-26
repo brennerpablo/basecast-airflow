@@ -69,7 +69,16 @@ below blocks the next tasks except item 1 (A2 needs the weights first).
    context (17)? Data centers count in both the score and a trigger (default: keep both). Every trigger threshold
    is Claude's (list in `docs/analysis/x5_triggers.md`).
 
-## Beyond phase 0 — explorations X1–X5
+13. **X7 — which large-load deck drives the forecast.** The March 2026 deck (before ERCOT's April "Batch Zero"
+   intake) gives 111.6 GW for 2030, the June 2026 deck 132.9 GW, and the 2023–25 approval pace 96.4 GW. Default: show
+   the three as scenarios, stop at 2030. The band covers 61% of cells in a nominal 80%: calibrate it on the 18
+   backtest cells and say so. No final LTLF 2026 is stored; add it if ERCOT published one.
+14. **X9 — accounts API and munis.** Key accounts by `ccn_no`, not the EIA `utility_id`; hold `is_base_partner` until
+   A2 (these are basecast-get-data changes, not made). Munis: 55 of 59 never reach the 20% county rule (X10 tests
+   city-level Census data as the fix). Show "call now until <date>" when a trigger lapses (the #1 lapses on
+   2026-10-22).
+
+## Beyond phase 0 — explorations X1–X9
 
 Run after the seven questions closed, each aimed at a core feature. Detail in `docs/analysis/xN_*.md`; every number
 is a candidate, not yet in `docs/video-numbers.md`.
@@ -81,6 +90,9 @@ is a candidate, not yet in `docs/video-numbers.md`.
 | X3 | 4CP timing and the offer to co-ops | A 2-hour discharge 15:45–17:45 covered 63 of 64 CPs (2010–2025); catching all four with a weather-based call takes ~56 days a summer and near-peak days doubled since 2023; since 2021 no CP fell in its month's top-20 priced intervals and the net-load peak moved to HE 20–21. | Accounts next action / offer, video |
 | X4 | EIA-861 short form | Reading 861S from the lake takes EIA customers from 57% to 99.1% of accounts (munis 27% → 98%); customers replace apportioned homes; Lubbock's −95% is retail choice (105,080 delivery-only customers). Parser spec for later in the doc. | Account score (A2), diagnosis |
 | X5 | Triggers and a ranking dry run | 8 triggers (5 strong); 46 of 107 non-partner accounts have one active; next action: 25 call now, 12 nurture, 34 watch, 36 hold; 14 of the top 15 sit on the metro growth rings; stable to ±0.05 weight shifts (ρ ≥ 0.993). | /accounts, /accounts/[id] |
+| X6 | Do the video numbers hold from the raw files? | All six re-derived without the models or parsers: 2026 peak 91,133.7 MW (HE 18, 2026-07-22), old record 85,508.5 MW, 112 GW and 90.5–98 GW (PUCT 58777 item 38), 232,500 MW tracked and 3.78% approved (Jan 2026), 1,810 projects / 438,262 MW (Aug 2026 GIS), Q5 deck inputs. Careful: the "> 20 GW" margin is 866 MW; the large-load queue reached ~438 GW by May 2026, the same figure as the generation queue. | video |
+| X7 | Does a three-layer peak forecast beat ERCOT? | Rebuilt as of 8 dates (18 cells): MAPE 3.3% vs LTLF 5.1% and CDR 4.8% (the design itself was chosen in 2026, a leak the doc lists). From the March 2026 deck: 93.0 [89.4–96.7] GW in 2027 and 111.6 [104.2–123.7] in 2030, vs LTLF 2025 104.3 and 138.9. After Batch Zero the MW promised by 2027 went from 67 to 201 GW while approved stayed at 8.8–8.9 GW. | Forecast, /backtest (A3), video |
+| X9 | What the /accounts/[id] page can show | `assemble(ccn_no)` renders score breakdown, triggers with lapse dates, territory, EIA series and next action as facts with source and as-of. Gaps: no public source for an account's own 4CP load (the UtilityDataSource case), munis miss county triggers, apportionment misreads size for 69 accounts. | /accounts/[id], API shape |
 
 ## Notes
 
