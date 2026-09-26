@@ -10,6 +10,33 @@ Plan and rules: `docs/PHASE0_ANALYSIS.md`. Per-question detail (tables, definiti
 phase 0 handoff does. Every decision below follows the handoff's rule; where Claude proposes to deviate, the
 row says so and the item waits in the review queue.
 
+## Start here
+
+**Decide first** (each unblocks a task; the full queue below has 18 items):
+
+1. **Score weights, Q3 or X4** (item 1). A2 cannot reveal the partners until one set is approved.
+2. **Spot-check the 10 deck values** (item 3, `docs/large-load-spot-check.md`, ~10 minutes). Q5, X1, X7 and X11 all
+   rest on the machine-read large-load values.
+3. **Queue model for A4** (item 4): Aalen–Johansen with X2's semi-Markov entry stage, instead of cohort rates.
+4. **Forecast scenarios for A3** (items 5 and 13): the organic baseline (fit ≤ 2019) and which large-load deck
+   (March vs June 2026) drives 2027–2030.
+5. **Pitch wording** (item 6 and `docs/analysis/video-candidates.md`): the record was 85.5 GW until July 2026, and
+   the "> 20 GW" miss has an 866 MW margin.
+
+**Strongest findings so far:**
+
+- The 2026 peak (91.1 GW) was 20.9 GW under ERCOT's 112 GW preliminary but 7–11 GW over trend and weather. The excess
+  is flat, always-on load, and ERCOT's own large-load reports explain only a third to half of it (Q1, Q7, X1, X12).
+- A three-layer forecast (organic + realized large load + flat layer), rebuilt as of 8 past dates, beat LTLF and CDR
+  on the same cells: MAPE 3.3% vs 5.1% and 4.8% (X7, with its leaks listed).
+- The generation queue's 438 GW becomes ~39 GW by the end of 2027; a 24-month backtest from three past queues lands
+  within 13%, while developers' dates add up to 5–8× what got built (X2).
+- Since 2021 the 4CP interval is no longer when power is scarce: a battery aimed at 4CP (15:45–17:45) misses the
+  evening price spikes (X3).
+
+**Git state:** pushes to `basecast-airflow` stopped after `214b906`, because each push redeploys the Airflow VM and
+restarts the scheduler, which kept killing the long `puct_filings process` run. Later commits wait locally.
+
 | Q | Result (numbers) | Decision | FINAL_SPRINT task affected | Verified |
 |---|---|---|---|---|
 | Q1 | 2026 summer peak = **91,134 MW** hourly, HE 18 CDT on 2026-07-22 (15-min 91,263 MW; data_as_of 2026-09-26, Jul–Aug not final-settled); preliminary 112 GW error = **+20.9 GW / +22.9%** (ERCOT's own 90.5–98 GW range contained the actual); LTLF mean error by horizon: 1y +1.6%, 3y +0.5%, 5y −1.5% (share over-forecasting 58% / 60% / 22%); 2026 by vintage: TSP-based +16.8 to +22.9%, ERCOT-adjusted +3.9 to +4.7% | mixed sign → narrative on the 2026 preliminary and on the TSP-based vs ERCOT-adjusted spread, not "X% at Y years" | A1 | file (ERCOT D&E workbook, LTLF/CDR files) |
