@@ -6,8 +6,9 @@ or X4's weights with ``scoring.weights_set: x4``); the nine event sources; the E
 the adjusted queue (X2, ``marts/queue.py``) and the zone 4CP (X3); then ``diagnosis.assemble`` per account. Every
 call gets the run's ``as_of``.
 
-Not built yet (P1): the X10 muni extras (``munis.*``), the G&T card (X13) and the 4CP offer (X3 + X15);
-``triggers.gen_storage_ia: context`` (R12) is not built either.
+The detail carries X13's wholesale-supplier card (``suppliers``); R19 applies (LCRA-supplied munis keep the fact,
+not the ``tsp_large_load`` trigger). Not built yet: the X10 muni extras (``munis.*``), the 4CP offer (X3 + X15)
+and ``triggers.gen_storage_ia: context`` (R12).
 """
 
 from __future__ import annotations
@@ -34,6 +35,9 @@ GEN_FUELS = ("storage", "gas")  # dispatchable capacity (X5)
 RAW = PROJECT_ROOT / "data" / "raw"
 N_ACCOUNTS = 107  # 112 in the universe minus the five held out
 MIN_LISTED_SHARE = 0.01  # mart_account_counties keeps counties the account covers ≥ 1% of (plus its context county)
+SUPPLY_ONLY_GT = "LCRA"  # R19: LCRA-supplied munis keep the G&T fact, not the trigger (X13)
+SUPPLIER_NEAR, SUPPLIER_FAR = 2030, 2032  # X13's card: requests in service by 2030 and 2032
+SUPPLIER_TRIGGER_MW = 1000.0  # tsp_large_load fires at ≥ 1 GW requested for 2030 (X5)
 
 # X4's proposal (docs/analysis/x4_eia861_short_form.md §3): eia_customers replaces owner_sf_homes, and
 # eia_customer_cagr takes 0.10 from pop_growth.
@@ -181,7 +185,8 @@ def _inputs(ctx: MartContext):
         T.events_by_county(T.transmission_events(T.load_tpit(), min_kv=138.0), links),
         T.rate_increase_events(res_price, universe, year=2025, base_year=2024, threshold=0.10),
         T.tsp_large_load_events(
-            pl.concat([T.load_gt(), T.self_tsp_rows(names)]), T.load_rfi(), target_year=2030, min_mw=1000.0
+            pl.concat([trigger_gt_links(T.load_gt(), names), T.self_tsp_rows(names)]), T.load_rfi(),
+            target_year=2030, min_mw=1000.0,
         ),
     ]
     cols = ["account_id", *T.EVENT_COLUMNS, "exposure"]
@@ -236,6 +241,53 @@ def _inputs(ctx: MartContext):
         as_of=ctx.as_of, dc_since=DC_SINCE, ltlf_years=(ZONE_START, ZONE_END),
     )
     return inp, weights_set
+
+
+def trigger_gt_links(gt: pl.DataFrame, names: pl.DataFrame) -> pl.DataFrame:
+    """The account × G&T links that may fire ``tsp_large_load`` (R19): a muni supplied by LCRA keeps the G&T fact
+    but not the trigger, since LCRA's RFI row is its transmission arm's (X13). ``gt``: ``account_id``, ``gt``."""
+    typed = gt.join(names.select("account_id", "account_type"), on="account_id", how="left")
+    return typed.filter(~((pl.col("gt") == SUPPLY_ONLY_GT) & (pl.col("account_type") == "muni"))).select(
+        "account_id", "gt"
+    )
+
+
+def supplier_blocks(ctx: MartContext) -> dict[str, list[dict]]:
+    """X13's wholesale-supplier card per account (the ``suppliers`` key of the detail): one item per RFI supplier
+    (a co-op with two G&Ts gets two), with its 2026 / 2030 / 2032 requests, its share of the ERCOT-wide RFI, the
+    accounts sharing it and whether it fires ``tsp_large_load`` (not for LCRA-supplied munis, R19)."""
+
+    def build() -> dict[str, list[dict]]:
+        from basecast_pipelines.models import gt_large_load as G
+
+        inp, _ = diagnosis_inputs(ctx)
+        names = inp.accounts.select("account_id", "name", "account_type")
+        rfi = G.load_rfi()
+        tsp = G.rfi_by_tsp(rfi)
+        members = G.gt_members(G.load_gt_accounts()).filter(
+            pl.col("account_id").is_in(inp.scored["account_id"].to_list())
+        ).join(names, on="account_id")
+        facts = G.exposure_facts(members.filter(pl.col("tsp").is_not_null()), tsp, near=SUPPLIER_NEAR,
+                                 far=SUPPLIER_FAR)
+        from basecast_pipelines.models import triggers as T
+
+        latest = T.load_rfi().sort("filed_date").row(-1, named=True)  # PUCT 58777 item 38 (docket and item)
+        source_ref = f"{latest['docket']}:{latest['item']}"
+        out: dict[str, list[dict]] = {}
+        for r in facts.sort("account_id", "tsp").iter_rows(named=True):
+            supply_only = r["gt"] == SUPPLY_ONLY_GT and r["account_type"] == "muni"
+            out.setdefault(r["account_id"], []).append({
+                "gt": r["gt"], "tsp": r["tsp"], "via": r["via"], "fact": r["fact"],
+                "path": [{"year": y, "mw": r[c]} for y, c in ((2026, "mw_2026"), (SUPPLIER_NEAR, "mw_near"),
+                                                              (SUPPLIER_FAR, "mw_far"))],
+                "share_of_rfi": r["share_near"], "n_accounts": r["n_accounts"], "filed_date": latest["filed_date"],
+                "source_ref": source_ref,
+                "fires_trigger": not supply_only and (r["mw_near"] or 0) >= SUPPLIER_TRIGGER_MW,
+                "verified": False,
+            })
+        return out
+
+    return ctx.cached("accounts.suppliers", build)
 
 
 def diagnoses(ctx: MartContext) -> dict[str, dict]:
@@ -380,6 +432,7 @@ def detail_payload(d: dict, ctx: MartContext) -> dict:
     ]
     p["gaps"] = D.to_jsonable(D.data_gaps(d, as_of=ctx.as_of, stale_days=730))
     p["coverage"] = {"public_data": True, "utility_private_data": False, "fleet_data": False, "resolution": "zone"}
+    p["suppliers"] = D.to_jsonable(supplier_blocks(ctx).get(d["account_id"], []))
     p["score"]["weights_set"] = weights_set
     p["score"]["weights_status"] = _weights_status(ctx)
     for fact in (*p["header"], *p["territory"]["facts"]):
@@ -464,7 +517,7 @@ ACCOUNTS = Mart(
 ACCOUNT_EVENTS = Mart(
     name="mart_account_events",
     build=build_events,
-    version=2,
+    version=3,
     key=("account_id", "trigger", "source_ref"),
     inputs=("mart_accounts",),
     description="Every dated trigger event of every ranked account (ever; active = the last 12 months), with its "
@@ -490,13 +543,17 @@ ACCOUNT_COUNTIES = Mart(
 ACCOUNT_DETAIL = Mart(
     name="mart_account_detail",
     build=build_detail,
-    version=2,
+    version=3,
     key=("account_id",),
     inputs=("mart_accounts", "mart_account_events", "mart_account_counties"),
     description="The per-account diagnosis (X9 §4) as one JSON payload: header facts, score breakdown, next action, "
     "active triggers, territory, EIA series, gaps and coverage; every fact with source and as-of.",
     caveats=("weights_pending_review",),
-    checks=(value_check("107 payloads", lambda f: f.height, N_ACCOUNTS),),
+    checks=(
+        value_check("107 payloads", lambda f: f.height, N_ACCOUNTS),
+        value_check("81 accounts with a supplier in the RFI (X13)",
+                    lambda f: sum(bool(json.loads(s)["suppliers"]) for s in f["payload"]), 81, as_of=GOLDEN_AS_OF),
+    ),
     json_columns=("payload",),
 )
 

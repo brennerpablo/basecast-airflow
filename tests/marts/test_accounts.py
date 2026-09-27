@@ -54,3 +54,9 @@ def test_timeline_drops_undated_events_and_fills_missing_titles():
                        "detail": ["a", "b", "BEPC 345.0 kV, Planned"]})
     out = M.timeline({"triggers": tl})
     assert out["title"].to_list() == ["A", "BEPC 345.0 kV, Planned"]
+
+
+def test_lcra_supplied_munis_keep_the_fact_but_not_the_trigger():
+    gt = pl.DataFrame({"account_id": ["m1", "m2", "m2", "c1"], "gt": ["LCRA", "LCRA", "Brazos", "LCRA"]})
+    names = pl.DataFrame({"account_id": ["m1", "m2", "c1"], "account_type": ["muni", "muni", "coop"]})
+    assert sorted(M.trigger_gt_links(gt, names).rows()) == [("c1", "LCRA"), ("m2", "Brazos")]
