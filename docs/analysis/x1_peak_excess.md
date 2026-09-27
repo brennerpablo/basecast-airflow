@@ -269,7 +269,7 @@ Caveats to say or show:
   load (0.51 × A2E, Q5 realization for new approvals) and unattributed flat (4.5 GW ERCOT, allocated by coincident
   shares). 2026 check: 89.1 vs. 91.1 GW. This is the non-double-counting answer to Q7's review item 3.
 - **Explorer map:** zone shares of the coincident excess (FWEST 31%, SCENT 26%, COAST 17%, NORTH 13%) and the
-  change in the average day's min/max ratio (WEST 0.63 → 0.72, FWEST 0.84 → 0.90, SOUTH 0.61 → 0.70, 2019 → 2026)
+  change in the average day's min/max ratio (WEST 0.63 → 0.72, FWEST 0.84 → 0.90, SOUTH 0.61 → 0.69, 2019 → 2026; SOUTH 2026 is 0.6947, printed 0.695 by the script and once rounded here to 0.70 by mistake)
   as a "flat load arrived" metric.
 - **Commercial intelligence triggers:** YoY in the zone's mean daily minimum, e.g. WEST +95 MW (Oct 2025) → +732
   MW (Sep 2026). Pair it with new TCEQ data-center permits in the zone's counties as the leading signal. Both

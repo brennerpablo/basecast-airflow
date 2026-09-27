@@ -17,7 +17,7 @@ acquisition priority.
   with the ``ercot_spp_hist`` parser. X11 (an alternative signal) and X2 (context, which the API joins) are not
   read. The legend breaks, the weights and the grid tilt go to ``mart_meta`` (``county_acquisition``).
 
-Not built: ``mart_zone_layers`` (P1).
+The zone layers (``mart_zone_layers``, ``mart_county_large_load``) are in ``marts/zones.py``.
 """
 
 from __future__ import annotations

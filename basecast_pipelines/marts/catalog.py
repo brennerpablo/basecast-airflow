@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from basecast_pipelines.marts import accounts, backtest, explorer, forecast, insights
+from basecast_pipelines.marts import accounts, backtest, explorer, forecast, four_cp, insights, load, zones
 from basecast_pipelines.marts.core import Mart
 
-MARTS: dict[str, Mart] = {m.name: m for m in (*accounts.MARTS, *explorer.MARTS, *forecast.MARTS, *backtest.MARTS, *insights.MARTS)}
+MARTS: dict[str, Mart] = {m.name: m for m in (
+    *accounts.MARTS, *explorer.MARTS, *load.MARTS, *four_cp.MARTS, *forecast.MARTS, *zones.MARTS, *backtest.MARTS,
+    *insights.MARTS,
+)}
 
 
 def select(names: list[str] | None) -> list[Mart]:

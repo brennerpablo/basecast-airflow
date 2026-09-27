@@ -6,9 +6,10 @@ or X4's weights with ``scoring.weights_set: x4``); the nine event sources; the E
 the adjusted queue (X2, ``marts/queue.py``) and the zone 4CP (X3); then ``diagnosis.assemble`` per account. Every
 call gets the run's ``as_of``.
 
-The detail carries X13's wholesale-supplier card (``suppliers``); R19 applies (LCRA-supplied munis keep the fact,
-not the ``tsp_large_load`` trigger). Not built yet: the X10 muni extras (``munis.*``), the 4CP offer (X3 + X15)
-and ``triggers.gen_storage_ia: context`` (R12).
+The detail carries X13's wholesale-supplier card (``suppliers``) and the zone's 4CP offer in dollars
+(``four_cp_offer``, X3 + X15, from ``marts/four_cp.py``); R19 applies (LCRA-supplied munis keep the fact, not the
+``tsp_large_load`` trigger). Not built yet: the X10 muni extras (``munis.*``) and ``triggers.gen_storage_ia:
+context`` (R12).
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import yaml
 
 from basecast_pipelines.config import PROJECT_ROOT
 from basecast_pipelines.marts import config as marts_config
-from basecast_pipelines.marts import holdout
+from basecast_pipelines.marts import four_cp, holdout
 from basecast_pipelines.marts import queue as marts_queue
 from basecast_pipelines.marts.core import Mart, MartContext, value_check
 
@@ -433,6 +434,7 @@ def detail_payload(d: dict, ctx: MartContext) -> dict:
     p["gaps"] = D.to_jsonable(D.data_gaps(d, as_of=ctx.as_of, stale_days=730))
     p["coverage"] = {"public_data": True, "utility_private_data": False, "fleet_data": False, "resolution": "zone"}
     p["suppliers"] = D.to_jsonable(supplier_blocks(ctx).get(d["account_id"], []))
+    p["four_cp_offer"] = D.to_jsonable(four_cp.offer_block(ctx, _facts(d, "territory").get("weather_zone")))
     p["score"]["weights_set"] = weights_set
     p["score"]["weights_status"] = _weights_status(ctx)
     for fact in (*p["header"], *p["territory"]["facts"]):
@@ -543,12 +545,12 @@ ACCOUNT_COUNTIES = Mart(
 ACCOUNT_DETAIL = Mart(
     name="mart_account_detail",
     build=build_detail,
-    version=3,
+    version=4,
     key=("account_id",),
     inputs=("mart_accounts", "mart_account_events", "mart_account_counties"),
     description="The per-account diagnosis (X9 §4) as one JSON payload: header facts, score breakdown, next action, "
     "active triggers, territory, EIA series, gaps and coverage; every fact with source and as-of.",
-    caveats=("weights_pending_review",),
+    caveats=("weights_pending_review", "requests_not_forecasts", "optimistic_weather"),
     checks=(
         value_check("107 payloads", lambda f: f.height, N_ACCOUNTS),
         value_check("81 accounts with a supplier in the RFI (X13)",

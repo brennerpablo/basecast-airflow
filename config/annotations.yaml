@@ -1,0 +1,111 @@
+# Dated events for the Forecast charts (mart_annotations, basecast_pipelines/marts/load.py).
+#
+# Rules (docs/build/BUILD_A_airflow_marts.md A-M5):
+# - source_url is a URL written in the repo doc named in doc_ref, copied verbatim (tests/marts/test_load.py checks
+#   it is there). Never invent or construct a URL.
+# - An event without such a URL keeps source_url: null and verified: false ("not verified" on screen).
+# - verified: true means the doc quotes the source for this event (date and wording checked there).
+# - kind: grid_event | demand_record | official_forecast | large_load_policy.
+# - date_precision: day (default) or month (the day is unknown; the date is the 1st).
+
+annotations:
+  - id: uri_rotating_outages
+    date: 2021-02-15
+    kind: grid_event
+    title: "Winter Storm Uri: rotating outages"
+    detail: >-
+      ERCOT ordered rotating outages at 01:20 on Feb 15, 2021 (10,800 MW of load dropped at first, up to 20,000 MW
+      of load shed requested) and returned to normal operations on Feb 19. Load was shed, so metered load was not
+      demand: the weather-normalized series uses the model's own day for Feb 14-20, 2021.
+    source_url: https://www.ercot.com/files/docs/2021/02/24/2.2_REVISED_ERCOT_Presentation.pdf
+    source_title: "ERCOT, Review of February 2021 Extreme Cold Weather Event (urgent board meeting, 2021-02-24)"
+    doc_ref: docs/analysis/x15_source_checks.md
+    verified: true
+
+  - id: demand_record_2023
+    date: 2023-08-10
+    kind: demand_record
+    title: "Demand record: 85,508 MW"
+    detail: >-
+      Hourly peak demand of 85,508 MW (hour ending 18:00), ERCOT's all-time record until 2026-07-22.
+    source_url: https://www.ercot.com/files/docs/2023/02/07/DemandandEnergy2023.xlsx
+    source_title: "ERCOT, DemandandEnergy2023.xlsx, sheet Demand"
+    doc_ref: docs/analysis/x6_verify_claims.md
+    verified: true
+
+  - id: batch_zero_intake
+    date: 2026-04-01
+    date_precision: month
+    kind: large_load_policy
+    title: "Batch Zero intake"
+    detail: >-
+      ERCOT's large-load decks change makeup from April 2026, when the queue passes 400 GW with the Batch Zero
+      intake (PGRR 145). No primary source for the intake's date or terms is in the repo: not verified.
+    source_url: null
+    doc_ref: docs/analysis/q5_large_load.md
+    verified: false
+
+  - id: preliminary_ltlf_2026
+    date: 2026-04-15
+    kind: official_forecast
+    title: "ERCOT files its preliminary 2026 long-term load forecast"
+    detail: >-
+      PUCT Project 58777 item 38: about 112,000 MW for summer 2026, against ERCOT's own range of 90,500-98,000 MW
+      in the same letter; 278,003 MW by 2029 and 367,790 MW by 2032.
+    source_url: https://interchange.puc.texas.gov/Documents/58777_38_1622647.PDF
+    source_title: "ERCOT, Preliminary Long-Term Load Forecast 2026-2032 (PUCT Project 58777, item 38)"
+    doc_ref: docs/analysis/x15_source_checks.md
+    verified: true
+
+  - id: puct_batch_zero_adjustment
+    date: 2026-06-18
+    kind: official_forecast
+    title: "PUCT approves the Batch Zero adjustment of the forecast"
+    detail: >-
+      PUCT Project 59772 item 18: the Commission approves adjusting the long-term load forecast with Option B
+      (Batch Zero base load) and orders ERCOT to file the MW values once they are known. None were filed by
+      2026-09-26.
+    source_url: https://interchange.puc.texas.gov/Documents/59772_18_1658216.PDF
+    source_title: "PUCT, Order Granting Adjustment Request (Project 59772, item 18)"
+    doc_ref: docs/analysis/x15_source_checks.md
+    verified: true
+
+  - id: demand_record_2026
+    date: 2026-07-22
+    kind: demand_record
+    title: "New demand record: 91,134 MW (preliminary)"
+    detail: >-
+      Hourly peak of 91,133.7 MW, hour ending 18:00 CDT, preliminary until final settlement: 5.6 GW over the 2023
+      record and 20.9 GW under the preliminary forecast's ~112 GW for summer 2026.
+    source_url: https://www.ercot.com/files/docs/2026/02/09/DemandandEnergy2026-for-Corp-Comms.xlsx
+    source_title: "ERCOT, DemandandEnergy2026-for-Corp-Comms.xlsx, sheet Demand"
+    doc_ref: docs/analysis/x6_verify_claims.md
+    verified: true
+
+  - id: large_load_pause
+    date: 2026-08-03
+    kind: large_load_policy
+    title: "ERCOT pauses approvals to energize large data centers and crypto"
+    detail: >-
+      "Issued a Market Notice pausing the Batch Zero study process and delaying final classification of all large
+      loads. Paused approvals to energize data centers or virtual currency mining facilities (crypto facilities)
+      that are 75 MW or greater", after the Governor's directive of the same day. The PUCT presentation of
+      2026-08-20 lists 17 large loads (6,608 MW) affected through the end of 2026. Read 2026's large-load
+      approvals as a policy pause, not as realization.
+    source_url: https://www.ercot.com/files/docs/2026/08/25/10.-Large-Load-Issues.zip
+    source_title: "ERCOT, Large Load Issues"
+    source_page: 2
+    doc_ref: docs/analysis/findings.md
+    verified: true
+
+  - id: batch_zero_board_update
+    date: 2026-09-14
+    kind: large_load_policy
+    title: "Batch Zero classifications stay conditional until December"
+    detail: >-
+      ERCOT board item 14 (Sep 14-15, 2026): 204 projects (66.4 GW) met the qualifications to be conditionally
+      included as base load; final inclusion follows the eligibility verification and audit, in December.
+    source_url: https://www.ercot.com/files/docs/2026/09/11/14-Batch-Zero-Update.pdf
+    source_title: "ERCOT, Batch Zero Update (board item 14, 2026-09-14/15)"
+    doc_ref: docs/analysis/x15_source_checks.md
+    verified: true
