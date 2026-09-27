@@ -142,7 +142,7 @@ By stage: IA-stage −20.6%, −1.1%, −4.9%; entry-stage +56%, +151%, +108%, o
 1.3–1.6 GW actual).
 
 **Counties (the map test).** The Spearman correlation of predicted vs actual county MW is 0.66 / 0.64 / 0.64. The raw
-queue gets 0.43 / 0.44 / 0.45, and the developer projected COD 0.48 / 0.51 / 0.57. County-level WAPE is 83% / 86%
+queue gets 0.43 / 0.44 / 0.45, and the developer projected COD 0.48 / 0.51 / 0.56. County-level WAPE is 83% / 86%
 / 72% (57–84 counties had any COD in the window). The adjusted map ranks counties clearly better than the raw one, but
 a single county's number is noisy.
 
