@@ -282,6 +282,121 @@ def b8(ctx: MartContext) -> dict | None:
     )
 
 
+def b9(ctx: MartContext) -> dict | None:
+    c = _read(ctx, "mart_queue_stage_curves", "where month = 36 and stratum in ('all', 'storage', 'solar')")
+    if c is None:
+        return None
+
+    def at(stage, stratum, weighting):
+        return c.filter(pl.col("stage") == stage, pl.col("stratum") == stratum,
+                        pl.col("weighting") == weighting)["cif_cod"].item()
+
+    entry_mw, entry_n = at("entry", "all", "mw"), at("entry", "all", "count")
+    ia_n, ia_mw = at("ia", "all", "count"), at("ia", "all", "mw")
+    storage, solar = at("ia", "storage", "count"), at("ia", "solar", "count")
+    return _card(
+        "B9", "B", "What the generation queue turns into",
+        f"In ERCOT's generation queue, only about {entry_mw:.0%} of the megawatts that enter are operating three years "
+        f"later, but {ia_n:.0%} of projects with a signed interconnection agreement reach commercial operation within "
+        f"three years: {storage:.0%} for storage, {solar:.0%} for solar.",
+        ia_n, "share", [_fig("From entry, MW, 36 months", entry_mw, "share"),
+                        _fig("From entry, projects, 36 months", entry_n, "share"),
+                        _fig("From the IA, MW, 36 months", ia_mw, "share"),
+                        _fig("Storage from the IA", storage, "share"), _fig("Solar from the IA", solar, "share")],
+        "Always say \"generation queue\". From entry this is the adjusted-queue model (through the IA, R4). The "
+        f"{ia_n:.0%} counts projects; by MW it is {ia_mw:.1%}. Cohort first listed since Aug 2018; curves are cut "
+        "where fewer than 10 projects remain at risk.",
+        [], "generation", ["R4"], "docs/analysis/q6_survival.md §4", "/forecast?tab=queue",
+    )
+
+
+def b10(ctx: MartContext) -> dict | None:
+    s = _read(ctx, "mart_four_cp_scarcity")
+    iv = _read(ctx, "mart_four_cp_intervals", "where source = 'de_15min'")
+    if s is None or iv is None:
+        return None
+    last = s["year"].max()
+    before = s.filter(pl.col("year").is_between(2011, 2020))["cp_in_top20_price_share"].mean()
+    since = s.filter(pl.col("year") >= 2021)["cp_in_top20_price_share"].mean()
+    now = s.filter(pl.col("year") == last).row(0, named=True)
+    cps = iv.filter(pl.col("year") == last)
+    return _card(
+        "B10", "B", "The 4CP is no longer when power is scarce",
+        f"Since 2021, not one of ERCOT's 4CP intervals fell among its month's 20 highest-priced intervals; in {last}, "
+        f"{now['top20_price_after_18h_share']:.0%} of those priciest intervals came after 6 pm, when the net-load peak "
+        "now falls.",
+        now["top20_price_after_18h_share"], "share",
+        [_fig("CP in the month's top-20 prices, 2011–2020", before, "share"),
+         _fig("Same, 2021 on", since, "share"),
+         _fig(f"Net-load peak, mean hour ending, {last}", now["net_load_peak_mean_he"], "hour"),
+         _fig(f"Load peak, mean hour ending, {last}", now["load_peak_mean_he"], "hour"),
+         _fig(f"CP interval price, min, {last}", cps["price_usd_mwh"].min(), "USD/MWh"),
+         _fig(f"CP interval price, max, {last}", cps["price_usd_mwh"].max(), "USD/MWh"),
+         _fig(f"Month's top price, min, {last}", cps["price_month_max"].min(), "USD/MWh"),
+         _fig(f"Month's top price, max, {last}", cps["price_month_max"].max(), "USD/MWh")],
+        f"Real-time hub energy prices only, no ancillary services. {last} covers June–August; September is provisional.",
+        ["preliminary_actuals"], None, ["R11"], "docs/analysis/x3_four_cp.md Q4", "/forecast?tab=4cp",
+    )
+
+
+def b11(ctx: MartContext) -> dict | None:
+    iv = _read(ctx, "mart_four_cp_intervals", "where source = 'de_15min'")
+    if iv is None:
+        return None
+    past = iv.filter(pl.col("year").is_between(2010, 2025))
+    recent = iv.filter(pl.col("year") >= 2021)
+    ends = past["end_min"].to_list()
+    best_hour = max(sum(s < e <= s + 60 for e in ends) for s in range(0, 24 * 60, 15))
+    return _card(
+        "B11", "B", "A two-hour window still catches the 4CP",
+        f"ERCOT's 4CP still lands near 5 pm: a two-hour battery discharge from 3:45 to 5:45 pm would have covered "
+        f"{past['in_window'].sum()} of the {past.height} summer peak intervals since 2010.",
+        past["in_window"].sum(), "intervals",
+        [_fig("Summer 4CP intervals 2010–2025", past.height, "intervals"),
+         _fig(f"Covered {recent['year'].min()}–{recent['year'].max()}", recent["in_window"].sum(), "intervals"),
+         _fig("4CP intervals since 2021", recent.height, "intervals"),
+         _fig("Best one-hour window, 2010–2025", best_hour, "intervals")],
+        "The window was chosen on the same years it is scored on. The times are interval ending (X15 confirmed the "
+        "label), and the D&E 15-minute peaks match ERCOT's settlement 4CP in 66 of 68 months (X15).",
+        [], None, ["R11"], "docs/analysis/x3_four_cp.md Q2", "/forecast?tab=4cp",
+    )
+
+
+def near_peak_days(ctx: MartContext) -> dict[int, int]:
+    """Summer days (June–September) within 3% of their month's peak, per year (X3 Q2), from the 4CP marts' daily
+    peaks."""
+    from basecast_pipelines.marts import four_cp
+
+    daily, _ = four_cp.daily_forecast(ctx)
+    d = daily.filter(pl.col("month").is_between(6, 9), pl.col("year") >= 2010)
+    d = d.with_columns((pl.col("peak_mw") / pl.col("peak_mw").max().over("year", "month")).alias("pct"))
+    return dict(d.group_by("year").agg((pl.col("pct") >= 0.97).sum()).iter_rows())
+
+
+def b12(ctx: MartContext) -> dict | None:
+    dc = _read(ctx, "mart_four_cp_dispatch_curve", "where headline")
+    if dc is None:
+        return None
+    head = dc.row(0, named=True)
+    days = near_peak_days(ctx)
+    early = sum(days[y] for y in range(2010, 2018)) / 8
+    recent_years = [y for y in range(2023, 2027) if y in days]
+    late = sum(days[y] for y in recent_years) / len(recent_years)
+    caught = round(head["all4_rate"] * head["n_summers"])
+    return _card(
+        "B12", "B", "Flatter summers make the 4CP harder to catch",
+        f"Flatter summers make the 4CP harder to catch: days within 3% of the monthly peak doubled from {early:.0f} a "
+        f"summer (2010–2017) to {late:.0f} (2023–2026), and a weather-based call now needs about "
+        f"{head['dispatch_days']:.0f} dispatch days a summer to catch all four.",
+        head["dispatch_days"], "days",
+        [_fig("Near-peak days, 2010–2017 mean", early, "days"), _fig("Near-peak days, 2023–2026 mean", late, "days"),
+         _fig(f"Summers with all four caught (of {head['n_summers']})", caught, "summers")],
+        "The weather model uses observed ERA5 weather, so it is optimistic. Whether Base's fleet can do ~55 two-hour "
+        "cycles a summer is not verified.",
+        ["optimistic_weather"], None, ["R11"], "docs/analysis/x3_four_cp.md Q2", "/forecast?tab=4cp",
+    )
+
+
 def b13(ctx: MartContext) -> dict | None:
     cells = _read(ctx, "mart_peak_backtest")
     if cells is None:
@@ -298,9 +413,10 @@ def b13(ctx: MartContext) -> dict | None:
     )
 
 
-CARDS: tuple[Callable[[MartContext], dict | None], ...] = (a1, a2, b1, b3, b4, b5, b6, b7, b8, b13)
+CARDS: tuple[Callable[[MartContext], dict | None], ...] = (a1, a2, b1, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13)
 INPUTS = ("mart_large_load_realization", "mart_large_load_in_service", "mart_backtest_fan", "mart_actual_summer_peaks",
-          "mart_peak_backtest", "mart_queue_adjusted_county", "mart_queue_backtest", "mart_peak_forecast")
+          "mart_peak_backtest", "mart_queue_adjusted_county", "mart_queue_backtest", "mart_peak_forecast",
+          "mart_queue_stage_curves", "mart_four_cp_scarcity", "mart_four_cp_intervals", "mart_four_cp_dispatch_curve")
 SCHEMA = {"id": pl.Utf8, "grade": pl.Utf8, "rank": pl.Int32, "title": pl.Utf8, "caption": pl.Utf8,
           "value": pl.Float64, "unit": pl.Utf8, "figures": pl.Utf8, "caveat": pl.Utf8,
           "caveat_codes": pl.List(pl.Utf8), "queue": pl.Utf8, "verified": pl.Boolean,
@@ -349,6 +465,10 @@ INSIGHTS = Mart(
         _golden("B6 median incremental ratio 2025", "B6", 0.20, 0.005),
         _golden("B7 promised for 2025, Nov 2025 deck", "B7", 13_400, 1),
         _golden("B8 promised by 2027, Jun 2026 deck", "B8", 201_000, 1),
+        _golden("B9 IA-signed projects reaching COD in 36 months", "B9", 0.440, 0.0005),
+        _golden("B10 priciest intervals after 6 pm, 2026", "B10", 0.98, 0.005 + 1e-9),  # 97.5% prints 98%
+        _golden("B11 CPs covered by the window, 2010–2025", "B11", 63, 0),
+        _golden("B12 dispatch days a summer", "B12", 55.8, 0.05),
         _golden("B13 our MAPE, 18 cells", "B13", 3.3, 0.05),
     ),
     json_columns=("figures",),
