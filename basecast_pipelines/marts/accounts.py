@@ -8,8 +8,9 @@ call gets the run's ``as_of``.
 
 The detail carries X13's wholesale-supplier card (``suppliers``) and the zone's 4CP offer in dollars
 (``four_cp_offer``, X3 + X15, from ``marts/four_cp.py``); R19 applies (LCRA-supplied munis keep the fact, not the
-``tsp_large_load`` trigger). Not built yet: the X10 muni extras (``munis.*``) and ``triggers.gen_storage_ia:
-context`` (R12).
+``tsp_large_load`` trigger). With ``munis.place_facts`` the munis' detail carries X10's city facts (``city``, from
+``marts/muni_places.py``). Not wired yet: X10's city permit trigger (``munis.place_permit_trigger``) and
+``triggers.gen_storage_ia: context`` (R12).
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ import yaml
 
 from basecast_pipelines.config import PROJECT_ROOT
 from basecast_pipelines.marts import config as marts_config
-from basecast_pipelines.marts import four_cp, holdout
+from basecast_pipelines.marts import four_cp, holdout, muni_places
 from basecast_pipelines.marts import queue as marts_queue
 from basecast_pipelines.marts.core import Mart, MartContext, value_check
 
@@ -115,8 +116,8 @@ def _inputs(ctx: MartContext):
     cfg = ctx.config
     if marts_config.value(cfg, "triggers.gen_storage_ia") != "strong":
         raise NotImplementedError("triggers.gen_storage_ia: context (R12) is not built")
-    if marts_config.value(cfg, "munis.place_facts") or marts_config.value(cfg, "munis.place_permit_trigger"):
-        raise NotImplementedError("munis.* (X10 extras, R15) are P1 and not built")
+    if marts_config.value(cfg, "munis.place_permit_trigger"):
+        raise NotImplementedError("munis.place_permit_trigger (X10's city permit trigger, R15) is not wired")
 
     # Universe minus the held-out accounts, by name, before anything else (validation lock).
     accounts = A.load_accounts()
@@ -435,6 +436,9 @@ def detail_payload(d: dict, ctx: MartContext) -> dict:
     p["coverage"] = {"public_data": True, "utility_private_data": False, "fleet_data": False, "resolution": "zone"}
     p["suppliers"] = D.to_jsonable(supplier_blocks(ctx).get(d["account_id"], []))
     p["four_cp_offer"] = D.to_jsonable(four_cp.offer_block(ctx, _facts(d, "territory").get("weather_zone")))
+    if marts_config.value(ctx.config, "munis.place_facts"):
+        blocks = ctx.cached("accounts.city", lambda: muni_places.city_blocks(ctx, inp.accounts, eia=inp.eia))
+        p["city"] = D.to_jsonable(blocks.get(d["account_id"]))
     p["score"]["weights_set"] = weights_set
     p["score"]["weights_status"] = _weights_status(ctx)
     for fact in (*p["header"], *p["territory"]["facts"]):
@@ -545,7 +549,7 @@ ACCOUNT_COUNTIES = Mart(
 ACCOUNT_DETAIL = Mart(
     name="mart_account_detail",
     build=build_detail,
-    version=4,
+    version=5,
     key=("account_id",),
     inputs=("mart_accounts", "mart_account_events", "mart_account_counties"),
     description="The per-account diagnosis (X9 §4) as one JSON payload: header facts, score breakdown, next action, "
@@ -555,6 +559,7 @@ ACCOUNT_DETAIL = Mart(
         value_check("107 payloads", lambda f: f.height, N_ACCOUNTS),
         value_check("81 accounts with a supplier in the RFI (X13)",
                     lambda f: sum(bool(json.loads(s)["suppliers"]) for s in f["payload"]), 81, as_of=GOLDEN_AS_OF),
+        *muni_places.DETAIL_CHECKS,
     ),
     json_columns=("payload",),
 )

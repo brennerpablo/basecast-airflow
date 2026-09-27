@@ -6,7 +6,9 @@ Series (the ``series`` and ``vintage`` of each file are in the manifest):
 - ``intercensal_2000_2010``: ``2000-2010/intercensal/county/co-est00int-tot.csv`` (all counties, totals);
 - ``intercensal_2010_2020``: ``2010-2020/intercensal/county/asrh/cc-est2020int-agesex-48.csv`` (Texas;
   ``YEAR`` is a code, see the layout);
-- ``postcensal_v2020``: ``2010-2020/counties/totals/co-est2020-alldata.csv`` (vintage 2020, components).
+- ``postcensal_v2020``: ``2010-2020/counties/totals/co-est2020-alldata.csv`` (vintage 2020, components);
+- ``places_latest``: newest period, ``cities/totals/sub-est*_48.csv`` (Texas incorporated places and county place
+  parts, July 1 estimates), read from the lake by ``marts/muni_places.py`` (city population); no parser reads it.
 
 Everything is reached by walking the popest ``datasets/`` and ``technical-documentation/file-layouts/``
 directory listings. Files are Latin-1. ``dt`` is the fetch date.
@@ -76,8 +78,11 @@ def discover(http: HttpClient) -> list[RemoteFile]:
         vintage = f"Vintage {end}"
         data = _matching(_walk(http, DATASETS, (period, "counties", "totals")), r"^co-est\d{4}-alldata\.csv$")
         add(data, "postcensal_latest", vintage, "data")
-        add(_matching(_walk(http, LAYOUTS, (period,)), r"^co-est\d{4}-alldata\.pdf$"), "postcensal_latest", vintage,
-            "layout")
+        layouts = _walk(http, LAYOUTS, (period,))
+        add(_matching(layouts, r"^co-est\d{4}-alldata\.pdf$"), "postcensal_latest", vintage, "layout")
+        places = _matching(_walk(http, DATASETS, (period, "cities", "totals")), r"^sub-est\d{4}_48\.csv$")  # Texas
+        add(places, "places_latest", vintage, "data")
+        add(_matching(layouts, r"^sub-est\d{4}\.pdf$"), "places_latest", vintage, "layout")
     for series, vintage, data_path, data_pattern, layout_path, layout_pattern in SERIES:
         add(_matching(_walk(http, DATASETS, data_path), data_pattern), series, vintage, "data")
         add(_matching(_walk(http, LAYOUTS, layout_path), layout_pattern), series, vintage, "layout")

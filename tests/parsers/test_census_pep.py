@@ -5,6 +5,7 @@ from datetime import date
 import polars as pl
 
 from basecast_pipelines.parsers.census.population import DATASETS, parse_population
+from basecast_pipelines.processing.core import list_raw_files
 
 
 def _value(df, fips, measure, ref):
@@ -48,3 +49,16 @@ def test_intercensal_2010_2020_year_codes(raw_file):
     assert anderson["ref_date"].to_list()[-1] == date(2020, 4, 1) and anderson["measure"][-1] == "census_population"
     assert anderson.filter(pl.col("measure") == "population")["year"].to_list() == list(range(2010, 2020))
     assert _value(df, "48001", "estimates_base", date(2010, 4, 1)) == 58457
+
+
+def test_place_totals_are_not_inputs(raw_file, storage):
+    """The source also fetches the Texas place totals (``sub-est<vintage>_48.csv`` and its layout, read by
+    marts/muni_places.py): the county dataset leaves them out."""
+    meta = {"series": "places_latest", "vintage": "Vintage 2025"}
+    raw_file("census_pep", "census_pep/co-est2025-alldata.csv")
+    place = raw_file("census_pep", "census_pep/sub-est2025_48.csv", meta={**meta, "kind": "data"})
+    raw_file("census_pep", "census_pep/sub-est2025_48.csv", name="SUB-EST2025.pdf", meta={**meta, "kind": "layout"})
+    assert parse_population(place) is None
+    chosen = DATASETS[0].files(list_raw_files(storage, "census_pep"))
+    assert [f.name for f in chosen] == ["co-est2025-alldata.csv"]
+

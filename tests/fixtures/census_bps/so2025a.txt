@@ -1,0 +1,6 @@
+Survey,State,6-Digit,County,Census Place,FIPS Place,FIPS MCD,Pop,CSA,CBSA,Footnote,Central,Zip,Region,Division,Number of,Place,,1-unit,,,2-units,,,3-4 units,,,5+ units,,,1-unit rep,,,2-units rep,,,3-4 units rep,,,5+ units rep
+Date,Code,ID,Code,Code,Code,Code,  ,Code,Code,Code,City,Code,Code,Code,Months Rep,Name,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value,Bldgs,Units,Value
+ 
+2025,48,001500,189,0010,00160 ,00000 ,1939 ,352,38380,2, ,79311      ,3,7,12,Abernathy,5,5,450000,0,0,0,0,0,0,0,0,0,5,5,450000,0,0,0,0,0,0,0,0,0
+2025,48,003000,441,0015,01000 ,00000 ,118720 ,101,10180,2,1,79604      ,3,7,12,Abilene,696,696,204645361,162,324,52008396,0,0,0,0,0,0,696,696,204645361,162,324,52008396,0,0,0,0,0,0
+2025,48,004500,113,0020,01240 ,00000 ,16218 ,206,19100, , ,750019010  ,3,7,12,Addison town,34,34,11651200,0,0,0,0,0,0,0,0,0,34,34,11651200,0,0,0,0,0,0,0,0,0

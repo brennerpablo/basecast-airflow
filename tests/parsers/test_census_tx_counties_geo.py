@@ -1,9 +1,11 @@
 import json
+from datetime import date
 
 import polars as pl
 import pytest
 
 from basecast_pipelines.parsers.census.counties_geo import DATASETS, SHAPEFILE_SRID, parse_counties, srid_from_prj
+from basecast_pipelines.processing.core import list_raw_files
 
 FIXTURE = "census_tx_counties_geo/cb_2025_us_county_500k.zip"  # Rockwall, Camp and Falls Church (VA)
 
@@ -37,3 +39,15 @@ def test_srid_from_prj():
     assert srid_from_prj(wgs84) == 4326
     with pytest.raises(ValueError):
         srid_from_prj('PROJCS["NAD83 / Texas Centric Albers",GEOGCS["NAD83",DATUM["North_American_Datum_1983"]]]')
+
+
+def test_place_zip_is_not_an_input(raw_file, storage):
+    """The source also fetches the Texas place zip (read by marts/muni_places.py), in a newer ``dt`` than the county
+    zip: the dataset keeps parsing the county zip of its own newest snapshot (the place zip's bytes here are the
+    county fixture's: only the name and manifest matter)."""
+    raw_file("census_tx_counties_geo", FIXTURE, meta={"vintage": 2025, "link_text": "shapefile"})
+    raw_file("census_tx_counties_geo", FIXTURE, dt=date(2026, 9, 26), name="cb_2025_48_place_500k.zip",
+             meta={"kind": "place", "state_fips": "48", "vintage": 2025, "link_text": "Texas"})
+    chosen = DATASETS[0].files(list_raw_files(storage, "census_tx_counties_geo"))
+    assert [(f.name, f.dt) for f in chosen] == [("cb_2025_us_county_500k.zip", date(2026, 9, 25))]
+

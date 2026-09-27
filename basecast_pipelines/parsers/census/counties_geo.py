@@ -26,6 +26,10 @@ _PRJ_SRID = {
     "wgs_1984": 4326,
 }
 _VINTAGE = re.compile(r"cb_(\d{4})_", re.IGNORECASE)
+# The national county zip only. The source also fetches the Texas place zip (``cb_<year>_48_place_500k.zip``, read
+# from the lake by ``marts/muni_places.py``): it is not a county file, and its ``dt`` must not hide the county zip's
+# from ``latest_dt``.
+_COUNTY_ZIP = re.compile(r"^cb_\d{4}_us_county_500k(?:__[0-9a-f]{8})?\.zip$", re.IGNORECASE)
 
 
 def srid_from_prj(prj: str) -> int:
@@ -113,7 +117,7 @@ DATASETS = [
         description="Texas counties (254): FIPS, names, Census land/water area and the 1:500k cartographic "
                     "boundary polygon (EPSG:4326).",
         parse=parse_counties,
-        inputs=lambda f: f.suffix == ".zip",
+        inputs=lambda f: bool(_COUNTY_ZIP.match(f.name)),
         select=latest_dt,
         geometry={"geom": SHAPEFILE_SRID},
     ),

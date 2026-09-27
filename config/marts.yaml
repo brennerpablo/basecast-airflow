@@ -26,8 +26,8 @@ dc_sites:
 triggers:
   gen_storage_ia: {value: strong, status: default_pending_review}  # R12: strong | context
 
-munis:  # R15's default turns both on; they are P1 (X10 place data), so off until built
-  place_facts: {value: false, status: default_pending_review}  # R15
+munis:  # R15's default turns both on; the city permit trigger stays off (it would move the ranking)
+  place_facts: {value: true, status: default_pending_review}  # R15
   place_permit_trigger: {value: false, status: default_pending_review}  # R15
 
 four_cp:  # R11, closed by X15

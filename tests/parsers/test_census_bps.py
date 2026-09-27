@@ -3,6 +3,7 @@
 from datetime import date
 
 from basecast_pipelines.parsers.census.permits import DATASETS, parse_permits
+from basecast_pipelines.processing.core import list_raw_files
 
 
 def test_annual_1990_layout_and_texas_filter(raw_file):
@@ -36,3 +37,19 @@ def test_monthly_blank_reported_block_is_null(raw_file):
     assert ector["units_1_unit"] == 7 and ector["units_1_unit_rep"] is None and ector["units_total_rep"] is None
     brazos = df.filter(df["county_fips"] == "48041").row(0, named=True)
     assert brazos["units_5_plus_units"] == 96 and brazos["units_5_plus_units_rep"] == 96
+
+
+def test_place_files_are_not_inputs(raw_file, storage):
+    """The source also fetches South-region place files (``so*``, read by marts/muni_places.py): the county dataset
+    keeps only the ``co*`` files, whatever the manifest says."""
+    raw_file("census_bps", "census_bps/co2025a.txt", meta={"kind": "annual", "year": 2025})
+    place = {"region": "South Region"}
+    raw_file("census_bps", "census_bps/so2025a.txt", dt=date(2026, 9, 26),
+             meta={**place, "kind": "place_annual", "year": 2025})
+    for name, month in (("so2508y.txt", 8), ("so2608y.txt", 8)):
+        raw_file("census_bps", "census_bps/so2025a.txt", dt=date(2026, 9, 26), name=name,
+                 meta={**place, "kind": "place_ytd", "year": 2000 + int(name[2:4]), "month": month})
+    raw_file("census_bps", "census_bps/so2025a.txt", dt=date(2026, 9, 26), name="so2608c.txt")
+    chosen = DATASETS[0].files(list_raw_files(storage, "census_bps"))
+    assert [f.name for f in chosen] == ["co2025a.txt"]
+
