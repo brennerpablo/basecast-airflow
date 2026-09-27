@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from basecast_pipelines.marts import accounts, backtest
+from basecast_pipelines.marts import accounts, backtest, explorer
 from basecast_pipelines.marts.core import Mart
 
-MARTS: dict[str, Mart] = {m.name: m for m in (*accounts.MARTS, *backtest.MARTS)}
+MARTS: dict[str, Mart] = {m.name: m for m in (*accounts.MARTS, *explorer.MARTS, *backtest.MARTS)}
 
 
 def select(names: list[str] | None) -> list[Mart]:

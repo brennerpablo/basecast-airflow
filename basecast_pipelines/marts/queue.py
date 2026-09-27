@@ -62,6 +62,23 @@ def _build(ctx: MartContext) -> AdjustedQueue:
     return AdjustedQueue(latest, as_of, horizons, scored.select(cols), events)
 
 
+def stage_dates(ctx: MartContext) -> pl.DataFrame:
+    """``inr`` → ``stage_date``: the date of the stage each active project of :func:`adjusted_queue` is scored at
+    (entry: the screening start, else the first listed month; IA: the IA date), from the same snapshot, events and
+    stage set (``queue_adjusted.stage_date``). ``elapsed`` is the months from it to the queue's as-of date."""
+    return ctx.cached("queue.stage_dates", lambda: _stage_dates(ctx))
+
+
+def _stage_dates(ctx: MartContext) -> pl.DataFrame:
+    from basecast_pipelines.models import queue_adjusted as qa
+
+    q = adjusted_queue(ctx)
+    stages = qa.STAGE_SETS[marts_config.value(ctx.config, "queue.model")]
+    return qa.build_queue(qa.load_snapshot(q.report_month), q.events, q.as_of, stages).select(
+        "inr", qa.stage_date(stages).alias("stage_date")
+    )
+
+
 def county_stratum(q: AdjustedQueue) -> pl.DataFrame:
     """County × stratum: ``projects``, ``raw_mw`` and ``adj_mw_<label>`` (the diagnosis' territory queue)."""
     return q.scored.group_by("county_fips", "stratum").agg(
