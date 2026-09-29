@@ -9,7 +9,6 @@
 
 **Texas' public grid data in an immutable lake, typed tables and the models behind every BaseCast forecast.**
 
-[![Deploy](https://img.shields.io/github/actions/workflow/status/brennerpablo/basecast-airflow/deploy.yml?branch=main&style=flat-square&label=GCP%20VM&labelColor=102a17&color=b2dd79)](https://github.com/brennerpablo/basecast-airflow/actions/workflows/deploy.yml)
 ![Sources](https://img.shields.io/badge/sources-35-b2dd79?style=flat-square&labelColor=102a17)
 <br>
 ![Python](https://img.shields.io/badge/Python_3.12-102a17?style=flat-square&logo=python&logoColor=b2dd79)
@@ -19,6 +18,12 @@
 ![BigQuery](https://img.shields.io/badge/BigQuery-102a17?style=flat-square&logo=googlebigquery&logoColor=b2dd79)
 
 </div>
+
+> [!NOTE]
+> **Shut down on 2026-09-29.** After the hackathon the GCP project (the Airflow VM, Cloud SQL, the lake's bucket,
+> BigQuery) was deleted to bring the bill to zero, and the deploy workflow is disabled. The live demo at
+> [basecast.pbrenner.com](https://basecast.pbrenner.com) serves a snapshot of the API's answers recorded that
+> day (basecast-app `snapshot/`). The pipelines still run locally from the CLI against `data/`.
 
 <table>
   <tr>
